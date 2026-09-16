@@ -35,8 +35,9 @@ app.use((req, res, next) => {
 app.use(cookieParser(process.env.SESSION_SECRET));
 
 app.get('/', (req, res) => {
-  res.set('Vary', 'Accept-Language');
-  res.redirect(302, '/' + (req.acceptsLanguages('th', 'en') || 'th'));
+  res.set('Vary', 'Accept-Language, Cookie');
+  const pref = ['th', 'en'].includes(req.cookies.lang) ? req.cookies.lang : null;
+  res.redirect(302, '/' + (pref || req.acceptsLanguages('th', 'en') || 'th'));
 });
 
 app.use(express.static(path.join(__dirname, '..', 'public'), { index: false, maxAge: '30d' }));
@@ -55,6 +56,17 @@ for (const lang of ['th', 'en']) {
     res.locals.lang = lang;
     res.locals.other = lang === 'th' ? 'en' : 'th';
     res.locals.t = strings[lang];
+    // Remembers the language last read (spec 4.2), used by GET / above. Only (re)written when the value would
+    // actually change, so most responses carry no Set-Cookie at all.
+    if (req.cookies.lang !== lang) {
+      res.cookie('lang', lang, {
+        maxAge: 365 * 864e5,
+        sameSite: 'lax',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/'
+      });
+    }
     next();
   }, publicRouter);
 }
