@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalkAlways - for the conversations that never stop</title>
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="TalkAlways - แพลตฟอร์มแชทส่วนตัวแบบ minimal สำหรับการสนทนาที่ไม่มีวันสิ้นสุด">
+    <meta name="keywords" content="chat, private, minimal, real-time, conversation">
+    <meta name="author" content="TalkAlways Team">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="TalkAlways - for the conversations that never stop">
+    <meta property="og:description" content="ความเงียบระหว่างสัญญาณ คือที่ที่เรายังได้ยินกัน">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://talkalways.app">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='25' cy='50' r='15' fill='none' stroke='%232E2E2E' stroke-width='3'/%3E%3Ccircle cx='75' cy='50' r='15' fill='none' stroke='%232E2E2E' stroke-width='3'/%3E%3Cpath d='M40 50 Q50 45 60 50' fill='none' stroke='%232E2E2E' stroke-width='3'/%3E%3C/svg%3E">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Landing Page -->
+        <div id="landing-page" class="content-wrapper">
+            <div class="landing-page">
+                <!-- Logo and Branding -->
+                <div class="logo-container">
+                    <div class="logo-symbol">
+                        <div class="logo-circles">
+                            <div class="circle"></div>
+                            <div class="wave-line"></div>
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                    <h1 class="brand-title">TalkAlways</h1>
+                    <p class="brand-tagline">for the conversations that never stop.</p>
+                </div>
+
+                <!-- Authentication Form -->
+                <form id="auth-form" class="auth-form">
+                    <div id="alert-container"></div>
+                    
+                    <div class="form-group">
+                        <label for="room-password" class="form-label">Enter Room Password</label>
+                        <input 
+                            type="password" 
+                            id="room-password" 
+                            class="form-input" 
+                            placeholder="Enter Room Password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="username" class="form-label">Your Name</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            class="form-input" 
+                            placeholder="Enter your name"
+                            required
+                            maxlength="20"
+                            autocomplete="name"
+                        >
+                    </div>
+                    
+                    <button type="submit" id="join-btn" class="btn btn-primary btn-full">
+                        <span id="join-btn-text">Join Chat</span>
+                        <span id="join-btn-loading" class="loading-spinner hidden"></span>
+                    </button>
+                </form>
+
+                <!-- Create Room Option -->
+                <div class="mt-4 text-center">
+                    <p class="text-muted mb-2">Don't have a room?</p>
+                    <button id="create-room-btn" class="btn btn-secondary">
+                        Create New Room
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Room -->
+        <div id="chat-room" class="hidden">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="room-info">
+                        <h3 id="room-title">TalkAlways Chat</h3>
+                        <div class="room-stats">
+                            <span id="online-count">0 online</span>
+                            <span> • </span>
+                            <span id="room-expires">Expires: --</span>
+                        </div>
+                    </div>
+                    <button id="leave-room-btn" class="btn btn-secondary">
+                        Leave
+                    </button>
+                </div>
+
+                <!-- Online Users -->
+                <div id="online-users" class="online-users hidden">
+                    <strong>Online:</strong> <span id="online-users-list"></span>
+                </div>
+
+                <!-- Messages Container -->
+                <div id="messages-container" class="chat-messages">
+                    <div id="messages-list"></div>
+                    <div id="typing-indicator" class="typing-indicator hidden">
+                        <span id="typing-user"></span> is typing<span class="typing-dots"></span>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-container">
+                    <form id="message-form" class="chat-input-form">
+                        <textarea 
+                            id="message-input" 
+                            class="chat-input" 
+                            placeholder="Type your message..."
+                            rows="1"
+                            maxlength="1000"
+                        ></textarea>
+                        <button type="submit" id="send-btn" class="send-button">
+                            Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Room Modal -->
+        <div id="create-room-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Room</h3>
+                    <button id="close-modal-btn" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-room-form">
+                        <div id="create-alert-container"></div>
+                        
+                        <div class="form-group">
+                            <label for="new-room-password" class="form-label">Room Password</label>
+                            <input 
+                                type="password" 
+                                id="new-room-password" 
+                                class="form-input" 
+                                placeholder="Create a secure password"
+                                required
+                                minlength="6"
+                            >
+                            <small class="text-muted">Minimum 6 characters</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirm-password" class="form-label">Confirm Password</label>
+                            <input 
+                                type="password" 
+                                id="confirm-password" 
+                                class="form-input" 
+                                placeholder="Confirm your password"
+                                required
+                            >
+                        </div>
+                        
+                        <button type="submit" id="create-room-submit" class="btn btn-primary btn-full">
+                            <span id="create-btn-text">Create Room (Free 7 days)</span>
+                            <span id="create-btn-loading" class="loading-spinner hidden"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

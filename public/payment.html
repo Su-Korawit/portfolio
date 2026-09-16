@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalkAlways - Premium Room</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="40" height="40" viewBox="0 0 100 100">
+                        <circle cx="25" cy="50" r="20" fill="none" stroke="#2E2E2E" stroke-width="3"/>
+                        <circle cx="75" cy="50" r="20" fill="none" stroke="#2E2E2E" stroke-width="3"/>
+                        <path d="M45 50 Q50 45 55 50" fill="none" stroke="#2E2E2E" stroke-width="3"/>
+                    </svg>
+                </div>
+                <h1>TalkAlways</h1>
+            </div>
+            <p class="tagline">for the conversations that never stop.</p>
+        </header>
+
+        <!-- Premium Packages -->
+        <div class="premium-section">
+            <h2>เลือกแพ็กเกจ Premium</h2>
+            <p class="section-description">สร้างห้องแชทส่วนตัวที่ปลอดภัย ไม่มีโฆษณา และใช้งานได้นานขึ้น</p>
+            
+            <div class="packages-grid" id="packages-grid">
+                <!-- Packages will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="payment-section hidden" id="payment-section">
+            <h2>ชำระเงิน</h2>
+            <div class="payment-summary" id="payment-summary">
+                <!-- Payment summary will be loaded here -->
+            </div>
+            
+            <form id="payment-form">
+                <div class="form-group">
+                    <label for="room-password">รหัสผ่านห้อง</label>
+                    <input type="password" id="room-password" placeholder="สร้างรหัสผ่านสำหรับห้องของคุณ" required minlength="6">
+                    <small class="form-help">รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="card-element">ข้อมูลบัตรเครดิต</label>
+                    <div id="card-element" class="card-element">
+                        <!-- Stripe Elements will create form elements here -->
+                    </div>
+                    <div id="card-errors" class="card-errors" role="alert"></div>
+                </div>
+
+                <button type="submit" id="submit-payment" class="btn btn-primary btn-large" disabled>
+                    <span id="button-text">ชำระเงิน</span>
+                    <div id="spinner" class="spinner hidden"></div>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-section hidden" id="success-section">
+            <div class="success-icon">✅</div>
+            <h2>ชำระเงินสำเร็จ!</h2>
+            <p>ห้อง Premium ของคุณพร้อมใช้งานแล้ว</p>
+            <div class="room-info" id="room-info">
+                <!-- Room info will be loaded here -->
+            </div>
+            <button class="btn btn-primary" onclick="window.location.href='/'">เข้าใช้งานห้องแชท</button>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading hidden" id="loading">
+            <div class="spinner"></div>
+            <p>กำลังประมวลผล...</p>
+        </div>
+    </div>
+
+    <script src="/js/payment.js"></script>
+</body>
+</html>
