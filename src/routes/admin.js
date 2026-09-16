@@ -65,5 +65,6 @@ router.post('/sessions/revoke', async (req, res) => {
 });
 
 router.use('/posts', require('./admin-posts'));
+router.use('/projects', require('./admin-projects'));
 
 module.exports = router;

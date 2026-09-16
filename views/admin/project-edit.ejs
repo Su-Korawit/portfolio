@@ -1,0 +1,122 @@
+<%
+const pageTitle = id ? 'แก้ไขโปรเจกต์' : 'โปรเจกต์ใหม่';
+const langNames = { th: 'ไทย', en: 'English' };
+const errorPrefix = { th: 'ฉบับไทย: ', en: 'ฉบับอังกฤษ: ' };
+const statusLabels = { none: 'ไม่มีฉบับแปล', draft: 'แบบร่าง', published: 'เผยแพร่' };
+const statusOptions = [['none', 'ไม่มีฉบับนี้'], ['draft', 'แบบร่าง'], ['published', 'เผยแพร่']];
+const errorList = Object.entries(errors).map(([key, message]) => (errorPrefix[key.split('.')[0]] || '') + message);
+-%>
+<%- include('head', { title: pageTitle, section: 'projects' }) %>
+<main id="main" class="editor">
+  <form class="admin-form" method="post" action="<%= id ? '/admin/projects/' + id : '/admin/projects' %>">
+    <div class="page-head">
+      <h1><%= pageTitle %></h1>
+      <button type="submit">บันทึก</button>
+    </div>
+<% if (saved) { -%>
+    <p class="form-saved" role="status">บันทึกแล้ว</p>
+<% } -%>
+<% if (errorList.length) { -%>
+    <div class="form-error" role="alert">
+      <p>ยังไม่ได้บันทึก กรุณาแก้ตามรายการนี้</p>
+      <ul>
+<% for (const message of errorList) { -%>
+        <li><%= message %></li>
+<% } -%>
+      </ul>
+    </div>
+<% } -%>
+    <label>ภาพ thumbnail
+      <input name="thumbnail" value="<%= values.thumbnail %>" placeholder="/uploads/" spellcheck="false">
+    </label>
+    <div class="field-pair">
+      <label>ลิงก์ repo
+        <input type="url" name="repo_url" value="<%= values.repo_url %>" placeholder="https://github.com/" spellcheck="false">
+<% if (errors.repo_url) { -%>
+        <span class="field-error"><%= errors.repo_url %></span>
+<% } -%>
+      </label>
+      <label>ลิงก์ demo
+        <input type="url" name="demo_url" value="<%= values.demo_url %>" placeholder="https://" spellcheck="false">
+<% if (errors.demo_url) { -%>
+        <span class="field-error"><%= errors.demo_url %></span>
+<% } -%>
+        <span class="field-hint">ถ้าเว้นว่าง หน้าโปรเจกต์จะไม่แสดงลิงก์ demo</span>
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>ลำดับ
+        <input type="number" name="sort_order" value="<%= values.sort_order %>" step="1">
+<% if (errors.sort_order) { -%>
+        <span class="field-error"><%= errors.sort_order %></span>
+<% } -%>
+        <span class="field-hint">เลขน้อยขึ้นก่อน และโปรเจกต์ที่ปักหมุดขึ้นก่อนโปรเจกต์ที่ไม่ได้ปักหมุดเสมอ</span>
+      </label>
+      <fieldset class="tag-options">
+        <legend>หน้าแรก</legend>
+        <label><input type="checkbox" name="featured" value="1"<% if (values.featured) { %> checked<% } %>> ปักหมุดเป็นโปรเจกต์เด่น</label>
+      </fieldset>
+    </div>
+    <fieldset class="tag-options">
+      <legend>แท็ก</legend>
+<% if (tags.length === 0) { -%>
+      <p class="field-hint">ยังไม่มีแท็ก</p>
+<% } -%>
+<% for (const tag of tags) { -%>
+      <label><input type="checkbox" name="tags" value="<%= tag.id %>"<% if (values.tags.includes(tag.id)) { %> checked<% } %>> <%= tag.slug %></label>
+<% } -%>
+    </fieldset>
+<% for (const lang of ['th', 'en']) {
+     const tr = values[lang];
+-%>
+    <details class="translation" lang="<%= lang %>"<% if (lang === 'th' || tr.status !== 'none') { %> open<% } %>>
+      <summary><%= langNames[lang] %> · <span lang="th"><%= statusLabels[tr.status] %></span></summary>
+      <div class="translation-fields">
+        <label><span lang="th">สถานะ</span>
+          <select name="<%= lang %>[status]" lang="th"<% if (stored[lang]) { %> data-prev="<%= tr.status %>" onchange="if (this.value === 'none') { if (!confirm('ลบฉบับภาษานี้เมื่อบันทึก?')) this.value = this.dataset.prev } this.dataset.prev = this.value"<% } %>>
+<% for (const [value, label] of statusOptions) { -%>
+            <option value="<%= value %>"<% if (tr.status === value) { %> selected<% } %>><%= label %></option>
+<% } -%>
+          </select>
+        </label>
+        <div class="field-pair">
+          <label><span lang="th">หัวข้อ</span>
+            <input name="<%= lang %>[title]" value="<%= tr.title %>">
+<% if (errors[lang + '.title']) { -%>
+            <span class="field-error" lang="th"><%= errors[lang + '.title'] %></span>
+<% } -%>
+          </label>
+          <label>slug
+            <input name="<%= lang %>[slug]" value="<%= tr.slug %>" pattern="[a-z0-9\-]*" autocapitalize="none" spellcheck="false">
+<% if (errors[lang + '.slug']) { -%>
+            <span class="field-error" lang="th"><%= errors[lang + '.slug'] %></span>
+<% } -%>
+            <span class="field-hint" lang="th">ใช้ได้เฉพาะ a-z, 0-9 และ - ถ้าเว้นว่าง ระบบใช้หัวข้อที่ไม่มีภาษาไทย หรือ slug ของอีกภาษา</span>
+<% if (stored[lang] === 'published') { -%>
+            <span class="field-hint" lang="th">ฉบับนี้เผยแพร่แล้ว ถ้าแก้ slug ลิงก์เดิมจะใช้ไม่ได้</span>
+<% } -%>
+          </label>
+        </div>
+        <label><span lang="th">สรุป</span>
+          <textarea name="<%= lang %>[summary]" rows="3"><%= tr.summary %></textarea>
+        </label>
+        <label><span lang="th">alt ภาพ thumbnail</span>
+          <input name="<%= lang %>[thumbnail_alt]" value="<%= tr.thumbnail_alt %>">
+        </label>
+        <label><span lang="th">เนื้อหา (markdown)</span>
+          <textarea class="editor-body" name="<%= lang %>[body_markdown]" rows="18">
+<%= tr.body_markdown %></textarea>
+        </label>
+        <button type="submit" formaction="/admin/projects/preview/<%= lang %>" formtarget="_blank" lang="th">ดูตัวอย่าง</button>
+      </div>
+    </details>
+<% } -%>
+    <button type="submit">บันทึก</button>
+  </form>
+<% if (id) { -%>
+  <form class="editor-delete" method="post" action="/admin/projects/<%= id %>/delete" onsubmit="return confirm('ลบโปรเจกต์นี้?')">
+    <button type="submit">ลบโปรเจกต์</button>
+  </form>
+<% } -%>
+</main>
+<%- include('foot') %>

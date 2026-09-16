@@ -1,0 +1,35 @@
+<%
+const chipLabels = { published: 'เผยแพร่', draft: 'แบบร่าง' };
+-%>
+<%- include('head', { title: 'โปรเจกต์', section: 'projects' }) %>
+<main id="main">
+  <div class="page-head">
+    <h1>โปรเจกต์</h1>
+    <a class="button-link" href="/admin/projects/new">เพิ่มโปรเจกต์ใหม่</a>
+  </div>
+<% if (projects.length === 0) { -%>
+  <p class="admin-empty">ยังไม่มีโปรเจกต์</p>
+<% } else { -%>
+  <div class="table-scroll">
+    <table class="admin-table">
+      <thead>
+        <tr><th scope="col">หัวข้อ</th><th scope="col">ไทย</th><th scope="col">EN</th><th scope="col">หน้าแรก</th><th scope="col">ลำดับ</th><th scope="col">แก้ไขล่าสุด</th></tr>
+      </thead>
+      <tbody>
+<% for (const project of projects) { -%>
+        <tr>
+          <td><a href="/admin/projects/<%= project.id %>"><%= project.title || '(ไม่มีหัวข้อ)' %></a></td>
+<% for (const status of [project.th, project.en]) { -%>
+          <td><span class="chip chip-<%= status || 'none' %>"><%= chipLabels[status] || 'ไม่มีฉบับแปล' %></span></td>
+<% } -%>
+          <td><%= project.featured ? 'ปักหมุด' : '' %></td>
+          <td><%= project.sort_order %></td>
+          <td class="admin-date"><%= formatDate('th', project.updated_at) %></td>
+        </tr>
+<% } -%>
+      </tbody>
+    </table>
+  </div>
+<% } -%>
+</main>
+<%- include('foot') %>
