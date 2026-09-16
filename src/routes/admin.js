@@ -64,14 +64,6 @@ router.post('/sessions/revoke', async (req, res) => {
   res.redirect(303, '/admin/login');
 });
 
-router.get('/posts', async (req, res) => {
-  const posts = await all(`
-    SELECT p.id, p.updated_at,
-      (SELECT title FROM post_translations WHERE post_id = p.id ORDER BY lang = 'th' DESC LIMIT 1) AS title,
-      (SELECT status FROM post_translations WHERE post_id = p.id AND lang = 'th') AS th,
-      (SELECT status FROM post_translations WHERE post_id = p.id AND lang = 'en') AS en
-    FROM posts p ORDER BY p.updated_at DESC`);
-  res.render('admin/posts', { posts });
-});
+router.use('/posts', require('./admin-posts'));
 
 module.exports = router;

@@ -38,3 +38,59 @@
 .chip-published { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 .chip-draft { background: var(--surface-soft); }
 .chip-none { border-style: dashed; color: var(--text-muted); }
+
+/* Page heading with an action beside it: post list and editor (Task 10) */
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+.page-head h1 { margin: 0; }
+.button-link {
+  display: inline-block;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  text-decoration: none;
+}
+.button-link:hover { border-color: var(--text); }
+.admin-table td a { color: var(--text); }
+
+/* Post editor. Each language is a <details> with its own lang, so :lang(th) in site.css sizes the Thai fields. */
+.editor .page-head { margin-bottom: 0; }
+.editor input:not([type="checkbox"]), .editor select, .editor textarea { width: 100%; }
+.editor textarea { resize: vertical; }
+.editor-body { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.form-saved { margin: 0; padding: var(--sp-3) var(--sp-4); background: var(--surface-soft); border-radius: var(--r-sm); }
+.form-error > p { margin: 0; }
+.form-error > ul { margin: var(--sp-2) 0 0; padding-inline-start: var(--sp-6); }
+.field-hint { margin: 0; color: var(--text-muted); font-size: var(--fs-sm); }
+.field-error { font-size: var(--fs-sm); font-weight: 600; }
+.tag-options { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); margin: 0; padding: 0; border: 0; }
+.tag-options legend { margin-bottom: var(--sp-1); padding: 0; }
+.admin-form .tag-options label { display: flex; align-items: center; gap: var(--sp-2); }
+.translation { border: 1px solid var(--border); border-radius: var(--r-md); }
+.translation > summary { padding: var(--sp-3) var(--sp-4); cursor: pointer; font-weight: 600; }
+.translation[open] > summary { border-bottom: 1px solid var(--border); }
+.translation-fields { display: grid; gap: var(--sp-4); padding: var(--sp-4); }
+.field-pair { display: grid; gap: var(--sp-4); }
+.editor-delete { margin-top: var(--sp-12); padding-top: var(--sp-6); border-top: 1px solid var(--border); }
+
+/* Bar at the top of a post preview. views/post.ejs links this file only when it renders a preview (Task 11). */
+.preview-bar {
+  margin: 0;
+  padding: var(--sp-2) var(--gutter);
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (min-width: 40rem) {
+  .field-pair { grid-template-columns: 1fr 1fr; align-items: start; }
+}

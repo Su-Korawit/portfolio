@@ -3,7 +3,10 @@ const chipLabels = { published: 'เผยแพร่', draft: 'แบบร่
 -%>
 <%- include('head', { title: 'บทความ', section: 'posts' }) %>
 <main id="main">
-  <h1>บทความ</h1>
+  <div class="page-head">
+    <h1>บทความ</h1>
+    <a class="button-link" href="/admin/posts/new">เขียนบทความใหม่</a>
+  </div>
 <% if (posts.length === 0) { -%>
   <p class="admin-empty">ยังไม่มีบทความ</p>
 <% } else { -%>
@@ -15,7 +18,7 @@ const chipLabels = { published: 'เผยแพร่', draft: 'แบบร่
       <tbody>
 <% for (const post of posts) { -%>
         <tr>
-          <td><%= post.title %></td>
+          <td><a href="/admin/posts/<%= post.id %>"><%= post.title || '(ไม่มีหัวข้อ)' %></a></td>
 <% for (const status of [post.th, post.en]) { -%>
           <td><span class="chip chip-<%= status || 'none' %>"><%= chipLabels[status] || 'ไม่มีฉบับแปล' %></span></td>
 <% } -%>
