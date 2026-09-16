@@ -287,3 +287,12 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
 .project-thumb { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-sm); }
 .project-summary { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-h3); }
 .project-links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-4) 0 0; font-weight: 600; }
+
+/* About page (Task 16). .social-list is shared with the footer, which reads the same settings keys. */
+.about > * { max-width: var(--measure); }
+.about h1 { margin: 0 0 var(--sp-6); }
+.about .prose { margin-bottom: var(--sp-8); }
+.social-list { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-6) 0 0; padding: 0; list-style: none; }
+.social-list a { color: var(--text-muted); text-decoration: none; }
+.social-list a:hover { color: var(--text); text-decoration: underline; }
+.site-footer .social-list { margin: 0 0 var(--sp-3); }

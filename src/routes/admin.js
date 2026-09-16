@@ -169,4 +169,39 @@ router.post('/upload', async (req, res) => {
   res.json({ url: '/uploads/' + name });
 });
 
+// Settings (spec 2.4): plain inputs and a textarea, no tabs and no per-field status. An empty field deletes
+// that row and a value upserts it. The form always submits this fixed set of keys, so session_epoch (which
+// is not one of them) is never touched by saving settings.
+const GLOBAL_SETTING_KEYS = ['site_name', 'github_url', 'linkedin_url', 'x_url', 'email'];
+const LANG_SETTING_KEYS = ['tagline', 'about_body'];
+
+async function upsertSetting(key, lang, value) {
+  if (value) {
+    await run(`INSERT INTO settings (key, lang, value) VALUES (?, ?, ?)
+               ON CONFLICT(key, lang) DO UPDATE SET value = excluded.value`, [key, lang, value]);
+  } else {
+    await run('DELETE FROM settings WHERE key = ? AND lang = ?', [key, lang]);
+  }
+}
+
+router.get('/settings', async (req, res) => {
+  const rows = await all('SELECT key, lang, value FROM settings');
+  const settings = {};
+  for (const row of rows) settings[row.key + ':' + row.lang] = row.value;
+  res.render('admin/settings', { settings, saved: req.query.saved === '1' });
+});
+
+router.post('/settings', async (req, res) => {
+  const body = req.body ?? {};
+  await transaction(async () => {
+    for (const key of GLOBAL_SETTING_KEYS) await upsertSetting(key, '*', text(body[key]).trim());
+    for (const key of LANG_SETTING_KEYS) {
+      for (const lang of ['th', 'en']) {
+        await upsertSetting(key, lang, text((body[lang] || {})[key]).trim());
+      }
+    }
+  });
+  res.redirect(303, '/admin/settings?saved=1');
+});
+
 module.exports = router;

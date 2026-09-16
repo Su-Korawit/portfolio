@@ -1,0 +1,57 @@
+<%
+const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
+-%>
+<%- include('head', { title: 'ตั้งค่า', section: 'settings' }) %>
+<main id="main">
+  <div class="page-head">
+    <h1>ตั้งค่า</h1>
+  </div>
+<% if (saved) { -%>
+  <p class="form-saved" role="status">บันทึกแล้ว</p>
+<% } -%>
+  <form class="admin-form" method="post" action="/admin/settings">
+    <label>ชื่อเว็บ
+      <input name="site_name" value="<%= val('site_name') %>">
+    </label>
+    <div class="field-pair">
+      <label>Tagline ภาษาไทย
+        <input name="th[tagline]" value="<%= val('tagline', 'th') %>">
+      </label>
+      <label>Tagline ภาษาอังกฤษ
+        <input name="en[tagline]" value="<%= val('tagline', 'en') %>" lang="en">
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>About ภาษาไทย (markdown)
+        <textarea name="th[about_body]" rows="10" class="editor-body"><%= val('about_body', 'th') %></textarea>
+      </label>
+      <label>About ภาษาอังกฤษ (markdown)
+        <textarea name="en[about_body]" rows="10" class="editor-body" lang="en"><%= val('about_body', 'en') %></textarea>
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>GitHub URL
+        <input type="url" name="github_url" value="<%= val('github_url') %>">
+      </label>
+      <label>LinkedIn URL
+        <input type="url" name="linkedin_url" value="<%= val('linkedin_url') %>">
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>X URL
+        <input type="url" name="x_url" value="<%= val('x_url') %>">
+      </label>
+      <label>อีเมล
+        <input type="email" name="email" value="<%= val('email') %>">
+      </label>
+    </div>
+    <p class="field-hint">ช่องไหนเว้นว่าง ระบบจะลบค่านั้นออกตอนบันทึก</p>
+    <button type="submit">บันทึก</button>
+  </form>
+  <h2>ออกจากระบบทุกเครื่อง</h2>
+  <p class="field-hint">ใช้เมื่อสงสัยว่ามีคนอื่นได้ cookie ของผู้ดูแลไป ปุ่มนี้ทำให้ cookie เดิมทุกใบใช้ไม่ได้ทันที รวมถึงเครื่องนี้ ต้อง เข้าสู่ระบบ ใหม่</p>
+  <form method="post" action="/admin/sessions/revoke">
+    <button type="submit">ออกจากระบบทุกเครื่อง</button>
+  </form>
+</main>
+<%- include('foot') %>

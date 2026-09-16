@@ -234,4 +234,27 @@ router.get('/tags/:slug', async (req, res, next) => {
   });
 });
 
+// About (spec 2.1): about_body falls back to the other language when the current one is empty, and the
+// wrapper gets a lang attribute only then, the same convention as the foreign card in post-card.ejs.
+router.get('/about', async (req, res) => {
+  const { lang, other, t } = res.locals;
+  const rows = await all("SELECT lang, value FROM settings WHERE key = 'about_body' AND lang IN ('th', 'en')");
+  const byLang = {};
+  for (const row of rows) byLang[row.lang] = row.value;
+  const aboutLang = byLang[lang] ? lang : (byLang[other] ? other : lang);
+  res.render('about', {
+    aboutLang,
+    aboutBody: byLang[aboutLang] || '',
+    meta: {
+      title: t.navAbout,
+      canonical: '/' + lang + '/about',
+      alternates: [
+        { lang: 'th', href: '/th/about' },
+        { lang: 'en', href: '/en/about' }
+      ],
+      type: 'website'
+    }
+  });
+});
+
 module.exports = router;

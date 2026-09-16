@@ -1,4 +1,5 @@
 <%
+const foreign = aboutLang !== lang;
 const social = [
   ['github_url', 'GitHub'],
   ['linkedin_url', 'LinkedIn'],
@@ -6,7 +7,15 @@ const social = [
 ];
 const hasSocial = social.some(([key]) => settings[key]) || settings.email;
 -%>
-<footer class="site-footer">
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="about">
+  <h1><%= t.navAbout %></h1>
+<% if (aboutBody) { -%>
+  <div class="prose"<% if (foreign) { %> lang="<%= aboutLang %>"<% } %>>
+    <%- md.render(aboutBody) %>
+  </div>
+<% } -%>
 <% if (hasSocial) { -%>
   <ul class="social-list">
 <% for (const [key, label] of social) { -%>
@@ -19,7 +28,5 @@ const hasSocial = social.some(([key]) => settings[key]) || settings.email;
 <% } -%>
   </ul>
 <% } -%>
-  <p>© <%= new Date().getFullYear() %> <%= settings.site_name || 'Portfolio' %></p>
-</footer>
-</body>
-</html>
+</main>
+<%- include('partials/footer') %>
