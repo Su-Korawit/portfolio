@@ -1,0 +1,3 @@
+# archive
+
+โฟลเดอร์นี้เก็บโค้ด TalkAlways chat MVP เดิมทั้งหมด (Express, socket.io, Stripe และ SQLite) ตามสภาพใน commit แรกของ repo นี้ ทุกไฟล์ถูกย้ายมาด้วย `git mv` โดยไม่แก้เนื้อหา ส่วน `README.md` เดิมเปลี่ยนชื่อเป็น `MVP_README.md` เพื่อให้ไฟล์นี้ใช้อธิบายโฟลเดอร์ แอปใหม่ที่เป็น dev portfolio และ tech blog ไม่ mount และไม่ require อะไรจากโฟลเดอร์นี้ เหตุผลที่เก็บไว้แทนการลบคือเผื่อใช้ทำระบบ comment หรือ private messenger ภายหลัง ถ้าจะเอากลับมาใช้ต้อง install `socket.io`, `stripe`, `cors`, `uuid`, `dotenv` และ `nodemon` ใหม่ เพราะ `package.json` ของแอปใหม่ไม่มีแล้ว ส่วน DB เดิมยังอยู่ที่ `data/talkalways.db` นอก git และไม่มีโค้ดใหม่เปิดไฟล์นั้น ห้ามแก้ไฟล์ในโฟลเดอร์นี้ ถ้าจะใช้โค้ดส่วนไหนให้คัดลอกออกไปแก้ข้างนอก
