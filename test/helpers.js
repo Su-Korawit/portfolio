@@ -100,6 +100,13 @@ async function insertProject({ thumbnail = null, repo_url = null, demo_url = nul
   return id;
 }
 
+// Inserts a tag straight into the DB and returns its id, which insertPost and insertProject take in tags.
+// Both names default to the slug, so a test that does not care about names can pass the slug alone.
+async function insertTag({ slug, name_th = slug, name_en = slug } = {}) {
+  const { lastID } = await run('INSERT INTO tags (slug, name_th, name_en) VALUES (?, ?, ?)', [slug, name_th, name_en]);
+  return lastID;
+}
+
 function updateJar(jar, setCookie) {
   for (const line of setCookie) {
     const [pair, ...attrs] = line.split(';');
@@ -161,4 +168,4 @@ async function start() {
   return { base, req, login, stop };
 }
 
-module.exports = { start, toForm, insertPost, insertProject, signCookie, run, get, all };
+module.exports = { start, toForm, insertPost, insertProject, insertTag, signCookie, run, get, all };

@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { run, get, all } = require('../db');
+const { run, get, all, transaction } = require('../db');
+const { toSlug } = require('../slug');
 
 const router = express.Router();
 
@@ -66,5 +67,73 @@ router.post('/sessions/revoke', async (req, res) => {
 
 router.use('/posts', require('./admin-posts'));
 router.use('/projects', require('./admin-projects'));
+
+// :id must be a positive integer (spec 2.4). null makes the route answer 404.
+function parseId(value) {
+  return /^[1-9][0-9]*$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : null;
+}
+
+const text = value => (typeof value === 'string' ? value : '');
+
+// Tags (spec 2.4): one page with an add form and a form for every row. edit is the form that failed validation,
+// { id, slug, name_th, name_en } with id null for the add form, so that form shows what was typed.
+async function renderTags(res, edit, errors, saved) {
+  const tags = await all(`
+    SELECT tg.id, tg.slug, tg.name_th, tg.name_en,
+      (SELECT COUNT(*) FROM post_tags WHERE tag_id = tg.id) AS posts,
+      (SELECT COUNT(*) FROM project_tags WHERE tag_id = tg.id) AS projects
+    FROM tags tg ORDER BY tg.slug`);
+  res.render('admin/tags', { tags, edit, errors, saved });
+}
+
+// Both names are required, and the slug is toSlug(slug || name_en) (spec 2.3).
+async function saveTag(req, res, id) {
+  const body = req.body ?? {};
+  // only strings are kept, so a field sent twice (an array) counts as empty instead of reaching SQL
+  const values = { slug: text(body.slug).trim(), name_th: text(body.name_th).trim(), name_en: text(body.name_en).trim() };
+  const slug = toSlug(values.slug || values.name_en);
+  const errors = {};
+  if (!values.name_th) errors.name_th = 'กรุณาใส่ชื่อภาษาไทย';
+  if (!values.name_en) errors.name_en = 'กรุณาใส่ชื่อภาษาอังกฤษ';
+  if (!slug) errors.slug = 'กรุณาใส่ slug ภาษาอังกฤษ (a-z, 0-9, -)';
+  if (Object.keys(errors).length === 0) {
+    // the duplicate check and the write share one transaction, the same as the post editor
+    const written = await transaction(async () => {
+      if (await get('SELECT 1 FROM tags WHERE slug = ? AND id <> ?', [slug, id || 0])) return false;
+      if (id) {
+        await run('UPDATE tags SET slug = ?, name_th = ?, name_en = ? WHERE id = ?', [slug, values.name_th, values.name_en, id]);
+      } else {
+        await run('INSERT INTO tags (slug, name_th, name_en) VALUES (?, ?, ?)', [slug, values.name_th, values.name_en]);
+      }
+      return true;
+    });
+    if (written) return res.redirect(303, '/admin/tags?saved=1');
+    errors.slug = 'slug นี้ถูกใช้แล้วในแท็กอื่น';
+  }
+  // the page again with what was typed, never a redirect and never a 500
+  res.status(400);
+  await renderTags(res, { id, ...values }, errors, false);
+}
+
+router.get('/tags', async (req, res) => {
+  await renderTags(res, null, {}, req.query.saved === '1');
+});
+
+router.post('/tags', (req, res) => saveTag(req, res, null));
+
+router.post('/tags/:id', async (req, res, next) => {
+  const id = parseId(req.params.id);
+  if (!id || !(await get('SELECT id FROM tags WHERE id = ?', [id]))) return next();
+  await saveTag(req, res, id);
+});
+
+router.post('/tags/:id/delete', async (req, res, next) => {
+  const id = parseId(req.params.id);
+  if (!id) return next();
+  // post_tags and project_tags go by ON DELETE CASCADE, which needs PRAGMA foreign_keys = ON from src/db.js
+  const { changes } = await run('DELETE FROM tags WHERE id = ?', [id]);
+  if (changes === 0) return next();
+  res.redirect(303, '/admin/tags');
+});
 
 module.exports = router;

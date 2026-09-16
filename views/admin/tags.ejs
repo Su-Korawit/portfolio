@@ -1,0 +1,71 @@
+<%
+const errorList = Object.values(errors);
+const editedTag = edit && edit.id ? tags.find(row => row.id === edit.id) : null;
+const errorPrefix = editedTag ? 'แท็ก ' + editedTag.slug + ': ' : 'แท็กใหม่: ';
+const addValues = edit && !edit.id ? edit : { slug: '', name_th: '', name_en: '' };
+-%>
+<%- include('head', { title: 'แท็ก', section: 'tags' }) %>
+<main id="main">
+  <div class="page-head">
+    <h1>แท็ก</h1>
+  </div>
+<% if (saved) { -%>
+  <p class="form-saved" role="status">บันทึกแล้ว</p>
+<% } -%>
+<% if (errorList.length) { -%>
+  <div class="form-error" role="alert">
+    <p>ยังไม่ได้บันทึก กรุณาแก้ตามรายการนี้</p>
+    <ul>
+<% for (const message of errorList) { -%>
+      <li><%= errorPrefix + message %></li>
+<% } -%>
+    </ul>
+  </div>
+<% } -%>
+  <h2>เพิ่มแท็ก</h2>
+  <form class="admin-form" method="post" action="/admin/tags">
+    <div class="field-pair">
+      <label>ชื่อภาษาไทย
+        <input name="name_th" value="<%= addValues.name_th %>" required>
+      </label>
+      <label>ชื่อภาษาอังกฤษ
+        <input name="name_en" value="<%= addValues.name_en %>" lang="en" required>
+      </label>
+    </div>
+    <label>slug
+      <input name="slug" value="<%= addValues.slug %>" pattern="[a-z0-9\-]*" autocapitalize="none" spellcheck="false">
+      <span class="field-hint">ใช้ได้เฉพาะ a-z, 0-9 และ - ถ้าเว้นว่าง ระบบสร้างจากชื่อภาษาอังกฤษ</span>
+    </label>
+    <button type="submit">เพิ่มแท็ก</button>
+  </form>
+  <h2>แท็กทั้งหมด</h2>
+<% if (tags.length === 0) { -%>
+  <p class="admin-empty">ยังไม่มีแท็ก</p>
+<% } else { -%>
+  <p class="field-hint">แก้ในแถวแล้วกด บันทึก ของแถวนั้น ถ้าแก้ slug ลิงก์เดิมของหน้าแท็กจะใช้ไม่ได้ ส่วนการลบแท็กไม่ลบบทความหรือโปรเจกต์ แค่เอาแท็กนี้ออก</p>
+  <div class="table-scroll">
+    <table class="admin-table">
+      <thead>
+        <tr><th scope="col">ชื่อภาษาไทย</th><th scope="col">ชื่อภาษาอังกฤษ</th><th scope="col">slug</th><th scope="col">บทความ</th><th scope="col">โปรเจกต์</th><th scope="col" colspan="2">จัดการ</th></tr>
+      </thead>
+      <tbody>
+<% for (const tag of tags) {
+     const row = edit && edit.id === tag.id ? edit : tag;
+     const formId = 'tag-' + tag.id;
+-%>
+        <tr>
+          <td><input form="<%= formId %>" name="name_th" value="<%= row.name_th %>" size="14" aria-label="ชื่อภาษาไทยของแท็ก <%= tag.slug %>" required></td>
+          <td><input form="<%= formId %>" name="name_en" value="<%= row.name_en %>" size="14" lang="en" aria-label="ชื่อภาษาอังกฤษของแท็ก <%= tag.slug %>" required></td>
+          <td><input form="<%= formId %>" name="slug" value="<%= row.slug %>" size="12" pattern="[a-z0-9\-]*" autocapitalize="none" spellcheck="false" aria-label="slug ของแท็ก <%= tag.slug %>"></td>
+          <td><%= tag.posts %></td>
+          <td><%= tag.projects %></td>
+          <td><form id="<%= formId %>" method="post" action="/admin/tags/<%= tag.id %>"><button type="submit">บันทึก</button></form></td>
+          <td><form method="post" action="/admin/tags/<%= tag.id %>/delete" onsubmit="return confirm('ลบแท็กนี้?')"><button type="submit">ลบ</button></form></td>
+        </tr>
+<% } -%>
+      </tbody>
+    </table>
+  </div>
+<% } -%>
+</main>
+<%- include('foot') %>

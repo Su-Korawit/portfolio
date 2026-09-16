@@ -1,10 +1,10 @@
 <%
-const base = '/' + lang + '/blog';
+const base = tag ? '/' + lang + '/tags/' + tag.slug : '/' + lang + '/blog';
 -%>
 <%- include('partials/head') %>
 <%- include('partials/header') %>
 <main id="main" class="blog">
-  <h1><%= t.navBlog %></h1>
+  <h1><%= tag ? t.tagTitle + ' ' + tag.name : t.navBlog %></h1>
 <% if (posts.length === 0) { -%>
   <p class="empty"><%= t.noPosts %></p>
 <% } else { -%>

@@ -33,6 +33,20 @@ const PROJECT_LIST_SQL = `
           WHERE x.project_id = t.project_id AND x.lang = ? AND x.status = 'published'))
   ORDER BY p.featured DESC, p.sort_order, p.id`;
 
+// The tag page lists posts only (spec 2.1). This is LIST_SQL with one more join that keeps the posts of one tag,
+// so the fallback and the order are the same as /blog. Parameters: [tagId, lang, lang, limit, offset].
+const TAG_LIST_SQL = `
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  FROM post_translations t
+  JOIN posts p ON p.id = t.post_id
+  JOIN post_tags pt ON pt.post_id = t.post_id AND pt.tag_id = ?
+  WHERE t.status = 'published'
+    AND (t.lang = ? OR NOT EXISTS (
+          SELECT 1 FROM post_translations x
+          WHERE x.post_id = t.post_id AND x.lang = ? AND x.status = 'published'))
+  ORDER BY t.published_at DESC, t.post_id DESC
+  LIMIT ? OFFSET ?`;
+
 async function loadSettings(lang) {
   const rows = await all("SELECT key, value FROM settings WHERE lang IN (?, '*')", [lang]);
   const settings = {};
@@ -185,6 +199,36 @@ router.get('/projects/:slug', async (req, res, next) => {
       canonical: '/' + lang + '/projects/' + tr.slug,
       alternates,
       image: project.thumbnail,
+      type: 'website'
+    }
+  });
+});
+
+// Posts with one tag (spec 2.1). The tag is looked up first: an unknown slug is a 404, and a tag without a
+// published post is an empty list. Pagination, canonical and hreflang follow GET /blog.
+router.get('/tags/:slug', async (req, res, next) => {
+  const { lang, t } = res.locals;
+  const row = await get('SELECT id, slug, name_th, name_en FROM tags WHERE slug = ?', [req.params.slug]);
+  if (!row) return next();
+  const page = pageNumber(req);
+  if (!page) return next();
+  const rows = await all(TAG_LIST_SQL, [row.id, lang, lang, PAGE_SIZE + 1, (page - 1) * PAGE_SIZE]);
+  if (page > 1 && rows.length === 0) return next();
+  const tag = { slug: row.slug, name: lang === 'th' ? row.name_th : row.name_en };
+  const title = t.tagTitle + ' ' + tag.name;
+  const query = page > 1 ? '?page=' + page : '';
+  res.render('blog', {
+    posts: rows.slice(0, PAGE_SIZE),
+    page,
+    hasNext: rows.length > PAGE_SIZE,
+    tag,
+    meta: {
+      title: page > 1 ? title + ' · ' + t.pageLabel + ' ' + page : title,
+      canonical: '/' + lang + '/tags/' + tag.slug + query,
+      alternates: [
+        { lang: 'th', href: '/th/tags/' + tag.slug + query },
+        { lang: 'en', href: '/en/tags/' + tag.slug + query }
+      ],
       type: 'website'
     }
   });

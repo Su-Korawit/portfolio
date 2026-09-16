@@ -30,7 +30,8 @@ module.exports = {
     noProjects: 'ยังไม่มีโปรเจกต์',
     projectRepo: 'ซอร์สโค้ด',
     projectDemo: 'ดูเดโม',
-    backToProjects: 'กลับไปหน้ารวมโปรเจกต์'
+    backToProjects: 'กลับไปหน้ารวมโปรเจกต์',
+    tagTitle: 'บทความที่ติดแท็ก'
   },
   en: {
     skipToContent: 'Skip to content',
@@ -63,6 +64,7 @@ module.exports = {
     noProjects: 'No projects yet.',
     projectRepo: 'Source code',
     projectDemo: 'Live demo',
-    backToProjects: 'Back to projects'
+    backToProjects: 'Back to projects',
+    tagTitle: 'Posts tagged'
   }
 };
