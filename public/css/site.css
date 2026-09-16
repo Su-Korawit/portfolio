@@ -296,3 +296,16 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
 .social-list a { color: var(--text-muted); text-decoration: none; }
 .social-list a:hover { color: var(--text); text-decoration: underline; }
 .site-footer .social-list { margin: 0 0 var(--sp-3); }
+
+/* Search page (Task 17). The queries live in src/routes/public.js as SEARCH_POST_SQL and SEARCH_PROJECT_SQL.
+   Matching projects reuse the uncapped .project-grid from the home page's featured section; matching posts
+   reuse .post-list, capped to --measure like every other post list. */
+.search h1 { max-width: var(--measure); margin: 0 0 var(--sp-6); }
+.search-form { max-width: var(--measure); display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-8); }
+.search-form label { font-weight: 600; }
+.search-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.search-row input { flex: 1 1 16rem; }
+.search-hint, .search-empty { max-width: var(--measure); color: var(--text-muted); }
+.search-section + .search-section { margin-top: var(--sp-12); }
+.search-section h2 { margin: 0 0 var(--sp-4); }
+.search-section .post-list { max-width: var(--measure); }

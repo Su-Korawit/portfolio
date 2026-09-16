@@ -31,7 +31,14 @@ module.exports = {
     projectRepo: 'ซอร์สโค้ด',
     projectDemo: 'ดูเดโม',
     backToProjects: 'กลับไปหน้ารวมโปรเจกต์',
-    tagTitle: 'บทความที่ติดแท็ก'
+    tagTitle: 'บทความที่ติดแท็ก',
+    navSearch: 'ค้นหา',
+    searchLabel: 'คำค้นหา',
+    searchButton: 'ค้นหา',
+    searchHint: 'พิมพ์อย่างน้อย 2 ตัวอักษรเพื่อค้นหา',
+    searchProjectsHeading: 'โปรเจกต์ที่พบ',
+    searchPostsHeading: 'บทความที่พบ',
+    searchNoResults: 'ไม่พบผลลัพธ์สำหรับ'
   },
   en: {
     skipToContent: 'Skip to content',
@@ -65,6 +72,13 @@ module.exports = {
     projectRepo: 'Source code',
     projectDemo: 'Live demo',
     backToProjects: 'Back to projects',
-    tagTitle: 'Posts tagged'
+    tagTitle: 'Posts tagged',
+    navSearch: 'Search',
+    searchLabel: 'Search term',
+    searchButton: 'Search',
+    searchHint: 'Type at least 2 characters to search.',
+    searchProjectsHeading: 'Matching projects',
+    searchPostsHeading: 'Matching posts',
+    searchNoResults: 'No results for'
   }
 };

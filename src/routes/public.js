@@ -47,6 +47,49 @@ const TAG_LIST_SQL = `
   ORDER BY t.published_at DESC, t.post_id DESC
   LIMIT ? OFFSET ?`;
 
+// Search (spec 4.1). LIKE instead of FTS5, because FTS5's default tokenizer cannot split Thai text that has
+// no spaces between words, and ESCAPE '!' turns a literal '%' or '_' the reader typed into an ordinary
+// character instead of a wildcard.
+const like = q => '%' + q.replace(/[!%_]/g, '!$&') + '%';
+
+// Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
+// translation of the post, not just the one being displayed - so a term that exists only in the Thai body
+// still finds the post on /en/search, shown as its own English card. Title matches sort first.
+const SEARCH_POST_SQL = `
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  FROM post_translations t
+  JOIN posts p ON p.id = t.post_id
+  WHERE t.status = 'published'
+    AND (t.lang = $lang OR NOT EXISTS (
+          SELECT 1 FROM post_translations x
+          WHERE x.post_id = t.post_id AND x.lang = $lang AND x.status = 'published'))
+    AND EXISTS (
+          SELECT 1 FROM post_translations m
+          WHERE m.post_id = t.post_id AND m.status = 'published'
+            AND (m.title LIKE $q ESCAPE '!' OR m.excerpt LIKE $q ESCAPE '!' OR m.body_markdown LIKE $q ESCAPE '!'))
+  ORDER BY EXISTS (
+          SELECT 1 FROM post_translations m
+          WHERE m.post_id = t.post_id AND m.status = 'published' AND m.title LIKE $q ESCAPE '!') DESC,
+        t.published_at DESC
+  LIMIT 20`;
+
+// Same shape as SEARCH_POST_SQL, matching title, summary and body_markdown, ordered like /projects
+// (featured first, then sort_order, then id) instead of by title match.
+const SEARCH_PROJECT_SQL = `
+  SELECT t.project_id, t.lang, t.slug, t.title, t.summary, p.thumbnail
+  FROM project_translations t
+  JOIN projects p ON p.id = t.project_id
+  WHERE t.status = 'published'
+    AND (t.lang = $lang OR NOT EXISTS (
+          SELECT 1 FROM project_translations x
+          WHERE x.project_id = t.project_id AND x.lang = $lang AND x.status = 'published'))
+    AND EXISTS (
+          SELECT 1 FROM project_translations m
+          WHERE m.project_id = t.project_id AND m.status = 'published'
+            AND (m.title LIKE $q ESCAPE '!' OR m.summary LIKE $q ESCAPE '!' OR m.body_markdown LIKE $q ESCAPE '!'))
+  ORDER BY p.featured DESC, p.sort_order, p.id
+  LIMIT 10`;
+
 async function loadSettings(lang) {
   const rows = await all("SELECT key, value FROM settings WHERE lang IN (?, '*')", [lang]);
   const settings = {};
@@ -254,6 +297,28 @@ router.get('/about', async (req, res) => {
       ],
       type: 'website'
     }
+  });
+});
+
+// Search (spec 4.1): q is trimmed and cut to 100 characters. Under 2 characters left, the form is shown with a
+// hint and no query runs at all - noindex is still set, and there is no canonical or hreflang on this page.
+router.get('/search', async (req, res) => {
+  const { t } = res.locals;
+  const q = String(req.query.q || '').trim().slice(0, 100);
+  const tooShort = q.length < 2;
+  let projects = [];
+  let posts = [];
+  if (!tooShort) {
+    const params = { $lang: res.locals.lang, $q: like(q) };
+    projects = await all(SEARCH_PROJECT_SQL, params);
+    posts = await all(SEARCH_POST_SQL, params);
+  }
+  res.render('search', {
+    q,
+    tooShort,
+    projects,
+    posts,
+    meta: { title: t.navSearch, noindex: true }
   });
 });
 

@@ -1,0 +1,39 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="search">
+  <h1><%= t.navSearch %></h1>
+  <form class="search-form" role="search" method="get" action="/<%= lang %>/search">
+    <label for="q"><%= t.searchLabel %></label>
+    <div class="search-row">
+      <input type="search" id="q" name="q" maxlength="100" value="<%= q %>">
+      <button type="submit"><%= t.searchButton %></button>
+    </div>
+  </form>
+<% if (tooShort) { -%>
+  <p class="search-hint"><%= t.searchHint %></p>
+<% } else if (!projects.length && !posts.length) { -%>
+  <p class="empty search-empty"><%= t.searchNoResults %> “<%= q %>”</p>
+<% } else { -%>
+<% if (projects.length) { -%>
+  <section class="search-section">
+    <h2><%= t.searchProjectsHeading %></h2>
+    <div class="project-grid">
+<% for (const card of projects) { -%>
+      <%- include('partials/project-card', { card, level: 3 }) %>
+<% } -%>
+    </div>
+  </section>
+<% } -%>
+<% if (posts.length) { -%>
+  <section class="search-section">
+    <h2><%= t.searchPostsHeading %></h2>
+    <div class="post-list">
+<% for (const card of posts) { -%>
+      <%- include('partials/post-card', { card, level: 3 }) %>
+<% } -%>
+    </div>
+  </section>
+<% } -%>
+<% } -%>
+</main>
+<%- include('partials/footer') %>
