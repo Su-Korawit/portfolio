@@ -3,6 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const md = require('./markdown');
 const strings = require('./strings');
+const { UPLOAD_DIR } = require('./db');
 const publicRouter = require('./routes/public');
 const adminRouter = require('./routes/admin');
 
@@ -39,6 +40,15 @@ app.get('/', (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, '..', 'public'), { index: false, maxAge: '30d' }));
+
+// Uploaded images (spec 2.1). A name is random and never reused, so the file can be cached for a year as immutable,
+// and nosniff stops a browser from reading a file as any type other than the one its extension gives.
+app.use('/uploads', express.static(UPLOAD_DIR, {
+  index: false,
+  maxAge: '365d',
+  immutable: true,
+  setHeaders: res => res.set('X-Content-Type-Options', 'nosniff')
+}));
 
 for (const lang of ['th', 'en']) {
   app.use('/' + lang, (req, res, next) => {

@@ -1,6 +1,10 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { run, get, all, transaction } = require('../db');
+const multer = require('multer');
+const { run, get, all, transaction, UPLOAD_DIR } = require('../db');
 const { toSlug } = require('../slug');
 
 const router = express.Router();
@@ -134,6 +138,35 @@ router.post('/tags/:id/delete', async (req, res, next) => {
   const { changes } = await run('DELETE FROM tags WHERE id = ?', [id]);
   if (changes === 0) return next();
   res.redirect(303, '/admin/tags');
+});
+
+// Image upload (spec 2.4). Memory storage keeps a file that has not passed the checks below off the disk.
+const receive = multer({ limits: { fileSize: 5 * 1024 * 1024, files: 1 } }).single('image');
+
+// The type comes from the first 12 bytes, never from the file name or the MIME type that the browser declared.
+function sniff(buffer) {
+  const hex = buffer.subarray(0, 12).toString('hex');
+  if (hex.startsWith('ffd8ff')) return '.jpg';
+  if (hex.startsWith('89504e470d0a1a0a')) return '.png';
+  if (hex.startsWith('474946383761') || hex.startsWith('474946383961')) return '.gif';
+  if (hex.startsWith('52494646') && hex.slice(16, 24) === '57454250') return '.webp';
+  return null;
+}
+
+router.post('/upload', async (req, res) => {
+  // multer is called by hand instead of as middleware, so a file over 5 MB, a wrong field name or a form
+  // without a file becomes a JSON 400 that admin.js can read, not the HTML error page
+  const err = await new Promise(resolve => receive(req, res, resolve));
+  if (err || !req.file) {
+    const error = err && err.code === 'LIMIT_FILE_SIZE' ? 'ไฟล์ใหญ่เกิน 5 MB' : 'กรุณาเลือกรูป 1 ไฟล์';
+    return res.status(400).json({ error });
+  }
+  const ext = sniff(req.file.buffer);
+  if (!ext) return res.status(400).json({ error: 'รองรับเฉพาะ JPEG / PNG / GIF / WebP' });
+  // the server makes the whole name, so originalname never reaches the file system
+  const name = crypto.randomBytes(16).toString('hex') + ext;
+  await fs.promises.writeFile(path.join(UPLOAD_DIR, name), req.file.buffer, { flag: 'wx' });
+  res.json({ url: '/uploads/' + name });
 });
 
 module.exports = router;

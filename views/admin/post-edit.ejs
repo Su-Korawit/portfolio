@@ -26,9 +26,15 @@ const errorList = Object.entries(errors).map(([key, message]) => (errorPrefix[ke
       </ul>
     </div>
 <% } -%>
-    <label>ภาพหน้าปก
-      <input name="cover_image" value="<%= values.cover_image %>" placeholder="/uploads/" spellcheck="false">
-    </label>
+    <div class="field-pair">
+      <label>ภาพหน้าปก
+        <input name="cover_image" value="<%= values.cover_image %>" placeholder="/uploads/" spellcheck="false">
+      </label>
+      <label>อัปโหลดภาพหน้าปก
+        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-upload-target="cover_image">
+        <span class="field-hint">JPEG, PNG, GIF หรือ WebP ไม่เกิน 5 MB แล้ว URL ของรูปจะถูกใส่ในช่องภาพหน้าปกให้</span>
+      </label>
+    </div>
     <fieldset class="tag-options">
       <legend>แท็ก</legend>
 <% if (tags.length === 0) { -%>
@@ -79,6 +85,10 @@ const errorList = Object.entries(errors).map(([key, message]) => (errorPrefix[ke
           <textarea class="editor-body" name="<%= lang %>[body_markdown]" rows="18">
 <%= tr.body_markdown %></textarea>
         </label>
+        <label><span lang="th">แทรกรูปในเนื้อหา</span>
+          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-upload-target="<%= lang %>[body_markdown]">
+          <span class="field-hint" lang="th">รูปถูกแทรกเป็น ![](url) ตรงตำแหน่ง cursor ล่าสุดในช่องเนื้อหา แล้วพิมพ์ alt ในวงเล็บเหลี่ยมต่อได้ทันที</span>
+        </label>
         <div class="field-pair">
           <label>SEO title
             <input name="<%= lang %>[seo_title]" value="<%= tr.seo_title %>">
@@ -99,4 +109,5 @@ const errorList = Object.entries(errors).map(([key, message]) => (errorPrefix[ke
   </form>
 <% } -%>
 </main>
+<script src="/js/admin.js?v=<%= v %>" defer></script>
 <%- include('foot') %>

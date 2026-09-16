@@ -26,9 +26,15 @@ const errorList = Object.entries(errors).map(([key, message]) => (errorPrefix[ke
       </ul>
     </div>
 <% } -%>
-    <label>ภาพ thumbnail
-      <input name="thumbnail" value="<%= values.thumbnail %>" placeholder="/uploads/" spellcheck="false">
-    </label>
+    <div class="field-pair">
+      <label>ภาพ thumbnail
+        <input name="thumbnail" value="<%= values.thumbnail %>" placeholder="/uploads/" spellcheck="false">
+      </label>
+      <label>อัปโหลดภาพ thumbnail
+        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-upload-target="thumbnail">
+        <span class="field-hint">JPEG, PNG, GIF หรือ WebP ไม่เกิน 5 MB แล้ว URL ของรูปจะถูกใส่ในช่องภาพ thumbnail ให้</span>
+      </label>
+    </div>
     <div class="field-pair">
       <label>ลิงก์ repo
         <input type="url" name="repo_url" value="<%= values.repo_url %>" placeholder="https://github.com/" spellcheck="false">
@@ -107,6 +113,10 @@ const errorList = Object.entries(errors).map(([key, message]) => (errorPrefix[ke
           <textarea class="editor-body" name="<%= lang %>[body_markdown]" rows="18">
 <%= tr.body_markdown %></textarea>
         </label>
+        <label><span lang="th">แทรกรูปในเนื้อหา</span>
+          <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-upload-target="<%= lang %>[body_markdown]">
+          <span class="field-hint" lang="th">รูปถูกแทรกเป็น ![](url) ตรงตำแหน่ง cursor ล่าสุดในช่องเนื้อหา แล้วพิมพ์ alt ในวงเล็บเหลี่ยมต่อได้ทันที</span>
+        </label>
         <button type="submit" formaction="/admin/projects/preview/<%= lang %>" formtarget="_blank" lang="th">ดูตัวอย่าง</button>
       </div>
     </details>
@@ -119,4 +129,5 @@ const errorList = Object.entries(errors).map(([key, message]) => (errorPrefix[ke
   </form>
 <% } -%>
 </main>
+<script src="/js/admin.js?v=<%= v %>" defer></script>
 <%- include('foot') %>
