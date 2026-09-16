@@ -1,0 +1,16 @@
+<%
+const foreign = card.lang !== lang;
+const heading = 'h' + (locals.level || 2);
+-%>
+<article class="project-card"<% if (foreign) { %> lang="<%= card.lang %>"<% } %>>
+<% if (card.thumbnail) { -%>
+  <img class="project-thumb" src="<%= card.thumbnail %>" alt="" loading="lazy">
+<% } -%>
+  <<%= heading %> class="card-title"><a href="/<%= card.lang %>/projects/<%= card.slug %>"><%= card.title %></a></<%= heading %>>
+<% if (foreign) { -%>
+  <p class="card-meta" lang="<%= lang %>"><span class="badge"><%= t.badgeOtherLang %></span></p>
+<% } -%>
+<% if (card.summary) { -%>
+  <p class="excerpt"><%= card.summary %></p>
+<% } -%>
+</article>

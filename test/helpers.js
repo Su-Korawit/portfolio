@@ -68,6 +68,38 @@ async function insertPost({ cover_image = null, th, en, tags = [] } = {}) {
   return id;
 }
 
+// Inserts a project straight into the DB, the same way as insertPost. th and en are optional; a language that is
+// left out has no row. featured is 0 or 1, and published_at defaults to now for a published translation.
+async function insertProject({ thumbnail = null, repo_url = null, demo_url = null, featured = 0, sort_order = 0, th, en, tags = [] } = {}) {
+  const now = new Date().toISOString();
+  const { lastID: id } = await run(
+    'INSERT INTO projects (thumbnail, repo_url, demo_url, featured, sort_order) VALUES (?, ?, ?, ?, ?)',
+    [thumbnail, repo_url, demo_url, featured, sort_order]
+  );
+  for (const [lang, tr] of [['th', th], ['en', en]]) {
+    if (!tr) continue;
+    const {
+      status = 'published',
+      slug,
+      title,
+      summary = '',
+      body_markdown = '',
+      thumbnail_alt = '',
+      published_at = status === 'published' ? now : null
+    } = tr;
+    await run(
+      `INSERT INTO project_translations
+         (project_id, lang, status, slug, title, summary, body_markdown, thumbnail_alt, published_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, lang, status, slug, title, summary, body_markdown, thumbnail_alt, published_at, now]
+    );
+  }
+  for (const tagId of tags) {
+    await run('INSERT INTO project_tags (project_id, tag_id) VALUES (?, ?)', [id, tagId]);
+  }
+  return id;
+}
+
 function updateJar(jar, setCookie) {
   for (const line of setCookie) {
     const [pair, ...attrs] = line.split(';');
@@ -129,4 +161,4 @@ async function start() {
   return { base, req, login, stop };
 }
 
-module.exports = { start, toForm, insertPost, signCookie, run, get, all };
+module.exports = { start, toForm, insertPost, insertProject, signCookie, run, get, all };

@@ -24,7 +24,13 @@ module.exports = {
     pagination: 'การแบ่งหน้า',
     pageLabel: 'หน้า',
     pageNewer: 'บทความใหม่กว่า',
-    pageOlder: 'บทความเก่ากว่า'
+    pageOlder: 'บทความเก่ากว่า',
+    featuredProjects: 'โปรเจกต์เด่น',
+    allProjects: 'ดูโปรเจกต์ทั้งหมด',
+    noProjects: 'ยังไม่มีโปรเจกต์',
+    projectRepo: 'ซอร์สโค้ด',
+    projectDemo: 'ดูเดโม',
+    backToProjects: 'กลับไปหน้ารวมโปรเจกต์'
   },
   en: {
     skipToContent: 'Skip to content',
@@ -51,6 +57,12 @@ module.exports = {
     pagination: 'Pagination',
     pageLabel: 'Page',
     pageNewer: 'Newer posts',
-    pageOlder: 'Older posts'
+    pageOlder: 'Older posts',
+    featuredProjects: 'Featured projects',
+    allProjects: 'All projects',
+    noProjects: 'No projects yet.',
+    projectRepo: 'Source code',
+    projectDemo: 'Live demo',
+    backToProjects: 'Back to projects'
   }
 };

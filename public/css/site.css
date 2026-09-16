@@ -263,3 +263,27 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
 @media (min-width: 40rem) {
   .card-thumb { display: block; flex: none; width: 8rem; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-md); }
 }
+
+/* Projects (Task 12): the grid on the home page and /projects, and the project page */
+.projects > h1 { margin: 0 0 var(--sp-6); }
+.featured .section-head { max-width: none; }
+.project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: var(--sp-6); }
+/* a card can carry lang="th" on an /en page, so it declares font-size and line-height again for :lang(th) */
+.project-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+}
+.project-card > * { margin: 0; }
+.project-card:hover { border-color: var(--border-strong); }
+.project-card:hover .card-title a { text-decoration: underline; }
+.project-thumb { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-sm); }
+.project-summary { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-h3); }
+.project-links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-4) 0 0; font-weight: 600; }

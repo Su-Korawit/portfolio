@@ -1,0 +1,41 @@
+<%- include('partials/head') %>
+<% if (locals.preview) { -%>
+<link rel="stylesheet" href="/css/admin.css?v=<%= v %>">
+<p class="preview-bar" lang="th">ตัวอย่าง ยังไม่ได้บันทึก</p>
+<% } -%>
+<%- include('partials/header') %>
+<main id="main" class="project">
+  <article class="post-article">
+    <header class="post-header">
+      <h1><%= tr.title %></h1>
+<% if (tr.summary) { -%>
+      <p class="project-summary"><%= tr.summary %></p>
+<% } -%>
+<% if (project.repo_url || project.demo_url) { -%>
+      <p class="project-links">
+<% if (project.repo_url) { -%>
+        <a href="<%= project.repo_url %>"><%= t.projectRepo %></a>
+<% } -%>
+<% if (project.demo_url) { -%>
+        <a href="<%= project.demo_url %>"><%= t.projectDemo %></a>
+<% } -%>
+      </p>
+<% } -%>
+<% if (tags.length) { -%>
+      <ul class="tag-list" aria-label="<%= t.postTags %>">
+<% for (const tag of tags) { -%>
+        <li><span class="tag"><%= tag.name %></span></li>
+<% } -%>
+      </ul>
+<% } -%>
+    </header>
+<% if (project.thumbnail) { -%>
+    <img class="post-cover" src="<%= project.thumbnail %>" alt="<%= tr.thumbnail_alt %>">
+<% } -%>
+    <div class="prose">
+      <%- md.render(tr.body_markdown) %>
+    </div>
+  </article>
+  <p class="post-back"><a href="/<%= lang %>/projects"><%= t.backToProjects %></a></p>
+</main>
+<%- include('partials/footer') %>

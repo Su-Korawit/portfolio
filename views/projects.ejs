@@ -1,0 +1,15 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="projects">
+  <h1><%= t.navProjects %></h1>
+<% if (projects.length === 0) { -%>
+  <p class="empty"><%= t.noProjects %></p>
+<% } else { -%>
+  <div class="project-grid">
+<% for (const card of projects) { -%>
+    <%- include('partials/project-card', { card, level: 2 }) %>
+<% } -%>
+  </div>
+<% } -%>
+</main>
+<%- include('partials/footer') %>
