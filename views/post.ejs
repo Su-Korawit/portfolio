@@ -1,4 +1,8 @@
 <%- include('partials/head') %>
+<% if (preview) { -%>
+<link rel="stylesheet" href="/css/admin.css?v=<%= v %>">
+<p class="preview-bar" lang="th">ตัวอย่าง ยังไม่ได้บันทึก</p>
+<% } -%>
 <%- include('partials/header') %>
 <main id="main" class="post">
   <article class="post-article">

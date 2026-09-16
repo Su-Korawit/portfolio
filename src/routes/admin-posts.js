@@ -1,6 +1,7 @@
 const express = require('express');
 const { run, get, all, transaction } = require('../db');
 const { resolveSlugs } = require('../slug');
+const strings = require('../strings');
 
 const router = express.Router();
 
@@ -146,6 +147,41 @@ router.get('/new', async (req, res) => {
 });
 
 router.post('/', (req, res) => save(req, res, null));
+
+// Preview from spec 2.4: the real post page rendered from the form, without writing anything to the DB.
+// :lang is th or en only; anything else goes on to the 404 handler.
+router.post('/preview/:lang', async (req, res, next) => {
+  const { lang } = req.params;
+  if (!LANGS.includes(lang)) return next();
+  const values = readForm(req.body ?? {});
+  const tr = values[lang];
+  // the same locals that src/app.js sets for /th and /en, otherwise an English preview gets <html lang="th"> and Thai UI text
+  res.locals.lang = lang;
+  res.locals.other = lang === 'th' ? 'en' : 'th';
+  res.locals.t = strings[lang];
+  // settings the way the public router loads them, so the header and <title> show the site name
+  const settingRows = await all("SELECT key, value FROM settings WHERE lang IN (?, '*')", [lang]);
+  res.locals.settings = Object.fromEntries(settingRows.map(row => [row.key, row.value]));
+  // tag chips in the page language, in the same { slug, name } shape and order as GET /blog/:slug
+  const tagRows = await all(
+    'SELECT slug, name_th, name_en FROM tags WHERE id IN (SELECT value FROM json_each(?)) ORDER BY slug',
+    [JSON.stringify(values.tags)]
+  );
+  res.render('post', {
+    post: { cover_image: values.cover_image },
+    tr,
+    tags: tagRows.map(tag => ({ slug: tag.slug, name: lang === 'th' ? tag.name_th : tag.name_en })),
+    alternates: [],
+    preview: true,
+    // no canonical, hreflang or og:url because a preview has no public URL, and noindex keeps it out of search
+    meta: {
+      title: tr.seo_title || tr.title,
+      description: tr.seo_description || tr.excerpt,
+      noindex: true,
+      type: 'article'
+    }
+  });
+});
 
 router.get('/:id', async (req, res, next) => {
   const id = parseId(req.params.id);
