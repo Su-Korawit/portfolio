@@ -1,0 +1,23 @@
+# .github/workflows/ci.yml
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: unescaped EJS only for md.render and include
+        run: |
+          if grep -rn "<%-" views/ | grep -v -e "md.render(" -e "include("; then
+            echo "found <%- outside md.render or include"
+            exit 1
+          fi
