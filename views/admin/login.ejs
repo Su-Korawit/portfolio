@@ -1,0 +1,17 @@
+<%- include('head', { title: 'เข้าสู่ระบบ', nav: false }) %>
+<main id="main" class="admin-login">
+  <h1>เข้าสู่ระบบ</h1>
+<% if (locals.error) { -%>
+  <p class="form-error" role="alert"><%= error %></p>
+<% } -%>
+  <form class="admin-form" method="post" action="/admin/login">
+    <label>ชื่อผู้ใช้
+      <input name="username" value="<%= locals.username || '' %>" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+    </label>
+    <label>รหัสผ่าน
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit">เข้าสู่ระบบ</button>
+  </form>
+</main>
+<%- include('foot') %>

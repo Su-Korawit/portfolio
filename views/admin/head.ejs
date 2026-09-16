@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title><%= locals.title %> | หลังบ้าน</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/anuphan-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/anuphan-thai.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/site.css?v=<%= v %>">
+<link rel="stylesheet" href="/css/admin.css?v=<%= v %>">
+</head>
+<body>
+<a class="skip-link" href="#main">ข้ามไปที่เนื้อหา</a>
+<% if (locals.nav !== false) { -%>
+<header class="site-header">
+  <a class="site-name" href="/admin/posts">หลังบ้าน</a>
+  <nav class="site-nav" aria-label="เมนูหลังบ้าน">
+<% for (const [section, href, label] of [
+     ['posts', '/admin/posts', 'บทความ'],
+     ['projects', '/admin/projects', 'โปรเจกต์'],
+     ['tags', '/admin/tags', 'แท็ก'],
+     ['settings', '/admin/settings', 'ตั้งค่า']
+   ]) { -%>
+    <a href="<%= href %>"<% if (locals.section === section) { %> aria-current="page"<% } %>><%= label %></a>
+<% } -%>
+  </nav>
+  <a class="admin-view-site" href="/">ดูหน้าเว็บ</a>
+  <form class="admin-logout" method="post" action="/admin/logout">
+    <button type="submit">ออกจากระบบ</button>
+  </form>
+</header>
+<% } -%>

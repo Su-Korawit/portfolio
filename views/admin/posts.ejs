@@ -1,0 +1,30 @@
+<%
+const chipLabels = { published: 'เผยแพร่', draft: 'แบบร่าง' };
+-%>
+<%- include('head', { title: 'บทความ', section: 'posts' }) %>
+<main id="main">
+  <h1>บทความ</h1>
+<% if (posts.length === 0) { -%>
+  <p class="admin-empty">ยังไม่มีบทความ</p>
+<% } else { -%>
+  <div class="table-scroll">
+    <table class="admin-table">
+      <thead>
+        <tr><th scope="col">หัวข้อ</th><th scope="col">ไทย</th><th scope="col">EN</th><th scope="col">แก้ไขล่าสุด</th></tr>
+      </thead>
+      <tbody>
+<% for (const post of posts) { -%>
+        <tr>
+          <td><%= post.title %></td>
+<% for (const status of [post.th, post.en]) { -%>
+          <td><span class="chip chip-<%= status || 'none' %>"><%= chipLabels[status] || 'ไม่มีฉบับแปล' %></span></td>
+<% } -%>
+          <td class="admin-date"><%= formatDate('th', post.updated_at) %></td>
+        </tr>
+<% } -%>
+      </tbody>
+    </table>
+  </div>
+<% } -%>
+</main>
+<%- include('foot') %>

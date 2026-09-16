@@ -1,8 +1,10 @@
 const path = require('node:path');
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const md = require('./markdown');
 const strings = require('./strings');
 const publicRouter = require('./routes/public');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 
@@ -29,6 +31,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cookieParser(process.env.SESSION_SECRET));
+
 app.get('/', (req, res) => {
   res.set('Vary', 'Accept-Language');
   res.redirect(302, '/' + (req.acceptsLanguages('th', 'en') || 'th'));
@@ -44,6 +48,8 @@ for (const lang of ['th', 'en']) {
     next();
   }, publicRouter);
 }
+
+app.use('/admin', adminRouter);
 
 app.use((req, res) => {
   res.status(404).render('error', { status: 404 });

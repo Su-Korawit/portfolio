@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { once } = require('node:events');
 
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'site-test-'));
@@ -27,6 +28,12 @@ function toForm(obj) {
   };
   for (const [key, value] of Object.entries(obj)) add(key, value);
   return form;
+}
+
+// Same format as cookie-parser: 's:' + value + '.' + base64 HMAC-SHA256 without trailing '='.
+function signCookie(value, secret = 'test-secret') {
+  const signature = crypto.createHmac('sha256', secret).update(value).digest('base64').replace(/=+$/, '');
+  return 's:' + value + '.' + signature;
 }
 
 function updateJar(jar, setCookie) {
@@ -77,13 +84,17 @@ async function start() {
     };
   }
 
+  function login(password = 'pw') {
+    return req('/admin/login', { method: 'POST', form: { username: 'admin', password } });
+  }
+
   async function stop() {
     await new Promise((resolve, reject) => server.close(err => (err ? reject(err) : resolve())));
     await close();
     fs.rmSync(DATA_DIR, { recursive: true, force: true });
   }
 
-  return { base, req, stop };
+  return { base, req, login, stop };
 }
 
-module.exports = { start, toForm, run, get, all };
+module.exports = { start, toForm, signCookie, run, get, all };

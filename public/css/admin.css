@@ -1,0 +1,40 @@
+/* Admin pages only. Loaded after site.css, so tokens, buttons, inputs and .site-header come from there. */
+
+/* Header bar */
+.site-nav a[aria-current="page"] { color: var(--text); font-weight: 600; }
+.admin-view-site { color: var(--text-muted); text-decoration: none; }
+.admin-view-site:hover { color: var(--text); text-decoration: underline; }
+.admin-logout { margin: 0; }
+
+/* Forms */
+.admin-form { display: grid; gap: var(--sp-4); }
+.admin-form label { display: grid; gap: var(--sp-1); }
+.admin-form button { justify-self: start; }
+.form-error {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface-soft);
+  border-inline-start: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+}
+.admin-login { max-width: 24rem; }
+
+/* Lists: on a narrow screen the table scrolls inside .table-scroll instead of squeezing the title column */
+.admin-empty { color: var(--text-muted); }
+.table-scroll { overflow-x: auto; }
+.admin-table { width: 100%; min-width: 36rem; border-collapse: collapse; }
+.admin-table th, .admin-table td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); }
+.admin-table th { text-align: start; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
+.admin-date { white-space: nowrap; }
+
+/* Status chips: neutral words and colors, never red */
+.chip {
+  display: inline-block;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.chip-published { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.chip-draft { background: var(--surface-soft); }
+.chip-none { border-style: dashed; color: var(--text-muted); }
