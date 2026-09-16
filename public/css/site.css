@@ -1,0 +1,187 @@
+:root {
+  color-scheme: light dark;
+  --bg:            light-dark(#FCFCFA, #121315);
+  --surface:       light-dark(#FFFFFF, #1A1C1F);
+  --surface-soft:  light-dark(#F0EEE8, #23262A);
+  --text:          light-dark(#1A1A18, #E8E8E4);
+  --text-muted:    light-dark(#5F5F58, #A8A8A1);
+  --border:        light-dark(#E4E2DC, #2C2F33);
+  --border-strong: light-dark(#948F84, #6B7079);
+  --accent:        light-dark(#1F5FA8, #7FB2F0);
+  --code-bg:       light-dark(#F5F4F0, #17191C);
+  --syn-key:       light-dark(#8A3B92, #D5A0E8);
+  --syn-str:       light-dark(#2D6E3E, #8FCFA0);
+  --syn-num:       light-dark(#9A4B18, #E9A178);
+  --syn-com:       light-dark(#6B6B63, #8E8E88);
+  --syn-typ:       light-dark(#8A5A00, #D9BE79);
+  --font-sans:     "Anuphan", system-ui, sans-serif;
+  --font-mono:     ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, "Anuphan", monospace;
+  --fs-sm: 0.875rem;  --fs-base: 1rem;  --fs-h3: 1.25rem;  --fs-h2: 1.5rem;  --fs-h1: 2rem;
+  --lh-body: 1.65;  --lh-tight: 1.25;
+  --sp-1: 0.25rem;  --sp-2: 0.5rem;  --sp-3: 0.75rem;  --sp-4: 1rem;  --sp-6: 1.5rem;  --sp-8: 2rem;  --sp-12: 3rem;
+  --r-sm: 4px;  --r-md: 8px;
+  --measure: 42rem;  --page: 64rem;  --gutter: 1rem;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+/* Anuphan variable 300-700. src and unicode-range come from fonts.googleapis.com css2 (thai and latin subsets). */
+@font-face {
+  font-family: "Anuphan";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/anuphan-thai.woff2") format("woff2");
+  unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;
+}
+@font-face {
+  font-family: "Anuphan";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/anuphan-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Base */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+img { max-width: 100%; height: auto; }
+a { color: var(--accent); text-underline-offset: 0.2em; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button {
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+button:hover { border-color: var(--text); }
+input, select, textarea {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+}
+
+/* Typography: Thai needs a larger size and taller lines so stacked marks do not touch the line above */
+:lang(th) { --fs-base: 1.125rem; --lh-body: 1.9; --lh-tight: 1.45; }
+body, .prose, .card, .excerpt { font-size: var(--fs-base); line-height: var(--lh-body); }
+h1, h2, h3 { line-height: var(--lh-tight); text-wrap: balance; font-weight: 600; }
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); }
+p, li { text-wrap: pretty; }
+:lang(th) em, :lang(th) i { font-style: normal; font-weight: 600; }
+.prose a, .prose code { overflow-wrap: break-word; }
+
+/* Layout: mobile first, breakpoints 40rem and 64rem */
+.site-header, main, .site-footer {
+  width: 100%;
+  max-width: var(--page);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+main { flex: 1 0 auto; padding-block: var(--sp-8) var(--sp-12); }
+
+.skip-link {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: 1;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  padding-block: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+.site-name, .site-nav a, .lang-switch { text-decoration: none; }
+.site-name { margin-inline-end: auto; color: var(--text); font-weight: 600; }
+.site-nav { order: 1; flex-basis: 100%; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-6); }
+.site-nav a, .lang-switch { color: var(--text-muted); }
+.site-name:hover, .site-nav a:hover, .lang-switch:hover { color: var(--text); text-decoration: underline; }
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+.theme-toggle:hover { border-color: var(--border-strong); }
+
+.site-footer {
+  padding-block: var(--sp-6) var(--sp-8);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.site-footer p { margin: 0; }
+
+.home { display: flex; flex-direction: column; gap: var(--sp-12); }
+.intro h1 { margin: 0; }
+.tagline { margin: var(--sp-3) 0 0; max-width: var(--measure); color: var(--text-muted); font-size: var(--fs-h3); }
+
+.error-page > * { max-width: var(--measure); }
+.error-page h1 { margin: 0 0 var(--sp-4); }
+.error-page p { margin: 0 0 var(--sp-4); color: var(--text-muted); }
+
+/* Prose: rendered markdown of posts, projects, About and privacy */
+.prose { max-width: var(--measure); }
+.prose h2 { margin: var(--sp-12) 0 var(--sp-4); }
+.prose h3 { margin: var(--sp-8) 0 var(--sp-3); }
+.prose p, .prose ul, .prose ol, .prose blockquote, .prose table { margin: 0 0 var(--sp-6); }
+.prose ul, .prose ol { padding-inline-start: var(--sp-6); }
+.prose li + li { margin-top: var(--sp-2); }
+.prose blockquote { padding-inline-start: var(--sp-4); margin-inline: 0; border-inline-start: 3px solid var(--border-strong); color: var(--text-muted); }
+.prose img { display: block; border-radius: var(--r-md); }
+.prose hr { margin: var(--sp-12) 0; border: 0; border-top: 1px solid var(--border); }
+.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.prose th, .prose td { padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); }
+.prose :not(pre) > code { padding: 0.125em 0.375em; background: var(--surface-soft); border-radius: var(--r-sm); font-size: 0.875em; }
+
+/* Code blocks and syntax colors. Comments stay upright because Thai has no italic. */
+pre { background: var(--code-bg); overflow-x: auto; padding: var(--sp-4);
+      border: 1px solid var(--border); border-radius: var(--r-md); tab-size: 2; }
+pre, code { font-family: var(--font-mono); }
+pre { font-size: var(--fs-sm); }
+.prose pre { margin: 0 calc(var(--gutter) * -1) var(--sp-6); border-inline: 0; border-radius: 0; }
+.hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-name, .hljs-selector-tag  { color: var(--syn-key); }
+.hljs-string, .hljs-regexp, .hljs-symbol, .hljs-addition                      { color: var(--syn-str); }
+.hljs-number, .hljs-deletion                                                  { color: var(--syn-num); }
+.hljs-comment, .hljs-quote                                                    { color: var(--syn-com); }
+.hljs-title, .hljs-section, .hljs-selector-class, .hljs-selector-id           { color: var(--accent); }
+.hljs-attr, .hljs-attribute, .hljs-type, .hljs-variable, .hljs-template-variable { color: var(--syn-typ); }
+
+@media (min-width: 40rem) {
+  .site-header, main, .site-footer { padding-inline: var(--sp-8); }
+  .site-nav { order: 0; flex-basis: auto; margin-inline-end: var(--sp-2); }
+  .prose pre { margin-inline: 0; border-inline: 1px solid var(--border); border-radius: var(--r-md); }
+}
+
+@media (min-width: 64rem) {
+  main { padding-block-start: var(--sp-12); }
+}
