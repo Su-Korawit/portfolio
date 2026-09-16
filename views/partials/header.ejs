@@ -1,0 +1,22 @@
+<%
+const otherAlt = (meta.alternates || []).find(alt => alt.lang === other);
+let switchHref = '/' + other;
+if (otherAlt) {
+  switchHref = otherAlt.href.split('?')[0];
+} else if (meta.canonical) {
+  switchHref = '/' + other + meta.canonical.split('?')[0].slice(lang.length + 1).replace(/\/[^/]*$/, '');
+}
+-%>
+<a class="skip-link" href="#main"><%= t.skipToContent %></a>
+<header class="site-header">
+  <a class="site-name" href="/<%= lang %>"><%= settings.site_name || 'Portfolio' %></a>
+  <nav class="site-nav" aria-label="<%= t.navMain %>">
+    <a href="/<%= lang %>/blog"><%= t.navBlog %></a>
+    <a href="/<%= lang %>/projects"><%= t.navProjects %></a>
+    <a href="/<%= lang %>/about"><%= t.navAbout %></a>
+  </nav>
+  <a class="lang-switch" href="<%= switchHref %>" lang="<%= other %>" hreflang="<%= other %>"><%= t.switchLang %></a>
+  <button type="button" class="theme-toggle" data-theme-toggle aria-label="<%= t.themeToggle %>">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+  </button>
+</header>

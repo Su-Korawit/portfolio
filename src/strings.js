@@ -1,0 +1,36 @@
+module.exports = {
+  th: {
+    skipToContent: 'ข้ามไปที่เนื้อหา',
+    navMain: 'เมนูหลัก',
+    navBlog: 'บทความ',
+    navProjects: 'โปรเจกต์',
+    navAbout: 'เกี่ยวกับ',
+    switchLang: 'English',
+    themeToggle: 'สลับธีมสว่างหรือมืด',
+    errorNotFoundTitle: 'ไม่พบหน้านี้',
+    errorNotFoundBody: 'ลิงก์อาจพิมพ์ผิด หรือหน้านี้ถูกลบไปแล้ว',
+    errorBadRequestTitle: 'ลิงก์ไม่ถูกต้อง',
+    errorBadRequestBody: 'ลิงก์นี้อาจขาดหายระหว่างการแชร์ ลองเปิดจากหน้ารวมบทความแทน',
+    errorServerTitle: 'เกิดข้อผิดพลาด',
+    errorServerBody: 'ระบบขัดข้องชั่วคราว ลองใหม่อีกครั้งในอีกสักครู่',
+    errorBackToBlog: 'ไปหน้ารวมบทความ',
+    errorBackHome: 'กลับหน้าแรก'
+  },
+  en: {
+    skipToContent: 'Skip to content',
+    navMain: 'Main',
+    navBlog: 'Blog',
+    navProjects: 'Projects',
+    navAbout: 'About',
+    switchLang: 'ไทย',
+    themeToggle: 'Toggle light or dark theme',
+    errorNotFoundTitle: 'Page not found',
+    errorNotFoundBody: 'The link may be mistyped, or the page has been removed.',
+    errorBadRequestTitle: 'Invalid link',
+    errorBadRequestBody: 'This link may have been cut off when it was shared. Try opening it from the blog index instead.',
+    errorServerTitle: 'Something went wrong',
+    errorServerBody: 'The site hit a temporary problem. Please try again in a moment.',
+    errorBackToBlog: 'Go to the blog',
+    errorBackHome: 'Back to home'
+  }
+};

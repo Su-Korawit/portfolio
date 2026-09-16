@@ -1,0 +1,12 @@
+<%
+const title = status === 404 ? t.errorNotFoundTitle : status < 500 ? t.errorBadRequestTitle : t.errorServerTitle;
+const body = status === 404 ? t.errorNotFoundBody : status < 500 ? t.errorBadRequestBody : t.errorServerBody;
+-%>
+<%- include('partials/head', { meta: { title } }) %>
+<%- include('partials/header') %>
+<main id="main" class="error-page">
+  <h1><%= title %></h1>
+  <p><%= body %></p>
+  <p><a href="/<%= lang %>/blog"><%= t.errorBackToBlog %></a> · <a href="/<%= lang %>"><%= t.errorBackHome %></a></p>
+</main>
+<%- include('partials/footer') %>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="<%= lang %>">
+<head>
+<meta charset="utf-8">
+<script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<%
+const siteName = settings.site_name || 'Portfolio';
+-%>
+<title><%= meta.title ? meta.title + ' | ' + siteName : siteName %></title>
+<% if (meta.description) { -%>
+<meta name="description" content="<%= meta.description %>">
+<% } -%>
+<% if (meta.noindex) { -%>
+<meta name="robots" content="noindex">
+<% } -%>
+<% if (meta.canonical) { -%>
+<link rel="canonical" href="<%= siteUrl + meta.canonical %>">
+<% } -%>
+<% for (const alt of meta.alternates || []) { -%>
+<link rel="alternate" hreflang="<%= alt.lang %>" href="<%= siteUrl + alt.href %>">
+<% } -%>
+<meta property="og:title" content="<%= meta.title || siteName %>">
+<% if (meta.description) { -%>
+<meta property="og:description" content="<%= meta.description %>">
+<% } -%>
+<% if (meta.image) { -%>
+<meta property="og:image" content="<%= siteUrl + meta.image %>">
+<% } -%>
+<% if (meta.canonical) { -%>
+<meta property="og:url" content="<%= siteUrl + meta.canonical %>">
+<% } -%>
+<meta property="og:type" content="<%= meta.type || 'website' %>">
+<meta property="og:locale" content="<%= lang === 'th' ? 'th_TH' : 'en_US' %>">
+<meta property="og:site_name" content="<%= siteName %>">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/anuphan-latin.woff2" as="font" type="font/woff2" crossorigin>
+<% if (lang === 'th') { -%>
+<link rel="preload" href="/fonts/anuphan-thai.woff2" as="font" type="font/woff2" crossorigin>
+<% } -%>
+<link rel="stylesheet" href="/css/site.css?v=<%= v %>">
+<script src="/js/theme.js?v=<%= v %>" defer></script>
+</head>
+<body>

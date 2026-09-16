@@ -1,0 +1,11 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="home">
+  <section class="intro">
+    <h1><%= settings.site_name || 'Portfolio' %></h1>
+<% if (settings.tagline) { -%>
+    <p class="tagline"><%= settings.tagline %></p>
+<% } -%>
+  </section>
+</main>
+<%- include('partials/footer') %>
