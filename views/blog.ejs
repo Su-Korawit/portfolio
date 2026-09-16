@@ -1,0 +1,28 @@
+<%
+const base = '/' + lang + '/blog';
+-%>
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="blog">
+  <h1><%= t.navBlog %></h1>
+<% if (posts.length === 0) { -%>
+  <p class="empty"><%= t.noPosts %></p>
+<% } else { -%>
+  <div class="post-list">
+<% for (const card of posts) { -%>
+    <%- include('partials/post-card', { card, level: 2 }) %>
+<% } -%>
+  </div>
+<% } -%>
+<% if (page > 1 || hasNext) { -%>
+  <nav class="pagination" aria-label="<%= t.pagination %>">
+<% if (page > 1) { -%>
+    <a class="pagination-newer" href="<%= page === 2 ? base : base + '?page=' + (page - 1) %>"><%= t.pageNewer %></a>
+<% } -%>
+<% if (hasNext) { -%>
+    <a class="pagination-older" href="<%= base + '?page=' + (page + 1) %>"><%= t.pageOlder %></a>
+<% } -%>
+  </nav>
+<% } -%>
+</main>
+<%- include('partials/footer') %>

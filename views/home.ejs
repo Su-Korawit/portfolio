@@ -7,5 +7,18 @@
     <p class="tagline"><%= settings.tagline %></p>
 <% } -%>
   </section>
+<% if (posts.length) { -%>
+  <section class="latest">
+    <div class="section-head">
+      <h2><%= t.latestPosts %></h2>
+      <a href="/<%= lang %>/blog"><%= t.allPosts %></a>
+    </div>
+    <div class="post-list">
+<% for (const card of posts) { -%>
+      <%- include('partials/post-card', { card, level: 3 }) %>
+<% } -%>
+    </div>
+  </section>
+<% } -%>
 </main>
 <%- include('partials/footer') %>

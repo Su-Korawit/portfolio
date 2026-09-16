@@ -1,0 +1,27 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="post">
+  <article class="post-article">
+    <header class="post-header">
+      <h1><%= tr.title %></h1>
+<% if (tr.published_at) { -%>
+      <p class="post-meta"><time datetime="<%= tr.published_at %>"><%= formatDate(lang, tr.published_at) %></time></p>
+<% } -%>
+<% if (tags.length) { -%>
+      <ul class="tag-list" aria-label="<%= t.postTags %>">
+<% for (const tag of tags) { -%>
+        <li><a class="tag" href="/<%= lang %>/tags/<%= tag.slug %>"><%= tag.name %></a></li>
+<% } -%>
+      </ul>
+<% } -%>
+    </header>
+<% if (post.cover_image) { -%>
+    <img class="post-cover" src="<%= post.cover_image %>" alt="<%= tr.cover_image_alt %>">
+<% } -%>
+    <div class="prose">
+      <%- md.render(tr.body_markdown) %>
+    </div>
+  </article>
+  <p class="post-back"><a href="/<%= lang %>/blog"><%= t.backToBlog %></a></p>
+</main>
+<%- include('partials/footer') %>

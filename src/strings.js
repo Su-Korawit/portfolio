@@ -14,7 +14,17 @@ module.exports = {
     errorServerTitle: 'เกิดข้อผิดพลาด',
     errorServerBody: 'ระบบขัดข้องชั่วคราว ลองใหม่อีกครั้งในอีกสักครู่',
     errorBackToBlog: 'ไปหน้ารวมบทความ',
-    errorBackHome: 'กลับหน้าแรก'
+    errorBackHome: 'กลับหน้าแรก',
+    latestPosts: 'บทความล่าสุด',
+    allPosts: 'ดูบทความทั้งหมด',
+    noPosts: 'ยังไม่มีบทความ',
+    badgeOtherLang: 'ภาษาอังกฤษ',
+    postTags: 'แท็ก',
+    backToBlog: 'กลับไปหน้ารวมบทความ',
+    pagination: 'การแบ่งหน้า',
+    pageLabel: 'หน้า',
+    pageNewer: 'บทความใหม่กว่า',
+    pageOlder: 'บทความเก่ากว่า'
   },
   en: {
     skipToContent: 'Skip to content',
@@ -31,6 +41,16 @@ module.exports = {
     errorServerTitle: 'Something went wrong',
     errorServerBody: 'The site hit a temporary problem. Please try again in a moment.',
     errorBackToBlog: 'Go to the blog',
-    errorBackHome: 'Back to home'
+    errorBackHome: 'Back to home',
+    latestPosts: 'Latest posts',
+    allPosts: 'All posts',
+    noPosts: 'No posts yet.',
+    badgeOtherLang: 'Thai',
+    postTags: 'Tags',
+    backToBlog: 'Back to the blog',
+    pagination: 'Pagination',
+    pageLabel: 'Page',
+    pageNewer: 'Newer posts',
+    pageOlder: 'Older posts'
   }
 };

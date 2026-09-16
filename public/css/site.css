@@ -185,3 +185,81 @@ pre { font-size: var(--fs-sm); }
 @media (min-width: 64rem) {
   main { padding-block-start: var(--sp-12); }
 }
+
+/* Post lists and cards (Task 9). The blog index is a list divided by thin rules, not a card grid. */
+.blog > * { max-width: var(--measure); }
+.blog h1 { margin: 0 0 var(--sp-6); }
+.empty { color: var(--text-muted); }
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+  max-width: var(--measure);
+  margin-bottom: var(--sp-2);
+}
+.section-head h2 { margin: 0; }
+.post-list { max-width: var(--measure); }
+.card { position: relative; display: flex; align-items: flex-start; gap: var(--sp-6); padding-block: var(--sp-6); }
+.card:first-child { padding-block-start: var(--sp-2); }
+.card + .card { border-top: 1px solid var(--border); }
+.card-body { flex: 1; min-width: 0; }
+.card-title { margin: 0; font-size: var(--fs-h3); }
+.card-title a { color: var(--text); text-decoration: none; }
+.card-title a::after { content: ""; position: absolute; inset: 0; }
+.card:hover .card-title a { text-decoration: underline; }
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  margin: var(--sp-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.badge { padding: 0 var(--sp-2); border: 1px solid var(--border-strong); border-radius: var(--r-sm); }
+/* line-height stays var(--lh-body) from the typography rule, so the clamp does not cut Thai marks on the first line */
+.excerpt {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin: var(--sp-2) 0 0;
+  color: var(--text-muted);
+}
+.card-thumb { display: none; }
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-6);
+  border-top: 1px solid var(--border);
+}
+.pagination-older { margin-inline-start: auto; }
+
+/* Post page */
+.post-article { max-width: var(--measure); }
+.post-header h1 { margin: 0; }
+.post-meta { margin: var(--sp-2) 0 0; color: var(--text-muted); font-size: var(--fs-sm); }
+.tag-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-4) 0 0; padding: 0; list-style: none; }
+.tag {
+  display: inline-block;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+}
+a.tag:hover { color: var(--text); border-color: var(--text); }
+.post-cover { display: block; margin-top: var(--sp-8); border-radius: var(--r-md); }
+.post-article .prose { margin-top: var(--sp-8); }
+.prose > :first-child { margin-top: 0; }
+.post-back { max-width: var(--measure); margin: var(--sp-12) 0 0; padding-top: var(--sp-6); border-top: 1px solid var(--border); }
+
+@media (min-width: 40rem) {
+  .card-thumb { display: block; flex: none; width: 8rem; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-md); }
+}

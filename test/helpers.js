@@ -36,6 +36,38 @@ function signCookie(value, secret = 'test-secret') {
   return 's:' + value + '.' + signature;
 }
 
+// Inserts a post straight into the DB. th and en are optional; a language that is left out has no row.
+// published_at defaults to now for a published translation and to null for a draft.
+async function insertPost({ cover_image = null, th, en, tags = [] } = {}) {
+  const now = new Date().toISOString();
+  const { lastID: id } = await run('INSERT INTO posts (cover_image) VALUES (?)', [cover_image]);
+  for (const [lang, tr] of [['th', th], ['en', en]]) {
+    if (!tr) continue;
+    const {
+      status = 'published',
+      slug,
+      title,
+      excerpt = '',
+      body_markdown = '',
+      cover_image_alt = '',
+      seo_title = '',
+      seo_description = '',
+      published_at = status === 'published' ? now : null
+    } = tr;
+    await run(
+      `INSERT INTO post_translations
+         (post_id, lang, status, slug, title, excerpt, body_markdown, cover_image_alt,
+          seo_title, seo_description, published_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, lang, status, slug, title, excerpt, body_markdown, cover_image_alt, seo_title, seo_description, published_at, now]
+    );
+  }
+  for (const tagId of tags) {
+    await run('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)', [id, tagId]);
+  }
+  return id;
+}
+
 function updateJar(jar, setCookie) {
   for (const line of setCookie) {
     const [pair, ...attrs] = line.split(';');
@@ -97,4 +129,4 @@ async function start() {
   return { base, req, login, stop };
 }
 
-module.exports = { start, toForm, signCookie, run, get, all };
+module.exports = { start, toForm, insertPost, signCookie, run, get, all };
