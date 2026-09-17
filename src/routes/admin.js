@@ -1,11 +1,10 @@
-const fs = require('node:fs');
-const path = require('node:path');
 const crypto = require('node:crypto');
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
-const { run, get, all, transaction, UPLOAD_DIR } = require('../db');
+const { run, get, all, transaction } = require('../db');
 const { toSlug } = require('../slug');
+const uploads = require('../uploads');
 
 const router = express.Router();
 
@@ -165,8 +164,8 @@ router.post('/upload', async (req, res) => {
   if (!ext) return res.status(400).json({ error: 'รองรับเฉพาะ JPEG / PNG / GIF / WebP' });
   // the server makes the whole name, so originalname never reaches the file system
   const name = crypto.randomBytes(16).toString('hex') + ext;
-  await fs.promises.writeFile(path.join(UPLOAD_DIR, name), req.file.buffer, { flag: 'wx' });
-  res.json({ url: '/uploads/' + name });
+  const url = await uploads.save(name, req.file.buffer);
+  res.json({ url });
 });
 
 // Settings (spec 2.4): plain inputs and a textarea, no tabs and no per-field status. An empty field deletes

@@ -6,11 +6,19 @@ BACKUP_DIR="${BACKUP_DIR:-/var/backups/talkalways}"
 RCLONE_REMOTE="${RCLONE_REMOTE:-remote:site-backups}"
 mkdir -p "$BACKUP_DIR"
 TS=$(date +%Y%m%d-%H%M%S)
-# VACUUM INTO gets a consistent snapshot without stopping the app. Opening the source DB OPEN_READONLY, together
-# with the DATA_DIR guard above, matters because a plain (non-readonly) open of a wrong path silently creates a
-# fresh empty database file, and this script would then back up that empty file with exit 0 every night with
-# nobody noticing. Never copy site.db directly either, because its -wal file lives next to it.
-node -e "new (require('sqlite3').Database)(process.argv[1], require('sqlite3').OPEN_READONLY).run('VACUUM INTO ?', [process.argv[2]], e => { if (e) throw e })" "$DATA_DIR/site.db" "$BACKUP_DIR/site-$TS.db"
+# Only applies to a local SQLite file (no TURSO_DATABASE_URL). With Turso, the database lives on
+# Turso's own storage instead of $DATA_DIR/site.db, and Turso covers backups on its side - see
+# docs/DEPLOY.md.
+: "${TURSO_DATABASE_URL:=}"
+if [ -z "$TURSO_DATABASE_URL" ]; then
+  # -f, together with the DATA_DIR guard above, matters because opening a wrong path for writing
+  # would otherwise silently create a fresh empty database file, and this script would then back up
+  # that empty file with exit 0 every night with nobody noticing.
+  [ -f "$DATA_DIR/site.db" ] || { echo "$DATA_DIR/site.db not found" >&2; exit 1; }
+  # VACUUM INTO gets a consistent snapshot without stopping the app. Never copy site.db directly
+  # either, because its -wal file lives next to it.
+  node -e "require('@libsql/client').createClient({ url: 'file:' + process.argv[1] }).execute({ sql: 'VACUUM INTO ?', args: [process.argv[2]] }).then(() => process.exit(0), e => { console.error(e); process.exit(1) })" "$DATA_DIR/site.db" "$BACKUP_DIR/site-$TS.db"
+fi
 tar czf "$BACKUP_DIR/uploads-$TS.tgz" -C "$DATA_DIR" uploads
 # The destination file name carries the timestamp because VACUUM INTO fails if the target already exists.
 rclone copy "$BACKUP_DIR" "$RCLONE_REMOTE"
