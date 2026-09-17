@@ -173,7 +173,7 @@ router.post('/upload', async (req, res) => {
 // that row and a value upserts it. The form always submits this fixed set of keys, so session_epoch (which
 // is not one of them) is never touched by saving settings.
 const GLOBAL_SETTING_KEYS = ['site_name', 'github_url', 'linkedin_url', 'x_url', 'email'];
-const LANG_SETTING_KEYS = ['tagline', 'about_body'];
+const LANG_SETTING_KEYS = ['tagline', 'about_body', 'privacy_body'];
 
 async function upsertSetting(key, lang, value) {
   if (value) {

@@ -309,3 +309,38 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
 .search-section + .search-section { margin-top: var(--sp-12); }
 .search-section h2 { margin: 0 0 var(--sp-4); }
 .search-section .post-list { max-width: var(--measure); }
+
+/* Footer credit line (Task 19), now carrying the privacy link next to the copyright text. */
+.footer-meta { display: flex; flex-wrap: wrap; gap: 0 var(--sp-2); }
+
+/* Cookie consent bar (Task 19). partials/consent.ejs renders it, public/js/consent.js wires the buttons.
+   Fixed to the bottom edge, never a modal, so it never blocks the content behind it. */
+.consent-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--gutter);
+  background: var(--surface);
+  border-top: 1px solid var(--border-strong);
+}
+.consent-bar p { margin: 0; max-width: 40rem; }
+.consent-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); flex-shrink: 0; }
+
+/* Privacy page (Task 19). The cookie table can be wider than --measure on a narrow screen, so it gets its own
+   horizontal-scroll container instead of the page itself scrolling. */
+.privacy > * { max-width: var(--measure); }
+.privacy h1 { margin: 0 0 var(--sp-6); }
+.privacy h2 { margin: var(--sp-8) 0 var(--sp-4); }
+.privacy .prose { margin-bottom: var(--sp-8); }
+.table-wrap { max-width: var(--measure); overflow-x: auto; }
+.cookie-table { border-collapse: collapse; width: 100%; min-width: 32rem; }
+.cookie-table th, .cookie-table td { text-align: left; padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); vertical-align: top; }
+.cookie-table th { font-weight: 600; }
+.privacy [data-consent-reset] { margin-top: var(--sp-6); }

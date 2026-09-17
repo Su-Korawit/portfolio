@@ -40,5 +40,8 @@ const siteName = settings.site_name || 'Portfolio';
 <% } -%>
 <link rel="stylesheet" href="/css/site.css?v=<%= v %>">
 <script src="/js/theme.js?v=<%= v %>" defer></script>
+<% if (locals.publicPage) { -%>
+<script src="/js/consent.js?v=<%= v %>" defer data-ga-id="<%= locals.gaId || '' %>"></script>
+<% } -%>
 </head>
 <body>

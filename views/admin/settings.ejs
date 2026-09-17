@@ -30,6 +30,14 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
       </label>
     </div>
     <div class="field-pair">
+      <label>Privacy ภาษาไทย (markdown)
+        <textarea name="th[privacy_body]" rows="8" class="editor-body"><%= val('privacy_body', 'th') %></textarea>
+      </label>
+      <label>Privacy ภาษาอังกฤษ (markdown)
+        <textarea name="en[privacy_body]" rows="8" class="editor-body" lang="en"><%= val('privacy_body', 'en') %></textarea>
+      </label>
+    </div>
+    <div class="field-pair">
       <label>GitHub URL
         <input type="url" name="github_url" value="<%= val('github_url') %>">
       </label>

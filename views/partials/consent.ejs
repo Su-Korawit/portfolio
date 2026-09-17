@@ -1,0 +1,25 @@
+<%
+// Cookie bar (spec 4.2). Rendered only on public pages, and only while the reader has not yet answered.
+// locals.publicPage, locals.consent and locals.gaId all come from src/routes/public.js (Task 19) - admin pages,
+// the preview route and the generic 404/500 handler never set them, so this partial is a no-op there.
+const answered = locals.consent === 'granted' || locals.consent === 'denied';
+-%>
+<% if (locals.publicPage && !answered) { -%>
+<div class="consent-bar" data-consent-bar role="region" aria-label="<%= t.consentAriaLabel %>">
+  <p>
+<% if (locals.gaId) { -%>
+    <%= t.consentTextAnalytics %> <a href="/<%= lang %>/privacy"><%= t.consentPrivacyLink %></a>
+<% } else { -%>
+    <%= t.consentTextEssential %> <a href="/<%= lang %>/privacy"><%= t.consentPrivacyLink %></a>
+<% } -%>
+  </p>
+  <div class="consent-actions">
+<% if (locals.gaId) { -%>
+    <button type="button" data-consent="granted"><%= t.consentAccept %></button>
+    <button type="button" data-consent="denied"><%= t.consentReject %></button>
+<% } else { -%>
+    <button type="button" data-consent="denied"><%= t.consentAcknowledge %></button>
+<% } -%>
+  </div>
+</div>
+<% } -%>

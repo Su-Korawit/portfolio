@@ -106,6 +106,12 @@ function pageNumber(req) {
 
 router.use(async (req, res, next) => {
   res.locals.settings = await loadSettings(res.locals.lang);
+  // spec 4.2: only the public router sets these three. Admin pages, the post/project preview route and the
+  // generic 404/500 handler never run this middleware, so partials/consent.ejs and the analytics <script> tag
+  // in partials/head.ejs stay off there with no extra locals to remember to set.
+  res.locals.publicPage = true;
+  res.locals.consent = req.cookies.consent;
+  res.locals.gaId = process.env.GA_MEASUREMENT_ID || '';
   next();
 });
 
@@ -319,6 +325,26 @@ router.get('/search', async (req, res) => {
     projects,
     posts,
     meta: { title: t.navSearch, noindex: true }
+  });
+});
+
+// Privacy (spec 4.2). privacy_body is markdown the owner writes in admin settings, one row per language with
+// no cross-language fallback (unlike about_body) - the settings page just shows what is there for the current
+// language. The cookie table itself lives in strings.js so both languages stay in sync automatically.
+router.get('/privacy', async (req, res) => {
+  const { lang, t } = res.locals;
+  const row = await get("SELECT value FROM settings WHERE key = 'privacy_body' AND lang = ?", [lang]);
+  res.render('privacy', {
+    privacyBody: row ? row.value : '',
+    meta: {
+      title: t.navPrivacy,
+      canonical: '/' + lang + '/privacy',
+      alternates: [
+        { lang: 'th', href: '/th/privacy' },
+        { lang: 'en', href: '/en/privacy' }
+      ],
+      type: 'website'
+    }
   });
 });
 

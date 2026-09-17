@@ -1,0 +1,51 @@
+<%
+// Cookie table (spec 4.2). The _ga row only shows when analytics can actually run - gaId is '' on a site
+// that never set GA_MEASUREMENT_ID, and then there is nothing to disclose in that row.
+const rows = [
+  { name: 'ta_admin', setBy: 'server', lifetime: t.cookieLifetime30d, purpose: t.cookiePurposeAdmin, category: t.cookieCategoryNecessary },
+  { name: 'lang', setBy: 'server', lifetime: t.cookieLifetime1y, purpose: t.cookiePurposeLang, category: t.cookieCategoryFunctional },
+  { name: 'consent', setBy: 'browser', lifetime: t.cookieLifetime180d, purpose: t.cookiePurposeConsent, category: t.cookieCategoryNecessary }
+];
+if (locals.gaId) {
+  rows.push({ name: '_ga, _ga_*', setBy: 'Google', lifetime: t.cookieLifetime2y, purpose: t.cookiePurposeGa, category: t.cookieCategoryAnalytics });
+}
+rows.push({ name: 'theme (localStorage)', setBy: 'browser', lifetime: t.cookieLifetimeNone, purpose: t.cookiePurposeTheme, category: t.cookieCategoryFunctional });
+-%>
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="privacy">
+  <h1><%= t.navPrivacy %></h1>
+<% if (privacyBody) { -%>
+  <div class="prose"><%- md.render(privacyBody) %></div>
+<% } -%>
+  <h2><%= t.privacyCookieHeading %></h2>
+  <div class="table-wrap">
+  <table class="cookie-table">
+    <thead>
+      <tr>
+        <th><%= t.cookieColName %></th>
+        <th><%= t.cookieColSetBy %></th>
+        <th><%= t.cookieColLifetime %></th>
+        <th><%= t.cookieColPurpose %></th>
+        <th><%= t.cookieColCategory %></th>
+      </tr>
+    </thead>
+    <tbody>
+<% for (const row of rows) { -%>
+      <tr>
+        <td><%= row.name %></td>
+        <td><%= row.setBy %></td>
+        <td><%= row.lifetime %></td>
+        <td><%= row.purpose %></td>
+        <td><%= row.category %></td>
+      </tr>
+<% } -%>
+    </tbody>
+  </table>
+  </div>
+<% if (settings.email) { -%>
+  <p><%= t.privacyContactLabel %>: <a href="mailto:<%= settings.email %>"><%= settings.email %></a></p>
+<% } -%>
+  <button type="button" data-consent-reset><%= t.privacyResetButton %></button>
+</main>
+<%- include('partials/footer') %>
