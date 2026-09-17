@@ -174,6 +174,10 @@ router.post('/upload', async (req, res) => {
 // is not one of them) is never touched by saving settings.
 const GLOBAL_SETTING_KEYS = ['site_name', 'github_url', 'linkedin_url', 'x_url', 'email'];
 const LANG_SETTING_KEYS = ['tagline', 'about_body', 'privacy_body'];
+// github_url/linkedin_url/x_url become href in about.ejs, footer.ejs and privacy.ejs, where <%= %> escapes HTML
+// but lets a javascript: link through. The same pattern as admin-projects.js's URL_PATTERN.
+const URL_PATTERN = /^https?:\/\/\S+$/i;
+const URL_SETTING_KEYS = ['github_url', 'linkedin_url', 'x_url'];
 
 async function upsertSetting(key, lang, value) {
   if (value) {
@@ -194,7 +198,12 @@ router.get('/settings', async (req, res) => {
 router.post('/settings', async (req, res) => {
   const body = req.body ?? {};
   await transaction(async () => {
-    for (const key of GLOBAL_SETTING_KEYS) await upsertSetting(key, '*', text(body[key]).trim());
+    for (const key of GLOBAL_SETTING_KEYS) {
+      let value = text(body[key]).trim();
+      // an unsafe scheme is silently treated as empty, never a validation error - this route has no 400 path
+      if (URL_SETTING_KEYS.includes(key) && value && !URL_PATTERN.test(value)) value = '';
+      await upsertSetting(key, '*', value);
+    }
     for (const key of LANG_SETTING_KEYS) {
       for (const lang of ['th', 'en']) {
         await upsertSetting(key, lang, text((body[lang] || {})[key]).trim());

@@ -341,6 +341,6 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
 .privacy .prose { margin-bottom: var(--sp-8); }
 .table-wrap { max-width: var(--measure); overflow-x: auto; }
 .cookie-table { border-collapse: collapse; width: 100%; min-width: 32rem; }
-.cookie-table th, .cookie-table td { text-align: left; padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); vertical-align: top; }
+.cookie-table th, .cookie-table td { text-align: start; padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); vertical-align: top; }
 .cookie-table th { font-weight: 600; }
 .privacy [data-consent-reset] { margin-top: var(--sp-6); }

@@ -52,6 +52,12 @@ const TAG_LIST_SQL = `
 // character instead of a wildcard.
 const like = q => '%' + q.replace(/[!%_]/g, '!$&') + '%';
 
+// Same pattern as admin-projects.js's URL_PATTERN/link(): repo_url/demo_url become href on this page, where
+// <%= %> escapes HTML but lets a javascript: link through. A row written straight into SQLite (bypassing the
+// admin form and its own filtering) could still carry an unsafe scheme, so this route filters independently.
+const URL_PATTERN = /^https?:\/\/\S+$/i;
+const link = url => (url && URL_PATTERN.test(url) ? url : '');
+
 // Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
 // still finds the post on /en/search, shown as its own English card. Title matches sort first.
@@ -223,6 +229,9 @@ router.get('/projects/:slug', async (req, res, next) => {
   );
   if (!tr) return next();
   const project = await get('SELECT id, thumbnail, repo_url, demo_url FROM projects WHERE id = ?', [tr.project_id]);
+  // filtered independently of the admin form's own validation, in case a row was written straight into SQLite
+  project.repo_url = link(project.repo_url);
+  project.demo_url = link(project.demo_url);
   const siblings = await all(
     "SELECT lang, slug FROM project_translations WHERE project_id = ? AND status = 'published' ORDER BY lang DESC",
     [tr.project_id]
