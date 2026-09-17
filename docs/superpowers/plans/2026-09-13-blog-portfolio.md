@@ -25,7 +25,7 @@
 - วันที่ที่แสดงบนหน้าใช้ `Intl.DateTimeFormat` พร้อม `{ dateStyle: 'medium', timeZone: 'Asia/Bangkok' }` และส่ง `new Date(...)` ให้ `format` เสมอ
 - `DATA_DIR` default คือ `data` resolve จาก root ของโปรเจกต์ DB อยู่ที่ `DATA_DIR/site.db` รูปอยู่ที่ `DATA_DIR/uploads` และห้ามเปิด `data/talkalways.db`
 - EJS ใช้ `<%-` ได้เฉพาะกับ `md.render(...)` และ `include(...)`
-- markdown-it ใช้ `html: false`, `linkify: false`, `breaks: false`
+- markdown-it ใช้ `html: false`, `linkify: true` (ปิด `fuzzyLink` และตัดลิงก์ตรงตัวอักษรไทยตัวแรก), `breaks: false`
 - ทุก mutation เป็น POST ใต้ `/admin` และ cookie ของ admin เป็น `SameSite=Lax` โดยไม่มี CSRF token
 - หน้า admin เป็นภาษาไทยอย่างเดียว
 - custom property ทุกตัวประกาศใน `:root` block เดียวที่หัว `public/css/site.css` และห้ามเขียน `var(--x, fallback)`
@@ -678,7 +678,7 @@ Phase นี้สร้างแอปใหม่ที่ root ของ repo
 - Consumes: root ของ repo หลัง Task 2 ที่ git track แค่ `.gitignore`, `package.json`, `package-lock.json`, `docs/` และ `archive/` (บนดิสก์ยังมี `node_modules/`, `data/` และ `.env` ที่ถูก gitignore) และ `node` บน PATH ที่เป็น `v24.21.0` จาก Task 1
 - Produces:
   - `package.json` ที่มี dependencies 8 ตัวตาม Global Constraints ไม่มี `devDependencies` และมี scripts `start`, `dev`, `test` โดย `npm test` คือ `node --test test/*.test.js`
-  - `src/markdown.js`: `module.exports = md` เป็น instance ของ `MarkdownIt` เรียก `md.render(src) -> string` ได้ ค่า `md.options.html`, `md.options.linkify`, `md.options.breaks` เป็น `false` ทั้งหมด highlight code block ด้วย `highlight.js/lib/common` บวกภาษา `dockerfile` ส่วนภาษาที่ไม่รู้จักจะถูก escape โดยไม่ throw
+  - `src/markdown.js`: `module.exports = md` เป็น instance ของ `MarkdownIt` เรียก `md.render(src) -> string` ได้ ค่า `md.options.html` กับ `md.options.breaks` เป็น `false` ส่วน `md.options.linkify` เป็น `true` URL ที่มี scheme กดได้ และลิงก์จบก่อนตัวอักษรไทยตัวแรก highlight code block ด้วย `highlight.js/lib/common` บวกภาษา `dockerfile` ส่วนภาษาที่ไม่รู้จักจะถูก escape โดยไม่ throw
   - `.env.example` ที่มี `PORT`, `NODE_ENV`, `DATA_DIR`, `SITE_URL` แล้ว Task 8 จะเพิ่ม `SESSION_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` และ Task 19 จะเพิ่ม `GA_MEASUREMENT_ID`
   - `test/01-markdown.test.js` เป็นไฟล์เดียวที่ไม่ได้เรียก `start()` และ `stop()` เพราะทดสอบแค่ `src/markdown.js` ซึ่งไม่ต้องใช้ DB หรือ server และ `test/helpers.js` ยังไม่มีจนถึง Task 5
 
@@ -802,7 +802,7 @@ Expected: `3000 development data http://localhost:3000`
 
 - [ ] **Step 9: เขียน test ที่ต้อง fail**
 
-สร้าง `test/01-markdown.test.js` นอกจากสาม assertion ตาม spec ข้อ 3.4 test นี้ยังล็อก option ทั้งสามของ markdown-it ไว้ ถ้าวันหน้ามีคนเปิด `html` หรือ `linkify` test จะ fail ทันที และตรวจว่า `dockerfile` ถูก register จริง เพราะ `lib/common` ไม่มีภาษานี้
+สร้าง `test/01-markdown.test.js` นอกจากสาม assertion ตาม spec ข้อ 3.4 test นี้ยังล็อก option ทั้งสามของ markdown-it ไว้ ถ้าวันหน้ามีคนเปิด `html` หรือปิด `linkify` test จะ fail ทันที และตรวจว่าลิงก์ไม่ดูดตัวอักษรไทยท้าย URL กับชื่อไฟล์ไม่กลายเป็นลิงก์ และตรวจว่า `dockerfile` ถูก register จริง เพราะ `lib/common` ไม่มีภาษานี้
 
 ````js
 const test = require('node:test');
@@ -811,7 +811,7 @@ const md = require('../src/markdown');
 
 test('01 markdown', async () => {
   assert.equal(md.options.html, false);
-  assert.equal(md.options.linkify, false);
+  assert.equal(md.options.linkify, true);
   assert.equal(md.options.breaks, false);
 
   const js = md.render('```js\nconst x = 1;\n```\n');
@@ -832,6 +832,15 @@ test('01 markdown', async () => {
   assert.ok(unknown.includes('class="language-foobar"'), unknown);
   assert.ok(unknown.includes('&lt;b&gt;x&lt;/b&gt;'), unknown);
   assert.ok(!unknown.includes('<b>'), unknown);
+
+  const drive = md.render('ไฟล์ https://drive.google.com/file/d/1Ab_x-Y/view?usp=sharing นะ\n');
+  assert.ok(drive.includes('<a href="https://drive.google.com/file/d/1Ab_x-Y/view?usp=sharing">'), drive);
+
+  const thai = md.render('ดูที่https://example.com/a.ครับ\n');
+  assert.ok(thai.includes('<a href="https://example.com/a">https://example.com/a</a>.ครับ'), thai);
+
+  const files = md.render('แก้ index.md กับ run.sh\n');
+  assert.ok(!files.includes('<a'), files);
 });
 ````
 
@@ -866,7 +875,7 @@ test at test\01-markdown.test.js:1:1
 
 - [ ] **Step 11: เขียน src/markdown.js**
 
-ใส่ `html`, `linkify` และ `breaks` ไว้ตรงๆ แม้จะเป็นค่า default อยู่แล้ว เพื่อให้คนอ่านเห็นว่าเป็นการตัดสินใจ ถ้า `highlight` คืน string ว่าง markdown-it จะ escape โค้ดเอง
+ใส่ `html`, `linkify` และ `breaks` ไว้ตรงๆ เพื่อให้คนอ่านเห็นว่าเป็นการตัดสินใจ ถ้า `highlight` คืน string ว่าง markdown-it จะ escape โค้ดเอง
 
 ```js
 const MarkdownIt = require('markdown-it');
@@ -874,15 +883,45 @@ const hljs = require('highlight.js/lib/common');
 
 hljs.registerLanguage('dockerfile', require('highlight.js/lib/languages/dockerfile'));
 
-module.exports = new MarkdownIt({
+const md = new MarkdownIt({
   html: false,
-  linkify: false,
+  linkify: true,
   breaks: false,
   highlight: (code, lang) =>
     lang && hljs.getLanguage(lang)
       ? hljs.highlight(code, { language: lang, ignoreIllegals: true }).value
       : ''
 });
+
+// Only link URLs with a scheme (https://...) and emails. Fuzzy links would
+// turn file names like index.md or run.sh into links (.md and .sh are TLDs).
+md.linkify.set({ fuzzyLink: false });
+
+// linkify-it treats Thai letters as part of a URL, so "https://x.comครับ"
+// would link the whole thing. Cut each match at its first Thai character.
+function trimThai(link) {
+  if (!link) return link;
+  const thai = link.text.search(/[\u0E00-\u0E7F]/);
+  if (thai < 0) return link;
+  const text = link.text.slice(0, thai).replace(/[.,;:!?]+$/, '');
+  const cut = link.text.length - text.length;
+  if (!/[^:/]$/.test(text) || text.length <= (link.schema || '').length + 2) return null;
+  link.text = text;
+  link.raw = link.raw.slice(0, link.raw.length - cut);
+  link.url = link.url.slice(0, link.url.length - cut);
+  link.lastIndex -= cut;
+  return link;
+}
+
+const match = md.linkify.match.bind(md.linkify);
+const matchAtStart = md.linkify.matchAtStart.bind(md.linkify);
+md.linkify.match = (text) => {
+  const links = match(text);
+  return links && links.map(trimThai).filter(Boolean);
+};
+md.linkify.matchAtStart = (text) => trimThai(matchAtStart(text));
+
+module.exports = md;
 ```
 
 - [ ] **Step 12: รัน test ให้เห็นว่าผ่าน**
@@ -5354,7 +5393,7 @@ test at test\09-editor-validation.test.js:1:1
 const toSlug = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 // The class is U+0E00 to U+0E7F, the Thai block, written with literal characters exactly as in spec 2.3.
-const hasThai = s => /[฀-๿]/.test(s || '');
+const hasThai = s => /[\u0E00-\u0E7F]/.test(s || '');
 
 const ACTIVE = ['draft', 'published'];
 

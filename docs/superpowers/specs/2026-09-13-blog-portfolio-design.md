@@ -560,15 +560,21 @@ res.json({ url: '/uploads/' + name });
 const MarkdownIt = require('markdown-it');
 const hljs = require('highlight.js/lib/common');   // มีมาให้ 36 ภาษา รวม js ts sql bash go rust php
 hljs.registerLanguage('dockerfile', require('highlight.js/lib/languages/dockerfile'));   // lib/common ไม่มี dockerfile
-module.exports = new MarkdownIt({
+const md = new MarkdownIt({
+  html: false, linkify: true, breaks: false,
   highlight: (code, lang) => lang && hljs.getLanguage(lang)
     ? hljs.highlight(code, { language: lang, ignoreIllegals: true }).value : ''
 });
+md.linkify.set({ fuzzyLink: false });
+// ห่อ md.linkify.match และ md.linkify.matchAtStart ให้ตัดลิงก์ตรงตัวอักษรไทยตัวแรก
+module.exports = md;
 ```
 
-- ใช้ค่า default ทั้งหมด คือ `html:false`, `linkify:false`, `breaks:false`
+- ตั้ง `html:false`, `linkify:true`, `breaks:false`
 - ห้ามเปิด `html` เพราะถ้า paste snippet ที่มี `<img onerror>` มา มันจะทำงานกับผู้อ่านทุกคน
-- ห้ามเปิด `linkify` เพราะ linkify-it จะดูดตัวอักษรไทยที่ติดท้าย URL เข้าไปในลิงก์ด้วย
+- เปิด `linkify` เพื่อให้ URL ที่ paste ลงไปเฉยๆ เช่นลิงก์ Google Drive กดได้
+- linkify-it นับตัวอักษรไทยเป็นส่วนหนึ่งของ URL จึงต้องห่อ `match` กับ `matchAtStart` ให้ตัดลิงก์ตรงตัวอักษรไทยตัวแรก แล้วตัด `.,;:!?` ที่ท้ายลิงก์ออก
+- ปิด `fuzzyLink` ลิงก์ต้องมี scheme เช่น `https://` เพราะ `.md` กับ `.sh` เป็น TLD จริง ชื่อไฟล์อย่าง `index.md` จะกลายเป็นลิงก์
 - field ที่ render เป็น markdown มีแค่ `body_markdown` ของโพสต์และโปรเจกต์ กับ `about_body`
 - field อื่นทุกตัว (title, excerpt, summary, seo_*, alt, tag name) ใช้ `<%= %>`
 - `<%-` ใช้ได้แค่กับผลของ `md.render` และ `include` เท่านั้น
@@ -1293,7 +1299,7 @@ jobs:
 14. hreflang x-default: เป็น optional และถ้าวางบนหน้า post จะไม่ reciprocal
 15. หน้า 404.ejs กับ 500.ejs แยกกัน: รวมเป็น error.ejs ไฟล์เดียว
 16. markdown-it-anchor, TOC อัตโนมัติ, ป้าย data-lang และ custom pre wrapper
-17. linkify: linkify-it ดูดตัวอักษรไทยที่ติดท้าย URL เข้าไปในลิงก์
+17. fuzzy link ของ linkify เช่น www.example.com ที่ไม่มี scheme: ชื่อไฟล์อย่าง index.md และ run.sh จะกลายเป็นลิงก์
 18. raw HTML ใน markdown, DOMPurify และ jsdom: เปิด html:false ไว้ก็ปลอดภัยโดยไม่ต้องมี sanitizer
 19. Shiki และ highlighter ฝั่ง client
 20. รายการภาษาและ alias ของ highlight.js ที่เขียนเอง: lib/common มีให้แล้ว 36 ภาษา
