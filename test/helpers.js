@@ -3,6 +3,13 @@ const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { once } = require('node:events');
+const v8 = require('node:v8');
+const vm = require('node:vm');
+
+// global.gc exists only with --expose-gc; setting the flag at runtime and reading gc from a new
+// context gives the same function without changing how npm test starts node.
+v8.setFlagsFromString('--expose-gc');
+const runGc = vm.runInNewContext('gc');
 
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'site-test-'));
 process.env.SESSION_SECRET = 'test-secret';
@@ -162,7 +169,11 @@ async function start() {
   async function stop() {
     await new Promise((resolve, reject) => server.close(err => (err ? reject(err) : resolve())));
     await close();
-    fs.rmSync(DATA_DIR, { recursive: true, force: true });
+    // libsql releases the database file only when its native connection objects are garbage
+    // collected, not on close(). Windows cannot delete an open file, so collect them first.
+    runGc();
+    await new Promise(resolve => setImmediate(resolve));
+    await fs.promises.rm(DATA_DIR, { recursive: true, force: true, maxRetries: 10, retryDelay: 50 });
   }
 
   return { base, req, login, stop };
