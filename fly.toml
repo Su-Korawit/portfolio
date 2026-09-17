@@ -1,0 +1,33 @@
+# Generated for the TalkAlways portfolio/blog. Rename `app` to something free on Fly, then run:
+#   fly launch --no-deploy --copy-config   # first time, to create the app + volume
+#   fly volumes create data --region <primary_region> --size 1
+#   fly secrets set SESSION_SECRET=... ADMIN_USERNAME=... ADMIN_PASSWORD_HASH=... SITE_URL=https://<app>.fly.dev
+#   fly deploy
+#
+# A Fly Volume is local to one machine, and SQLite is single-writer, so this app runs as exactly
+# one machine (min/max = 1) rather than autoscaling replicas. Scaling further later means moving
+# to LiteFS (Fly's SQLite replication) instead of adding machines against this same volume.
+app = "talkalways-portfolio"
+primary_region = "sin"
+
+[build]
+
+[env]
+  PORT = "3000"
+  DATA_DIR = "/app/data"
+
+[[mounts]]
+  source = "data"
+  destination = "/app/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
