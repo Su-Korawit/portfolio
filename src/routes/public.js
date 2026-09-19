@@ -9,7 +9,7 @@ const PAGE_SIZE = 10;
 // translation is published, otherwise as the published translation in the other language.
 // post_id breaks ties, so two posts with the same published_at never swap places between pages.
 const LIST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
   WHERE t.status = 'published'
@@ -36,7 +36,7 @@ const PROJECT_LIST_SQL = `
 // The tag page lists posts only (spec 2.1). This is LIST_SQL with one more join that keeps the posts of one tag,
 // so the fallback and the order are the same as /blog. Parameters: [tagId, lang, lang, limit, offset].
 const TAG_LIST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
   JOIN post_tags pt ON pt.post_id = t.post_id AND pt.tag_id = ?
@@ -62,7 +62,7 @@ const link = url => (url && URL_PATTERN.test(url) ? url : '');
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
 // still finds the post on /en/search, shown as its own English card. Title matches sort first.
 const SEARCH_POST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
   WHERE t.status = 'published'

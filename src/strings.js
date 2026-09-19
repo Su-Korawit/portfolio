@@ -20,6 +20,8 @@ module.exports = {
     noPosts: 'ยังไม่มีบทความ',
     badgeOtherLang: 'ภาษาอังกฤษ',
     postTags: 'แท็ก',
+    // {n} is the estimated number of minutes from src/reading-time.js
+    readTime: 'อ่าน {n} นาที',
     backToBlog: 'กลับไปหน้ารวมบทความ',
     pagination: 'การแบ่งหน้า',
     pageLabel: 'หน้า',
@@ -90,6 +92,8 @@ module.exports = {
     noPosts: 'No posts yet.',
     badgeOtherLang: 'Thai',
     postTags: 'Tags',
+    // {n} is the estimated number of minutes from src/reading-time.js
+    readTime: '{n} min read',
     backToBlog: 'Back to the blog',
     pagination: 'Pagination',
     pageLabel: 'Page',

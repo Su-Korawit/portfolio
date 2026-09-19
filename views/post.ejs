@@ -1,30 +1,56 @@
+<%
+// Byline avatar: the first letter of the site name, the stand-in for an author photo this site has no field for
+const authorName = settings.site_name || 'Portfolio';
+const initial = [...authorName.trim()][0] || 'P';
+-%>
 <%- include('partials/head') %>
 <% if (locals.preview) { -%>
 <link rel="stylesheet" href="/css/admin.css?v=<%= v %>">
 <p class="preview-bar" lang="th">ตัวอย่าง ยังไม่ได้บันทึก</p>
 <% } -%>
 <%- include('partials/header') %>
+<div class="reading-progress" aria-hidden="true"></div>
 <main id="main" class="post">
   <article class="post-article">
     <header class="post-header">
       <h1><%= tr.title %></h1>
-<% if (tr.published_at) { -%>
-      <p class="post-meta"><time datetime="<%= tr.published_at %>"><%= formatDate(lang, tr.published_at) %></time></p>
+<% if (tr.excerpt) { -%>
+      <p class="post-subtitle"><%= tr.excerpt %></p>
 <% } -%>
+      <div class="byline">
+        <span class="byline-avatar" aria-hidden="true"><%= initial %></span>
+        <div class="byline-text">
+          <p class="byline-name"><%= authorName %></p>
+          <p class="post-meta">
+<% if (tr.published_at) { -%>
+            <time datetime="<%= tr.published_at %>"><%= formatDate(lang, tr.published_at) %></time>
+            <span class="meta-dot" aria-hidden="true">·</span>
+<% } -%>
+            <span><%= readTime(t, tr.body_markdown) %></span>
+          </p>
+        </div>
+      </div>
+    </header>
+<% if (post.cover_image) { -%>
+    <figure class="post-cover-figure">
+      <img class="post-cover" src="<%= post.cover_image %>" alt="<%= tr.cover_image_alt %>">
+<% if (tr.cover_image_alt) { -%>
+      <figcaption class="post-cover-caption"><%= tr.cover_image_alt %></figcaption>
+<% } -%>
+    </figure>
+<% } -%>
+    <div class="prose">
+      <%- md.render(tr.body_markdown) %>
+    </div>
 <% if (tags.length) { -%>
+    <footer class="post-footer">
       <ul class="tag-list" aria-label="<%= t.postTags %>">
 <% for (const tag of tags) { -%>
         <li><a class="tag" href="/<%= lang %>/tags/<%= tag.slug %>"><%= tag.name %></a></li>
 <% } -%>
       </ul>
+    </footer>
 <% } -%>
-    </header>
-<% if (post.cover_image) { -%>
-    <img class="post-cover" src="<%= post.cover_image %>" alt="<%= tr.cover_image_alt %>">
-<% } -%>
-    <div class="prose">
-      <%- md.render(tr.body_markdown) %>
-    </div>
   </article>
   <p class="post-back"><a href="/<%= lang %>/blog"><%= t.backToBlog %></a></p>
 </main>

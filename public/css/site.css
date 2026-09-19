@@ -15,12 +15,21 @@
   --syn-com:       light-dark(#6B6B63, #8E8E88);
   --syn-typ:       light-dark(#8A5A00, #D9BE79);
   --font-sans:     "Anuphan", system-ui, sans-serif;
+  /* Reading font for long-form text. Latin falls through the serif faces a desktop is likely to have and ends
+     at the generic serif; Thai has no glyph in any of them, so a Thai character walks past the whole list and
+     lands on Anuphan. Anuphan sits after the generic on purpose - before it, Latin would take it too and the
+     body would come out sans on a machine with no Charter or Georgia. */
+  --font-serif:    Charter, "Bitstream Charter", "Iowan Old Style", "Source Serif 4", Georgia, Cambria, "Times New Roman", serif, "Anuphan";
+  /* What long-form text is set in. Thai overrides it back to the sans below. */
+  --font-read:     var(--font-serif);
   --font-mono:     ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, "Anuphan", monospace;
   --fs-sm: 0.875rem;  --fs-base: 1rem;  --fs-h3: 1.25rem;  --fs-h2: 1.5rem;  --fs-h1: 2rem;
-  --lh-body: 1.65;  --lh-tight: 1.25;
+  /* Reading sizes: article body, article title and the title of a card in a feed */
+  --fs-read: 1.25rem;  --fs-title: 2.25rem;  --fs-card: 1.375rem;
+  --lh-body: 1.65;  --lh-tight: 1.25;  --lh-read: 1.75;
   --sp-1: 0.25rem;  --sp-2: 0.5rem;  --sp-3: 0.75rem;  --sp-4: 1rem;  --sp-6: 1.5rem;  --sp-8: 2rem;  --sp-12: 3rem;
-  --r-sm: 4px;  --r-md: 8px;
-  --measure: 42rem;  --page: 64rem;  --gutter: 1rem;
+  --r-sm: 4px;  --r-md: 8px;  --r-full: 999px;
+  --measure: 42rem;  --measure-wide: 52rem;  --page: 64rem;  --gutter: 1rem;
 }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"]  { color-scheme: dark; }
@@ -53,6 +62,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 img { max-width: 100%; height: auto; }
 a { color: var(--accent); text-underline-offset: 0.2em; }
@@ -62,7 +72,7 @@ button {
   padding: var(--sp-2) var(--sp-4);
   background: var(--surface);
   border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-full);
   cursor: pointer;
 }
 button:hover { border-color: var(--text); }
@@ -74,7 +84,9 @@ input, select, textarea {
 }
 
 /* Typography: Thai needs a larger size and taller lines so stacked marks do not touch the line above */
-:lang(th) { --fs-base: 1.125rem; --lh-body: 1.9; --lh-tight: 1.45; }
+/* Thai reads in Anuphan, the only face this site ships with Thai glyphs. A serif body would set the Latin words
+   inside a Thai sentence in a system serif and the Thai around them in Anuphan, which splits one line in two. */
+:lang(th) { --fs-base: 1.125rem; --lh-body: 1.9; --lh-tight: 1.45; --fs-read: 1.1875rem; --lh-read: 1.95; --font-read: var(--font-sans); }
 body, .prose, .card, .excerpt { font-size: var(--fs-base); line-height: var(--lh-body); }
 h1, h2, h3 { line-height: var(--lh-tight); text-wrap: balance; font-weight: 600; }
 h1 { font-size: var(--fs-h1); }
@@ -97,7 +109,7 @@ main { flex: 1 0 auto; padding-block: var(--sp-8) var(--sp-12); }
   position: absolute;
   top: var(--sp-2);
   left: var(--sp-2);
-  z-index: 1;
+  z-index: 30;
   padding: var(--sp-2) var(--sp-4);
   background: var(--surface);
   color: var(--text);
@@ -116,9 +128,9 @@ main { flex: 1 0 auto; padding-block: var(--sp-8) var(--sp-12); }
   border-bottom: 1px solid var(--border);
 }
 .site-name, .site-nav a, .lang-switch { text-decoration: none; }
-.site-name { margin-inline-end: auto; color: var(--text); font-weight: 600; }
+.site-name { margin-inline-end: auto; color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
 .site-nav { order: 1; flex-basis: 100%; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-6); }
-.site-nav a, .lang-switch { color: var(--text-muted); }
+.site-nav a, .lang-switch { color: var(--text-muted); font-size: var(--fs-sm); }
 .site-name:hover, .site-nav a:hover, .lang-switch:hover { color: var(--text); text-decoration: underline; }
 .theme-toggle {
   display: inline-grid;
@@ -142,32 +154,54 @@ main { flex: 1 0 auto; padding-block: var(--sp-8) var(--sp-12); }
 .site-footer p { margin: 0; }
 
 .home { display: flex; flex-direction: column; gap: var(--sp-12); }
-.intro h1 { margin: 0; }
+.intro { max-width: var(--measure); }
+.intro h1 { margin: 0; font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .tagline { margin: var(--sp-3) 0 0; max-width: var(--measure); color: var(--text-muted); font-size: var(--fs-h3); }
 
 .error-page > * { max-width: var(--measure); }
 .error-page h1 { margin: 0 0 var(--sp-4); }
 .error-page p { margin: 0 0 var(--sp-4); color: var(--text-muted); }
 
-/* Prose: rendered markdown of posts, projects, About and privacy */
-.prose { max-width: var(--measure); }
+/* Prose: rendered markdown of posts, projects, About and privacy. Serif, because this is the part of the page
+   that is read line after line rather than scanned. */
+.prose { max-width: var(--measure); font-family: var(--font-read); }
+.prose h2, .prose h3 { font-family: var(--font-sans); letter-spacing: -0.01em; }
 .prose h2 { margin: var(--sp-12) 0 var(--sp-4); }
 .prose h3 { margin: var(--sp-8) 0 var(--sp-3); }
 .prose p, .prose ul, .prose ol, .prose blockquote, .prose table { margin: 0 0 var(--sp-6); }
 .prose ul, .prose ol { padding-inline-start: var(--sp-6); }
 .prose li + li { margin-top: var(--sp-2); }
-.prose blockquote { padding-inline-start: var(--sp-4); margin-inline: 0; border-inline-start: 3px solid var(--border-strong); color: var(--text-muted); }
-.prose img { display: block; border-radius: var(--r-md); }
+.prose blockquote {
+  padding-inline-start: var(--sp-6);
+  margin-inline: 0;
+  border-inline-start: 3px solid var(--text);
+  color: var(--text-muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose img { display: block; border-radius: var(--r-sm); }
 .prose hr { margin: var(--sp-12) 0; border: 0; border-top: 1px solid var(--border); }
-.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-family: var(--font-sans); }
 .prose th, .prose td { padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); }
 .prose :not(pre) > code { padding: 0.125em 0.375em; background: var(--surface-soft); border-radius: var(--r-sm); font-size: 0.875em; }
+
+/* A paragraph holding one image alone becomes a <figure> in src/markdown.js, with the alt text repeated as the
+   caption. It may run wider than the text column, the way a figure does on a long-form reading page. */
+.prose figure { margin: var(--sp-8) 0; }
+/* width: auto so a small image keeps its own size instead of being blown up to the column width */
+.prose figure img { width: auto; max-width: 100%; margin-inline: auto; }
+.prose figcaption {
+  margin-top: var(--sp-3);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
 
 /* Code blocks and syntax colors. Comments stay upright because Thai has no italic. */
 pre { background: var(--code-bg); overflow-x: auto; padding: var(--sp-4);
       border: 1px solid var(--border); border-radius: var(--r-md); tab-size: 2; }
 pre, code { font-family: var(--font-mono); }
-pre { font-size: var(--fs-sm); }
+pre { font-size: var(--fs-sm); line-height: 1.6; }
 .prose pre { margin: 0 calc(var(--gutter) * -1) var(--sp-6); border-inline: 0; border-radius: 0; }
 .hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-name, .hljs-selector-tag  { color: var(--syn-key); }
 .hljs-string, .hljs-regexp, .hljs-symbol, .hljs-addition                      { color: var(--syn-str); }
@@ -180,15 +214,28 @@ pre { font-size: var(--fs-sm); }
   .site-header, main, .site-footer { padding-inline: var(--sp-8); }
   .site-nav { order: 0; flex-basis: auto; margin-inline-end: var(--sp-2); }
   .prose pre { margin-inline: 0; border-inline: 1px solid var(--border); border-radius: var(--r-md); }
+  /* The bar follows the reader down the page once it is one row tall. On a narrow screen the nav wraps to a
+     second row, which would take too much of the screen to keep pinned. */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+  }
 }
 
 @media (min-width: 64rem) {
   main { padding-block-start: var(--sp-12); }
+  /* Figures reach past the text column on a wide screen, centred on it */
+  .prose figure { width: var(--measure-wide); margin-inline: calc((var(--measure) - var(--measure-wide)) / 2); }
 }
 
-/* Post lists and cards (Task 9). The blog index is a list divided by thin rules, not a card grid. */
+/* Post lists and cards. A feed of posts is a list divided by thin rules, never a grid of boxes: title, a short
+   excerpt and one line of meta, with the cover image as a small thumbnail beside it. Titles are set in the
+   interface sans and only the excerpt is serif, the same split as the post page: sans to scan, serif to read. */
 .blog > * { max-width: var(--measure); }
-.blog h1 { margin: 0 0 var(--sp-6); }
+.blog h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .empty { color: var(--text-muted); }
 .section-head {
   display: flex;
@@ -198,14 +245,26 @@ pre { font-size: var(--fs-sm); }
   gap: var(--sp-2) var(--sp-4);
   max-width: var(--measure);
   margin-bottom: var(--sp-2);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border);
 }
-.section-head h2 { margin: 0; }
+.section-head h2 { margin: 0; font-size: var(--fs-h3); letter-spacing: -0.01em; }
+.section-head a { font-size: var(--fs-sm); }
 .post-list { max-width: var(--measure); }
-.card { position: relative; display: flex; align-items: flex-start; gap: var(--sp-6); padding-block: var(--sp-6); }
-.card:first-child { padding-block-start: var(--sp-2); }
+.card { position: relative; display: flex; align-items: flex-start; gap: var(--sp-4); padding-block: var(--sp-6); }
+.card:first-child { padding-block-start: var(--sp-4); }
 .card + .card { border-top: 1px solid var(--border); }
 .card-body { flex: 1; min-width: 0; }
-.card-title { margin: 0; font-size: var(--fs-h3); }
+.card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  font-size: var(--fs-card);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
 .card-title a { color: var(--text); text-decoration: none; }
 .card-title a::after { content: ""; position: absolute; inset: 0; }
 .card:hover .card-title a { text-decoration: underline; }
@@ -213,22 +272,37 @@ pre { font-size: var(--fs-sm); }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--sp-1) var(--sp-3);
-  margin: var(--sp-1) 0 0;
+  gap: var(--sp-1) var(--sp-2);
+  margin: var(--sp-3) 0 0;
   color: var(--text-muted);
   font-size: var(--fs-sm);
 }
-.badge { padding: 0 var(--sp-2); border: 1px solid var(--border-strong); border-radius: var(--r-sm); }
+/* The dot between two pieces of meta. It is decoration, so it is hidden from assistive technology in the markup. */
+.meta-dot { color: var(--border-strong); }
+.badge {
+  padding: 0 var(--sp-2);
+  background: var(--surface-soft);
+  border-radius: var(--r-full);
+  font-size: var(--fs-sm);
+}
 /* line-height stays var(--lh-body) from the typography rule, so the clamp does not cut Thai marks on the first line */
 .excerpt {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
   margin: var(--sp-2) 0 0;
   color: var(--text-muted);
+  font-family: var(--font-read);
 }
-.card-thumb { display: none; }
+.card-thumb {
+  display: block;
+  flex: none;
+  width: 5.5rem;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
 
 .pagination {
   display: flex;
@@ -237,35 +311,96 @@ pre { font-size: var(--fs-sm); }
   margin-top: var(--sp-6);
   padding-top: var(--sp-6);
   border-top: 1px solid var(--border);
+  font-size: var(--fs-sm);
 }
 .pagination-older { margin-inline-start: auto; }
 
+/* Reading progress: a hairline across the top that fills as the page scrolls. It is driven by the scroll
+   position alone, with no script; where animation-timeline is missing the bar simply stays at zero width. */
+.reading-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 20;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+@supports (animation-timeline: scroll()) {
+  .reading-progress { animation: reading-progress linear both; animation-timeline: scroll(root block); }
+}
+@keyframes reading-progress { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .reading-progress { display: none; } }
+
 /* Post page */
 .post-article { max-width: var(--measure); }
-.post-header h1 { margin: 0; }
-.post-meta { margin: var(--sp-2) 0 0; color: var(--text-muted); font-size: var(--fs-sm); }
-.tag-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-4) 0 0; padding: 0; list-style: none; }
-.tag {
-  display: inline-block;
-  padding: 0 var(--sp-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+.post-header h1 {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.post-subtitle { margin: var(--sp-3) 0 0; color: var(--text-muted); font-family: var(--font-read); font-size: var(--fs-h3); }
+/* Byline: who wrote it, when, and how long it takes to read - the line every reader looks for before starting. */
+.byline {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-8) 0 0;
+  padding-bottom: var(--sp-6);
+  border-bottom: 1px solid var(--border);
+}
+.byline-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--surface-soft);
+  border-radius: 50%;
+  font-weight: 600;
+}
+.byline-text { min-width: 0; }
+.byline-name { margin: 0; font-weight: 600; }
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  margin: 0;
   color: var(--text-muted);
   font-size: var(--fs-sm);
+}
+.tag-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.tag {
+  display: inline-block;
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--surface-soft);
+  border-radius: var(--r-full);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
   text-decoration: none;
 }
-a.tag:hover { color: var(--text); border-color: var(--text); }
-.post-cover { display: block; margin-top: var(--sp-8); border-radius: var(--r-md); }
-.post-article .prose { margin-top: var(--sp-8); }
+a.tag:hover { background: var(--border); color: var(--text); }
+.post-cover-figure { margin: var(--sp-8) 0 0; }
+.post-cover { display: block; width: 100%; border-radius: var(--r-sm); }
+.post-cover-caption { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-sm); text-align: center; }
+/* The article body is set larger than the rest of the site, the one place on the page meant for long reading */
+.post-article .prose { margin-top: var(--sp-8); font-size: var(--fs-read); line-height: var(--lh-read); }
 .prose > :first-child { margin-top: 0; }
-.post-back { max-width: var(--measure); margin: var(--sp-12) 0 0; padding-top: var(--sp-6); border-top: 1px solid var(--border); }
+.post-footer { margin-top: var(--sp-12); padding-top: var(--sp-6); border-top: 1px solid var(--border); }
+.post-back { max-width: var(--measure); margin: var(--sp-8) 0 0; font-size: var(--fs-sm); }
 
 @media (min-width: 40rem) {
-  .card-thumb { display: block; flex: none; width: 8rem; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-md); }
+  .card { gap: var(--sp-8); }
+  .card-thumb { width: 10rem; }
+  :root { --fs-title: 2.75rem; }
 }
 
-/* Projects (Task 12): the grid on the home page and /projects, and the project page */
-.projects > h1 { margin: 0 0 var(--sp-6); }
+/* Projects: the grid on the home page and /projects, and the project page */
+.projects > h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .featured .section-head { max-width: none; }
 .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: var(--sp-6); }
 /* a card can carry lang="th" on an /en page, so it declares font-size and line-height again for :lang(th) */
@@ -282,45 +417,47 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
   line-height: var(--lh-body);
 }
 .project-card > * { margin: 0; }
+/* a project card shows its whole title and, like a post card, is clickable anywhere through the a::after overlay */
+.project-card .card-title { display: block; font-size: var(--fs-h3); }
 .project-card:hover { border-color: var(--border-strong); }
 .project-card:hover .card-title a { text-decoration: underline; }
 .project-thumb { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-sm); }
 .project-summary { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-h3); }
 .project-links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-4) 0 0; font-weight: 600; }
 
-/* About page (Task 16). .social-list is shared with the footer, which reads the same settings keys. */
+/* About page. .social-list is shared with the footer, which reads the same settings keys. */
 .about > * { max-width: var(--measure); }
-.about h1 { margin: 0 0 var(--sp-6); }
+.about h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .about .prose { margin-bottom: var(--sp-8); }
 .social-list { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-6) 0 0; padding: 0; list-style: none; }
 .social-list a { color: var(--text-muted); text-decoration: none; }
 .social-list a:hover { color: var(--text); text-decoration: underline; }
 .site-footer .social-list { margin: 0 0 var(--sp-3); }
 
-/* Search page (Task 17). The queries live in src/routes/public.js as SEARCH_POST_SQL and SEARCH_PROJECT_SQL.
+/* Search page. The queries live in src/routes/public.js as SEARCH_POST_SQL and SEARCH_PROJECT_SQL.
    Matching projects reuse the uncapped .project-grid from the home page's featured section; matching posts
    reuse .post-list, capped to --measure like every other post list. */
-.search h1 { max-width: var(--measure); margin: 0 0 var(--sp-6); }
+.search h1 { max-width: var(--measure); margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .search-form { max-width: var(--measure); display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-8); }
 .search-form label { font-weight: 600; }
 .search-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.search-row input { flex: 1 1 16rem; }
+.search-row input { flex: 1 1 16rem; border-radius: var(--r-full); padding-inline: var(--sp-4); }
 .search-hint, .search-empty { max-width: var(--measure); color: var(--text-muted); }
 .search-section + .search-section { margin-top: var(--sp-12); }
-.search-section h2 { margin: 0 0 var(--sp-4); }
+.search-section h2 { margin: 0 0 var(--sp-4); font-size: var(--fs-h3); }
 .search-section .post-list { max-width: var(--measure); }
 
-/* Footer credit line (Task 19), now carrying the privacy link next to the copyright text. */
+/* Footer credit line, carrying the privacy link next to the copyright text. */
 .footer-meta { display: flex; flex-wrap: wrap; gap: 0 var(--sp-2); }
 
-/* Cookie consent bar (Task 19). partials/consent.ejs renders it, public/js/consent.js wires the buttons.
+/* Cookie consent bar. partials/consent.ejs renders it, public/js/consent.js wires the buttons.
    Fixed to the bottom edge, never a modal, so it never blocks the content behind it. */
 .consent-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 10;
+  z-index: 15;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -333,10 +470,10 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
 .consent-bar p { margin: 0; max-width: 40rem; }
 .consent-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); flex-shrink: 0; }
 
-/* Privacy page (Task 19). The cookie table can be wider than --measure on a narrow screen, so it gets its own
+/* Privacy page. The cookie table can be wider than --measure on a narrow screen, so it gets its own
    horizontal-scroll container instead of the page itself scrolling. */
 .privacy > * { max-width: var(--measure); }
-.privacy h1 { margin: 0 0 var(--sp-6); }
+.privacy h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .privacy h2 { margin: var(--sp-8) 0 var(--sp-4); }
 .privacy .prose { margin-bottom: var(--sp-8); }
 .table-wrap { max-width: var(--measure); overflow-x: auto; }

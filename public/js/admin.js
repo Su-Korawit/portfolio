@@ -30,4 +30,21 @@
       }
     });
   }
+
+  // The body field grows with what is typed, so a long post is written on the page instead of inside a small
+  // scrolling box. A translation that is closed measures zero, so the fields inside it are measured again when
+  // its <details> opens.
+  const grow = area => {
+    area.style.height = 'auto';
+    area.style.height = area.scrollHeight + 'px';
+  };
+  for (const area of document.querySelectorAll('.write-field .editor-body')) {
+    area.addEventListener('input', () => grow(area));
+    if (area.offsetParent) grow(area);
+  }
+  for (const section of document.querySelectorAll('details.translation')) {
+    section.addEventListener('toggle', () => {
+      if (section.open) for (const area of section.querySelectorAll('.write-field .editor-body')) grow(area);
+    });
+  }
 }
