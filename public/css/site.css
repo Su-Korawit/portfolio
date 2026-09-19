@@ -681,6 +681,10 @@ body:has(main.about) {
   background: var(--surface);
   border-top: 1px solid var(--border-strong);
 }
+/* public/js/consent.js hides the bar by setting the hidden attribute, and an author rule beats the browser's
+   own [hidden] { display: none } no matter how specific it is - so display: flex above would keep the bar on
+   screen after the reader answers without this line. */
+.consent-bar[hidden] { display: none; }
 .consent-bar p { margin: 0; max-width: 40rem; }
 .consent-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); flex-shrink: 0; }
 

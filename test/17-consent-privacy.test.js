@@ -66,6 +66,13 @@ test('17 consent, analytics and privacy', async () => {
     assert.ok(r.text.includes('googletagmanager.com'), r.text);
     r = await h.req('/th');
     assert.ok(r.text.includes('<script src="/js/consent.js?v='), r.text);
+
+    // consent.js hides the bar with the hidden attribute, and .consent-bar sets display: flex - an author
+    // rule that beats the browser's own [hidden] { display: none }, so the bar stayed on screen after the
+    // reader answered until the stylesheet said otherwise. This keeps that rule from being dropped again.
+    r = await h.req('/css/site.css');
+    assert.equal(r.status, 200);
+    assert.ok(/\.consent-bar\[hidden\]\s*\{[^}]*display:\s*none/.test(r.text), r.text);
   } finally {
     await h.stop();
   }
