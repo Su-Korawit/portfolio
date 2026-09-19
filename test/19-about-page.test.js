@@ -20,8 +20,8 @@ test('19 about page blocks', async () => {
 
     // the settings form has a field for every block
     r = await h.req('/admin/settings');
-    assert.ok(r.text.includes('name="about_image" value=""'), r.text);
-    assert.ok(r.text.includes('data-upload-target="about_image"'), r.text);
+    assert.ok(/<textarea[^>]*name="about_image"/.test(r.text), r.text);
+    assert.ok(r.text.includes('multiple data-upload-target="about_image" data-upload-mode="lines"'), r.text);
     assert.ok(r.text.includes('name="about_video" value=""'), r.text);
     assert.ok(r.text.includes('name="instagram_url" value=""'), r.text);
     assert.ok(r.text.includes('name="th[about_quote_source]" value=""'), r.text);
@@ -64,7 +64,7 @@ test('19 about page blocks', async () => {
 
     // the saved values come back into the form
     r = await h.req('/admin/settings');
-    assert.ok(r.text.includes('name="about_image" value="/uploads/me.webp"'), r.text);
+    assert.ok(/<textarea[^>]*name="about_image"[^>]*>\/uploads\/me\.webp<\/textarea>/.test(r.text), r.text);
     assert.ok(r.text.includes('name="en[about_quote]" value="Kindness is beautiful."'), r.text);
     assert.ok(/<textarea[^>]*name="th\[about_facts\]"[^>]*>อายุ 22 ปี/.test(r.text), r.text);
 
@@ -128,6 +128,9 @@ test('19 about page blocks', async () => {
     for (const bad of ['javascript:alert(1)', '//evil.example.com/me.png', 'me.webp']) {
       await h.req('/admin/settings', { method: 'POST', form: { ...filled, about_image: bad } });
       assert.equal(await get("SELECT value FROM settings WHERE key = 'about_image' AND lang = '*'"), undefined, bad);
+      // and the same line among good ones is the only one dropped
+      await h.req('/admin/settings', { method: 'POST', form: { ...filled, about_image: '/uploads/ok.webp\n' + bad } });
+      assert.deepEqual(await get("SELECT value FROM settings WHERE key = 'about_image' AND lang = '*'"), { value: '/uploads/ok.webp' }, bad);
     }
     // a link with no video id in it is stored as empty rather than kept to fail silently on the page
     for (const bad of ['https://evil.example.com/watch?v=dQw4w9WgXcQ', 'javascript:alert(1)', 'not a link']) {
@@ -151,6 +154,34 @@ test('19 about page blocks', async () => {
     await h.req('/admin/settings', { method: 'POST', form: { ...filled, about_image: 'https://cdn.example.com/me.webp' } });
     r = await h.req('/th/about');
     assert.ok(r.text.includes('src="https://cdn.example.com/me.webp"'), r.text);
+
+    // Several pictures, one per line, make the portrait a slideshow: every slide is rendered with the first
+    // one showing, so the page is right before the script runs and with JavaScript off. The line that is not
+    // a picture is dropped on the way in rather than shown as a broken image.
+    await h.req('/admin/settings', {
+      method: 'POST',
+      form: { ...filled, about_image: '/uploads/one.webp\n  not-a-picture  \n/uploads/two.webp\nhttps://cdn.example.com/three.webp' }
+    });
+    assert.deepEqual(
+      await get("SELECT value FROM settings WHERE key = 'about_image' AND lang = '*'"),
+      { value: '/uploads/one.webp\n/uploads/two.webp\nhttps://cdn.example.com/three.webp' }
+    );
+    r = await h.req('/th/about');
+    assert.ok(r.text.includes('<div class="about-slides" data-slides>'), r.text);
+    assert.ok(r.text.includes('<div class="about-slide is-current">'), r.text);
+    assert.ok(r.text.includes('<div class="about-slide" aria-hidden="true">'), r.text);
+    assert.ok(!r.text.includes('not-a-picture'), r.text);
+    // the dots, and the script that moves the slideshow along, only exist when there is more than one picture
+    assert.equal((r.text.match(/data-slide-to="/g) || []).length, 3);
+    assert.ok(r.text.includes('aria-label="รูปที่ 2"'), r.text);
+    assert.ok(r.text.includes('<script src="/js/about.js?v='), r.text);
+
+    // one picture stays one plain image, with no slideshow machinery around it
+    await h.req('/admin/settings', { method: 'POST', form: { ...filled, about_image: '/uploads/one.webp' } });
+    r = await h.req('/th/about');
+    assert.ok(r.text.includes('<img class="about-portrait" src="/uploads/one.webp"'), r.text);
+    assert.ok(!r.text.includes('about-slides'), r.text);
+    assert.ok(!r.text.includes('/js/about.js'), r.text);
 
     // clearing the fields deletes the rows and the blocks disappear again
     await h.req('/admin/settings', { method: 'POST', form: { site_name: 'พอร์ตของผม', email: 'hello@example.com' } });

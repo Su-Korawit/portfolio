@@ -243,6 +243,7 @@ const hasNext = rows.length > 10;
 - ทุกบล็อกเป็น settings และเป็น optional บล็อกที่ยังไม่มีค่าจะไม่ถูก render เลย ไม่ใช่ render เป็นช่องว่าง
 - ข้อความแต่ละบล็อก fallback ข้ามภาษาเป็นอิสระต่อกัน (`about_body`, `about_name`, `about_facts`, `about_quote`, `about_quote_source`, `about_contact`, `about_image_alt`) บล็อกที่ fallback จะใส่ `lang` ของภาษาต้นทางไว้ที่ element ครอบ ส่วน alt ของรูปใส่ `lang` ไว้ที่ `img` เพราะ alt ใส่ markup ไม่ได้
 - กลุ่มแนะนำตัว: `aboutGreeting` จาก strings.js + `about_name` + `about_body` (markdown) + กรอบข้อมูลจาก `about_facts` ซึ่งเป็น textarea บรรทัดละข้อ (สูงสุด 8)
+- `about_image` เก็บบรรทัดละ 1 รูป (สูงสุด 8) บรรทัดที่ไม่ใช่ URL รูปถูกตัดทิ้งทั้งตอนบันทึกและตอน render ถ้ามีรูปเดียวแสดงเป็น `img` ธรรมดา ถ้ามากกว่านั้นกลายเป็นสไลด์: server render ทุกสไลด์โดยให้รูปแรกแสดงอยู่ หน้าเว็บจึงถูกต้องตั้งแต่ก่อน `public/js/about.js` ทำงานและตอนปิด JavaScript สไลด์ที่ไม่ได้แสดงมี `aria-hidden` เพื่อไม่ให้ screen reader อ่าน alt ซ้ำทุกสไลด์ มีจุดกดเลือกรูปใต้กรอบ เลื่อนเองทุก 5 วินาที หยุดเมื่อเมาส์ชี้หรือโฟกัสอยู่ในกรอบ และไม่เลื่อนเองเลยเมื่อผู้อ่านตั้ง `prefers-reduced-motion: reduce` (จุดยังกดได้)
 - `about_colors` เป็นรหัสสี hex คั่นด้วยจุลภาค (สูงสุด 8) ค่าที่ไม่ใช่ hex ถูกตัดทิ้งเพราะค่านี้ลงไปอยู่ใน style attribute
 - `about_video` รับลิงก์ YouTube รูปแบบไหนก็ได้ แล้วดึงเฉพาะรหัสวิดีโอ 11 ตัวอักษรออกมาด้วย `src/youtube.js` ค่าที่อ่านรหัสไม่ได้ถือว่าว่าง `iframe` จึงมีแต่ `https://www.youtube-nocookie.com/embed/<id>` ที่ประกอบจากรหัสนั้น ไม่เคยเป็นค่าดิบจาก settings หัวข้อของบล็อกมาจาก `aboutVideoTitle` ใน strings.js
 - คำคมอยู่ใต้แถบสี คั่นด้วยเส้นที่มีดาวอยู่กลาง ตัวอักษรเล็กเพื่อให้ข้อความยาวยังอยู่ในคอลัมน์แคบได้ มีเครื่องหมายคำพูดขนาดใหญ่คร่อมมุมบนซ้ายกับล่างขวาเป็นลวดลาย (`content: "…" / ""` จึงไม่ถูกอ่านออกเสียง) และมีที่มาจาก `about_quote_source` อยู่ใต้คำคมใน `cite`
@@ -526,7 +527,7 @@ key            lang      ใช้ที่
 site_name      *         <title>, header
 tagline        th, en    หน้าแรก (ข้อความธรรมดา)
 about_body     th, en    /about (markdown)
-about_image    *         รูปโค้งของเจ้าของเว็บในหน้า /about (path /uploads/... หรือ URL เต็ม)
+about_image    *         รูปโค้งของเจ้าของเว็บในหน้า /about บรรทัดละ 1 รูป (path /uploads/... หรือ URL เต็ม)
 about_image_alt th, en   alt ของรูปนั้น
 about_name     th, en    ชื่อตัวใหญ่ในหน้า /about
 about_facts    th, en    ข้อมูลในกรอบ บรรทัดละข้อ
@@ -618,6 +619,7 @@ talkalways/
     js/theme.js             ปุ่มสลับธีม
     js/admin.js             upload และแทรกรูป
     js/consent.js           แถบ cookie และโหลด Google Analytics (ข้อ 4.2)
+    js/about.js             สไลด์รูปโค้งในหน้า About โหลดเฉพาะหน้าที่มีรูปมากกว่า 1 รูป
     favicon.svg             placeholder จนกว่าเจ้าของจะเลือกแบรนด์ อ้างจาก <link rel="icon"> ใน head
   scripts/
     hash-password.js        สร้าง ADMIN_PASSWORD_HASH
