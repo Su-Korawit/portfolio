@@ -563,9 +563,11 @@ body:has(main.about) {
 }
 .about-video-wait p { margin: 0; }
 
-/* The quote spans the whole width, with the star centred on the rule above it. */
-.about-row-quote { position: relative; text-align: center; }
-.about-row-quote > .about-star {
+/* The quote sits under the swatches, in small type so a long passage still fits the narrow column. The star
+   is centred on the rule that separates it from the swatches above. */
+.about-aside > * + * { margin-top: var(--sp-8); padding-top: var(--sp-8); border-top: 1px solid var(--about-rule); }
+.about-quote-wrap { position: relative; }
+.about-quote-wrap > .about-star {
   position: absolute;
   top: 0;
   left: 50%;
@@ -574,14 +576,27 @@ body:has(main.about) {
   background: var(--about-bg);
   box-sizing: content-box;
 }
-.about-quote-block { max-width: var(--measure-wide); margin: 0 auto; }
-/* The quotation marks are drawn by the block itself: the text is already a <blockquote>, so repeating them
-   in the markup would have a screen reader read stray punctuation. */
-.about-quote { margin: 0; font-size: clamp(1.375rem, 2.6vw, 1.875rem); line-height: 1.4; color: var(--about-accent); }
-.about-quote::before, .about-quote::after { color: var(--about-rule); }
-.about-quote::before { content: "\201C"; }
-.about-quote::after { content: "\201D"; }
-.about-quote-source { margin: var(--sp-4) 0 0; color: var(--about-ink); font-size: var(--fs-base); }
+/* The quotation marks are drawn by the block, one hung over each corner of the text, the way the reference
+   sets a quote. They are decoration, so the empty alt text after the slash keeps a screen reader from
+   reading stray punctuation around a <blockquote> that is already announced as a quote. */
+.about-quote-block {
+  position: relative;
+  margin: 0;
+  padding: var(--sp-6) var(--sp-4) var(--sp-4);
+}
+.about-quote-block::before, .about-quote-block::after {
+  position: absolute;
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--about-rule);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.about-quote-block::before { content: "\201C" / ""; top: 0; left: 0; }
+.about-quote-block::after { content: "\201D" / ""; right: 0; bottom: 0; transform: translateY(0.35em); }
+.about-quote { margin: 0; font-size: var(--fs-base); line-height: 1.65; color: var(--about-accent); }
+.about-quote-source { margin: var(--sp-3) 0 0; color: var(--about-ink); font-size: var(--fs-sm); }
 .about-quote-source cite { font-style: normal; }
 
 /* Contact sits under a rule at the foot of the page, like the reference. */
@@ -604,9 +619,6 @@ body:has(main.about) {
      picture with no text beside it keeps a sane size rather than growing to the width of the page */
   .about-row > :only-child { grid-column: 1 / -1; }
   .about-figure:only-child .about-portrait { max-width: 20rem; }
-  /* the quote row is one block, so the two-column rule above must not land on the figure inside it */
-  .about-row-quote { display: block; }
-  .about-row.about-row-quote > * { padding-left: 0; border-left: 0; }
   .about-figure { margin: 0; }
   .about-portrait { max-width: none; }
   .about-video { margin-top: 0; }
