@@ -7,18 +7,6 @@
 .admin-logout { margin: 0; }
 .admin-logout button { padding: var(--sp-1) var(--sp-3); border-color: var(--border); font-size: var(--fs-sm); }
 
-/* Only visible to a screen reader: the label of a field whose placeholder already says what it is */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
 /* Forms */
 .admin-form { display: grid; gap: var(--sp-4); }
 .admin-form label { display: grid; gap: var(--sp-1); }

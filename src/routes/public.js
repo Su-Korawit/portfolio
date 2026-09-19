@@ -63,6 +63,20 @@ const link = url => (url && URL_PATTERN.test(url) ? url : '');
 const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
 const image = url => (url && IMAGE_PATTERN.test(url) ? url : '');
 
+// The text blocks of /about that exist in both languages. about_image, about_photo and about_colors are one
+// value for the whole site, so they stay in settings (lang '*') and are read from res.locals.settings.
+const ABOUT_LANG_KEYS = [
+  'about_body', 'about_image_alt', 'about_name', 'about_facts', 'about_quote', 'about_photo_caption', 'about_contact'
+];
+
+// The swatch row. Each colour ends up in a style attribute, so only a plain hex literal is kept - anything
+// else in the field is dropped rather than escaped, and the row is capped so a long paste cannot fill the page.
+const HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+const colors = value => String(value || '').split(/[\s,]+/).filter(c => HEX_PATTERN.test(c)).slice(0, 8);
+
+// The facts box and the contact block are textareas the owner writes one item per line.
+const linesOf = ({ value, lang }) => ({ lang, items: value.split('\n').map(line => line.trim()).filter(Boolean).slice(0, 8) });
+
 // Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
 // still finds the post when searching from /en, shown as its own English card. Title matches sort first.
@@ -321,28 +335,42 @@ router.get('/tags/:slug', async (req, res, next) => {
   });
 });
 
-// About (spec 2.1): about_body falls back to the other language when the current one is empty, and the
-// wrapper gets a lang attribute only then, the same convention as the foreign card in post-card.ejs.
-// about_image_alt is read in the same query and falls back on its own: the portrait is one image for both
-// languages, so a reader can have their own alt text even when the body beside it is the other language's.
+// About (spec 2.1). Every block of the page is a setting the owner fills in, and every one of them is
+// optional: a block with nothing in it is left out rather than shown empty. Each piece of text falls back to
+// the other language on its own, so a half-translated page shows the reader as much of their own language as
+// exists, and pick() reports which language won so the template can mark the odd one out with lang=.
 router.get('/about', async (req, res) => {
   const { lang, other, t, settings } = res.locals;
   const rows = await all(
-    "SELECT key, lang, value FROM settings WHERE key IN ('about_body', 'about_image_alt') AND lang IN ('th', 'en')"
+    `SELECT key, lang, value FROM settings
+     WHERE key IN (${ABOUT_LANG_KEYS.map(() => '?').join(', ')}) AND lang IN ('th', 'en')`,
+    ABOUT_LANG_KEYS
   );
-  const byLang = {};
-  const altByLang = {};
-  for (const row of rows) (row.key === 'about_body' ? byLang : altByLang)[row.lang] = row.value;
-  const aboutLang = byLang[lang] ? lang : (byLang[other] ? other : lang);
-  const altLang = altByLang[lang] ? lang : (altByLang[other] ? other : lang);
+  const byKey = {};
+  for (const row of rows) (byKey[row.key] ||= {})[row.lang] = row.value;
+  // { value, lang }: the reader's language when it has something, otherwise the other one. lang is what the
+  // template compares against res.locals.lang to decide whether the block needs a lang attribute.
+  const pick = key => {
+    const values = byKey[key] || {};
+    const from = values[lang] ? lang : (values[other] ? other : lang);
+    return { value: values[from] || '', lang: from };
+  };
+  const body = pick('about_body');
   res.render('about', {
-    aboutLang,
-    aboutBody: byLang[aboutLang] || '',
-    // filtered independently of the settings form's own filtering, the same reason as repo_url/demo_url above:
-    // a row written straight into SQLite could otherwise put any scheme in the portrait's src
+    // aboutLang/aboutBody keep the names the body has always had, since the prose block still reads them
+    aboutLang: body.lang,
+    aboutBody: body.value,
+    // the images are filtered independently of the settings form's own filtering, the same reason as
+    // repo_url/demo_url above: a row written straight into SQLite could otherwise put any scheme in an src
     aboutImage: image(settings.about_image),
-    aboutImageAlt: altByLang[altLang] || '',
-    altLang,
+    aboutPhoto: image(settings.about_photo),
+    aboutColors: colors(settings.about_colors),
+    name: pick('about_name'),
+    quote: pick('about_quote'),
+    photoCaption: pick('about_photo_caption'),
+    facts: linesOf(pick('about_facts')),
+    contact: linesOf(pick('about_contact')),
+    imageAlt: pick('about_image_alt'),
     meta: {
       title: t.navAbout,
       canonical: '/' + lang + '/about',
