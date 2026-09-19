@@ -60,7 +60,7 @@ const link = url => (url && URL_PATTERN.test(url) ? url : '');
 
 // Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
-// still finds the post on /en/search, shown as its own English card. Title matches sort first.
+// still finds the post when searching from /en, shown as its own English card. Title matches sort first.
 const SEARCH_POST_SQL = `
   SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
@@ -121,13 +121,37 @@ router.use(async (req, res, next) => {
   next();
 });
 
+// Home, and the search form that used to live on its own page (spec 4.1). q is trimmed and cut to 100
+// characters; under 2 characters left nothing is queried, so a bare "/" - and a stray one-character q -
+// still gets the usual featured and latest sections, with a hint under the form.
 router.get('/', async (req, res) => {
-  const { lang, settings } = res.locals;
+  const { lang, t, settings } = res.locals;
+  const q = String(req.query.q || '').trim().slice(0, 100);
+  if (q.length >= 2) {
+    const params = { $lang: lang, $q: like(q) };
+    // Results replace the featured and latest sections. noindex, and no canonical or hreflang, keeps a result
+    // page out of search engines while "/" itself stays indexed.
+    return res.render('home', {
+      q,
+      searching: true,
+      tooShort: false,
+      featured: [],
+      posts: [],
+      foundProjects: await all(SEARCH_PROJECT_SQL, params),
+      foundPosts: await all(SEARCH_POST_SQL, params),
+      meta: { title: t.searchTitle, noindex: true }
+    });
+  }
   const featured = await all(PROJECT_LIST_SQL, [1, lang, lang]);
   const posts = await all(LIST_SQL, [lang, lang, 5, 0]);
   res.render('home', {
+    q,
+    searching: false,
+    tooShort: q.length > 0,
     featured,
     posts,
+    foundProjects: [],
+    foundPosts: [],
     meta: {
       description: settings.tagline,
       canonical: '/' + lang,
@@ -315,26 +339,11 @@ router.get('/about', async (req, res) => {
   });
 });
 
-// Search (spec 4.1): q is trimmed and cut to 100 characters. Under 2 characters left, the form is shown with a
-// hint and no query runs at all - noindex is still set, and there is no canonical or hreflang on this page.
-router.get('/search', async (req, res) => {
-  const { t } = res.locals;
+// The search form and its results moved onto the home page, so /search only redirects old links there,
+// keeping q. 301 rather than 302: the page is gone for good and a client may stop asking for it.
+router.get('/search', (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 100);
-  const tooShort = q.length < 2;
-  let projects = [];
-  let posts = [];
-  if (!tooShort) {
-    const params = { $lang: res.locals.lang, $q: like(q) };
-    projects = await all(SEARCH_PROJECT_SQL, params);
-    posts = await all(SEARCH_POST_SQL, params);
-  }
-  res.render('search', {
-    q,
-    tooShort,
-    projects,
-    posts,
-    meta: { title: t.navSearch, noindex: true }
-  });
+  res.redirect(301, '/' + res.locals.lang + (q ? '?q=' + encodeURIComponent(q) : ''));
 });
 
 // Privacy (spec 4.2). privacy_body is markdown the owner writes in admin settings, one row per language with
