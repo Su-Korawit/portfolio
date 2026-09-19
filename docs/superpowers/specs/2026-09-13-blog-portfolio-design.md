@@ -157,7 +157,8 @@ GET     /tags/:slug      /en/tags/sqlite?page=2       โพสต์ที่�
 GET     /projects        /th/projects                 โปรเจกต์ทั้งหมด ไม่แบ่งหน้า
 GET     /projects/:slug  /th/projects/talkalways      รายละเอียดโปรเจกต์
 GET     /about           /th/about                    About และ social links
-GET     /search          /th/search?q=docker          ค้นหาบทความและโปรเจกต์ (ข้อ 4.1)
+GET     /?q=...          /th?q=docker                 ค้นหาบทความและโปรเจกต์ บนหน้าแรก (ข้อ 4.1)
+GET     /search          /th/search?q=docker          redirect 301 ไปหน้าแรก เก็บลิงก์เก่าไว้
 GET     /privacy         /en/privacy                  cookie ที่ใช้และนโยบายความเป็นส่วนตัว (ข้อ 4.2)
 ```
 
@@ -615,7 +616,7 @@ talkalways/
     routes/admin-projects.js
   views/
     partials/head.ejs  partials/header.ejs  partials/footer.ejs  partials/post-card.ejs  partials/consent.ejs
-    home.ejs  blog.ejs  post.ejs  projects.ejs  project.ejs  about.ejs  error.ejs  search.ejs  privacy.ejs
+    home.ejs  blog.ejs  post.ejs  projects.ejs  project.ejs  about.ejs  error.ejs  privacy.ejs
     admin/head.ejs  admin/foot.ejs  admin/login.ejs
     admin/posts.ejs  admin/post-edit.ejs  admin/projects.ejs  admin/project-edit.ejs
     admin/tags.ejs  admin/settings.ejs
@@ -628,7 +629,7 @@ talkalways/
 ```
 
 - `blog.ejs` ใช้กับทั้งหน้า blog index และหน้า tag
-- `post-card.ejs` เป็น partial เพราะใช้ในสี่หน้า รวมหน้า search
+- `post-card.ejs` เป็น partial เพราะใช้ในสี่หน้า รวมผลการค้นหาบนหน้าแรก
 - admin posts กับ projects เขียนแยกไฟล์ และยอมให้โค้ดซ้ำกันบางส่วน ไม่ทำ generic "translatable entity" helper เพราะสอง editor ต่างกันพอสมควร
 - ไม่มีไฟล์ `auth.js`, `seo.js`, `i18n.js` หรือ middleware แยก เพราะแต่ละอย่างใช้แค่ที่เดียว
 - EJS ใช้ `include` ไม่ใช้ `express-ejs-layouts`
@@ -943,11 +944,11 @@ module.exports = { start, insertPost, insertProject, get, all };
     - บันทึก settings ผ่านฟอร์ม admin โดยให้ `th[about_body]` เป็น `**หนา**` และปล่อย `github_url` ว่าง
     - `/th/about` ต้องมี `<strong>หนา</strong>` และไม่มีลิงก์ GitHub
 15. **search**
-    - โพสต์ th published ที่ body มีคำว่า `ญี่ปุ่น` ต้องขึ้นใน `/th/search?q=ญี่ปุ่น` ส่วนโพสต์ draft ที่มีคำเดียวกันต้องไม่ขึ้น
-    - โพสต์ที่ published ทั้ง th และ en โดยคำค้นมีแค่ในฉบับไทย ต้องขึ้นใน `/en/search` เป็นการ์ดภาษาอังกฤษ
+    - โพสต์ th published ที่ body มีคำว่า `ญี่ปุ่น` ต้องขึ้นใน `/th?q=ญี่ปุ่น` ส่วนโพสต์ draft ที่มีคำเดียวกันต้องไม่ขึ้น
+    - โพสต์ที่ published ทั้ง th และ en โดยคำค้นมีแค่ในฉบับไทย ต้องขึ้นใน `/en?q=...` เป็นการ์ดภาษาอังกฤษ
     - `q=100%` ต้องเจอเฉพาะโพสต์ที่มีข้อความ `100%` จริง
     - โปรเจกต์ published ที่ summary มีคำค้นต้องขึ้นในส่วนโปรเจกต์
-    - หน้า search มี `noindex` และ `q` ยาว 500 ตัวอักษรได้ 200
+    - หน้าที่มีผลการค้นหามี `noindex` และ `q` ยาว 500 ตัวอักษรได้ 200
 16. **cookie ภาษา**
     - `GET /en/blog` ที่ไม่มี cookie ต้องได้ `Set-Cookie` ที่ขึ้นต้นด้วย `lang=en` และมี `HttpOnly`
     - `GET /` พร้อม `Cookie: lang=en` และ `Accept-Language: th` ได้ 302 ไป `/en` และ `Vary` มี `Cookie`
@@ -1043,7 +1044,7 @@ module.exports = { start, insertPost, insertProject, get, all };
 
 #### Phase 6: Search, cookie และ privacy
 
-- หน้า `/search` พร้อม query ของบทความและโปรเจกต์ และลิงก์ค้นหาใน header
+- ฟอร์มค้นหาบนหน้าแรก พร้อม query ของบทความและโปรเจกต์
 - cookie `lang` และลำดับการเลือกภาษาที่ `/`
 - แถบ consent, `public/js/consent.js`, หน้า `/privacy` และ key `privacy_body` ในหน้า admin settings
 - tests ข้อ 15, 16 และ 17
@@ -1125,16 +1126,17 @@ find /var/backups -mtime +7 -delete
 ### 4.1 Search
 
 ```
-GET  /th/search?q=...   /en/search?q=...   ค้นบทความและโปรเจกต์ที่ published
+GET  /th?q=...   /en?q=...   ค้นบทความและโปรเจกต์ที่ published บนหน้าแรก
 ```
 
-- header เพิ่มลิงก์ ค้นหา / Search ส่วนฟอร์มอยู่บนหน้า `/search` หน้าเดียว header จึงไม่มีช่องค้นหาและไม่ต้องใช้ JS
-- ฟอร์มเป็น `<form role="search" method="get">` ที่มี `<input type="search" name="q" maxlength="100">`
-- `q` ถูก trim แล้วตัดให้ไม่เกิน 100 ตัวอักษร ถ้าเหลือไม่ถึง 2 ตัวอักษร ให้แสดงฟอร์มกับข้อความแนะนำโดยไม่ query
-- ผลลัพธ์แสดงโปรเจกต์ไม่เกิน 10 รายการ ต่อด้วยบทความไม่เกิน 20 รายการ ไม่มีการแบ่งหน้า
+- ไม่มีแท็บ ค้นหา / Search ใน header และไม่มีหน้า `/search` แยก ฟอร์มอยู่ใต้ intro บนหน้าแรก จึงไม่ต้องใช้ JS
+- ฟอร์มเป็น `<form role="search" method="get">` ที่ action ชี้ไป `/<lang>` มี `<input type="search" name="q" maxlength="100">`
+- `q` ถูก trim แล้วตัดให้ไม่เกิน 100 ตัวอักษร ถ้าเหลือไม่ถึง 2 ตัวอักษร หน้าแรกยังแสดงโปรเจกต์เด่นกับบทความล่าสุดตามปกติ และเพิ่มข้อความแนะนำใต้ฟอร์มเมื่อผู้อ่านพิมพ์มาแล้วแต่สั้นเกินไป
+- เมื่อค้นจริง ผลลัพธ์แทนที่ส่วนโปรเจกต์เด่นกับบทความล่าสุด แสดงโปรเจกต์ไม่เกิน 10 รายการ ต่อด้วยบทความไม่เกิน 20 รายการ ไม่มีการแบ่งหน้า
 - บทความใช้ `post-card.ejs` เดิม การ์ดของอีกภาษาได้ badge และ `lang` แบบเดียวกับหน้า list
-- หน้า search ส่ง `meta.noindex = true` ให้ `head.ejs` ใส่ `<meta name="robots" content="noindex">` และไม่มี canonical หรือ hreflang
-- ลิงก์สลับภาษาบนหน้า search พก `q` ไปด้วย เช่น `/en/search?q=docker`
+- หน้าที่มีผลการค้นหาส่ง `meta.noindex = true` ให้ `head.ejs` ใส่ `<meta name="robots" content="noindex">` และไม่มี canonical หรือ hreflang ส่วนหน้าแรกเปล่า ๆ ยังมี canonical และ hreflang ตามเดิม
+- ลิงก์สลับภาษาพก `q` ไปด้วย เช่น `/en?q=docker`
+- `/th/search` และ `/en/search` redirect 301 ไปหน้าแรกของภาษานั้นพร้อม `q` เพื่อไม่ให้ลิงก์เก่าตาย
 - `q` แสดงกลับบนหน้าด้วย `<%= %>` เท่านั้น
 
 ```js
@@ -1329,7 +1331,7 @@ jobs:
 44. helmet และ migration tool: ตอนนี้มีแค่ schema.sql แบบ CREATE IF NOT EXISTS ถ้าจะแก้ schema ทีหลังให้เขียน ALTER เอง
 45. ลิงก์จากชิปแท็กในหน้าโปรเจกต์: หน้า tag แสดงเฉพาะโพสต์
 46. script ตรวจขนาด repo ใน Phase 0: brand-mockup.png ย้ายไป archive โดยไม่ต้องตัดสินใจอะไรเพิ่ม
-47. FTS5, การไฮไลต์คำค้น, คำแนะนำระหว่างพิมพ์ และช่องค้นหาใน header: `LIKE` กับหน้า `/search` หน้าเดียวพอสำหรับเว็บขนาดนี้
+47. FTS5, การไฮไลต์คำค้น, คำแนะนำระหว่างพิมพ์ และช่องค้นหาใน header: `LIKE` กับฟอร์มเดียวบนหน้าแรกพอสำหรับเว็บขนาดนี้
 48. Google Consent Mode, การแบ่ง cookie หลายหมวดให้ติ๊กเลือก และการเก็บประวัติการยินยอมลง DB: มี analytics ตัวเดียว ปุ่มยอมรับกับปฏิเสธจึงพอ
 49. CI บน Windows และ CD: server เป็น Linux และยังไม่ได้เลือก host
 
