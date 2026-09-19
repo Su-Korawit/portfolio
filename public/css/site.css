@@ -425,10 +425,38 @@ a.tag:hover { background: var(--border); color: var(--text); }
 .project-summary { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-h3); }
 .project-links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-4) 0 0; font-weight: 600; }
 
-/* About page. .social-list is shared with the footer, which reads the same settings keys. */
+/* About page. .social-list is shared with the footer, which reads the same settings keys.
+   The portrait and the text sit in one column on a phone and side by side from 40rem up, but only when
+   there is a portrait: without one, .about-intro stays a plain block capped to the reading measure so a
+   photoless page reads exactly as it did before. */
 .about > * { max-width: var(--measure); }
 .about h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .about .prose { margin-bottom: var(--sp-8); }
+.about-figure { margin: 0 0 var(--sp-8); }
+/* aspect-ratio plus object-fit crops any photo to the same portrait shape, so the text beside it does not
+   move while the image loads and a landscape upload does not tower over the page. */
+.about-portrait {
+  display: block;
+  width: 100%;
+  max-width: 18rem;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: var(--surface-soft);
+  border-radius: var(--r-md);
+}
+
+@media (min-width: 40rem) {
+  .about-intro.has-portrait {
+    display: grid;
+    /* the photo column is fixed so the text column keeps a comfortable measure at every width */
+    grid-template-columns: 17rem minmax(0, 1fr);
+    gap: var(--sp-8);
+    align-items: start;
+    max-width: var(--measure-wide);
+  }
+  .about-intro.has-portrait .about-figure { margin: 0; }
+  .about-intro.has-portrait .about-portrait { max-width: none; }
+}
 .social-list { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-6) 0 0; padding: 0; list-style: none; }
 .social-list a { color: var(--text-muted); text-decoration: none; }
 .social-list a:hover { color: var(--text); text-decoration: underline; }

@@ -1,5 +1,8 @@
 <%
 const foreign = aboutLang !== lang;
+// The portrait carries alt text of its own, which falls back to the other language separately from the body.
+// alt cannot hold markup, so the lang attribute goes on the <img> itself when the two differ.
+const foreignAlt = Boolean(aboutImageAlt) && altLang !== lang;
 const social = [
   ['github_url', 'GitHub'],
   ['linkedin_url', 'LinkedIn'],
@@ -11,22 +14,31 @@ const hasSocial = social.some(([key]) => settings[key]) || settings.email;
 <%- include('partials/header') %>
 <main id="main" class="about">
   <h1><%= t.navAbout %></h1>
+  <div class="about-intro<% if (aboutImage) { %> has-portrait<% } %>">
+<% if (aboutImage) { -%>
+    <figure class="about-figure">
+      <img class="about-portrait" src="<%= aboutImage %>" alt="<%= aboutImageAlt %>"<% if (foreignAlt) { %> lang="<%= altLang %>"<% } %> decoding="async">
+    </figure>
+<% } -%>
+    <div class="about-text">
 <% if (aboutBody) { -%>
-  <div class="prose"<% if (foreign) { %> lang="<%= aboutLang %>"<% } %>>
-    <%- md.render(aboutBody) %>
-  </div>
+      <div class="prose"<% if (foreign) { %> lang="<%= aboutLang %>"<% } %>>
+        <%- md.render(aboutBody) %>
+      </div>
 <% } -%>
 <% if (hasSocial) { -%>
-  <ul class="social-list">
+      <ul class="social-list">
 <% for (const [key, label] of social) { -%>
 <% if (settings[key]) { -%>
-    <li><a href="<%= settings[key] %>"><%= label %></a></li>
+        <li><a href="<%= settings[key] %>"><%= label %></a></li>
 <% } -%>
 <% } -%>
 <% if (settings.email) { -%>
-    <li><a href="mailto:<%= settings.email %>"><%= settings.email %></a></li>
+        <li><a href="mailto:<%= settings.email %>"><%= settings.email %></a></li>
 <% } -%>
-  </ul>
+      </ul>
 <% } -%>
+    </div>
+  </div>
 </main>
 <%- include('partials/footer') %>

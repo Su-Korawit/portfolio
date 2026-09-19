@@ -238,6 +238,8 @@ const hasNext = rows.length > 10;
 
 - body ของหน้า About มาจาก `about_body` ของภาษาปัจจุบัน
 - ถ้าภาษานั้นยังว่าง ให้ใช้ของอีกภาษา และใส่ `lang` ของภาษานั้นไว้ที่ element ครอบ body
+- ถ้ามี `about_image` ให้แสดงรูปข้าง body ตั้งแต่ 40rem ขึ้นไป จอแคบกว่านั้นเรียงลงมาเป็นคอลัมน์เดียว
+- alt ของรูปมาจาก `about_image_alt` ซึ่ง fallback ข้ามภาษาแยกจาก body และใส่ `lang` ไว้ที่ `img` เมื่อ fallback
 - social links อ่านจาก settings ที่ `lang='*'` ถ้าค่าไหนว่างก็ไม่ต้องแสดง
 
 ### 2.2 การเลือกภาษาและการสลับภาษา
@@ -517,6 +519,8 @@ key            lang      ใช้ที่
 site_name      *         <title>, header
 tagline        th, en    หน้าแรก (ข้อความธรรมดา)
 about_body     th, en    /about (markdown)
+about_image    *         รูปของเจ้าของเว็บในหน้า /about (path /uploads/... หรือ URL เต็ม)
+about_image_alt th, en   alt ของรูปนั้น
 github_url     *         footer และ About
 linkedin_url   *
 x_url          *

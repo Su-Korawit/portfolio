@@ -58,6 +58,11 @@ const like = q => '%' + q.replace(/[!%_]/g, '!$&') + '%';
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const link = url => (url && URL_PATTERN.test(url) ? url : '');
 
+// Same idea for the about portrait's src, which is either a local '/uploads/<name>' or an absolute R2 URL.
+// Kept in step with IMAGE_PATTERN in admin.js, which filters the same value on the way in.
+const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
+const image = url => (url && IMAGE_PATTERN.test(url) ? url : '');
+
 // Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
 // still finds the post when searching from /en, shown as its own English card. Title matches sort first.
@@ -318,15 +323,26 @@ router.get('/tags/:slug', async (req, res, next) => {
 
 // About (spec 2.1): about_body falls back to the other language when the current one is empty, and the
 // wrapper gets a lang attribute only then, the same convention as the foreign card in post-card.ejs.
+// about_image_alt is read in the same query and falls back on its own: the portrait is one image for both
+// languages, so a reader can have their own alt text even when the body beside it is the other language's.
 router.get('/about', async (req, res) => {
-  const { lang, other, t } = res.locals;
-  const rows = await all("SELECT lang, value FROM settings WHERE key = 'about_body' AND lang IN ('th', 'en')");
+  const { lang, other, t, settings } = res.locals;
+  const rows = await all(
+    "SELECT key, lang, value FROM settings WHERE key IN ('about_body', 'about_image_alt') AND lang IN ('th', 'en')"
+  );
   const byLang = {};
-  for (const row of rows) byLang[row.lang] = row.value;
+  const altByLang = {};
+  for (const row of rows) (row.key === 'about_body' ? byLang : altByLang)[row.lang] = row.value;
   const aboutLang = byLang[lang] ? lang : (byLang[other] ? other : lang);
+  const altLang = altByLang[lang] ? lang : (altByLang[other] ? other : lang);
   res.render('about', {
     aboutLang,
     aboutBody: byLang[aboutLang] || '',
+    // filtered independently of the settings form's own filtering, the same reason as repo_url/demo_url above:
+    // a row written straight into SQLite could otherwise put any scheme in the portrait's src
+    aboutImage: image(settings.about_image),
+    aboutImageAlt: altByLang[altLang] || '',
+    altLang,
     meta: {
       title: t.navAbout,
       canonical: '/' + lang + '/about',
