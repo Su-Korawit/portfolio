@@ -184,12 +184,14 @@ const LANG_SETTING_KEYS = [
 // but lets a javascript: link through. The same pattern as admin-projects.js's URL_PATTERN.
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const URL_SETTING_KEYS = ['github_url', 'linkedin_url', 'x_url', 'instagram_url'];
-// about_image, the portrait on /about, becomes an <img src>. /admin/upload answers with '/uploads/<name>'
-// locally and an absolute R2 URL in production, so both shapes are allowed and nothing else is: '//host/x'
-// and a javascript: or data: value typed into the field by hand are treated as empty, the same silent
-// handling as the URLs above. about_video goes the same way through the YouTube link parser: a value with no
-// video id in it is stored as empty rather than kept around to fail silently on the page.
+// about_image is one picture per line, the slideshow in the portrait frame on /about, and each line becomes
+// an <img src>. /admin/upload answers with '/uploads/<name>' locally and an absolute R2 URL in production, so
+// both shapes are allowed and nothing else is: a '//host/x' or javascript: line typed in by hand is dropped,
+// the same silent handling as the URLs above, and the lines that are pictures are kept. about_video goes the
+// same way through the YouTube link parser: a value with no video id in it is stored as empty rather than
+// kept around to fail silently on the page.
 const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
+const imageLines = value => value.split('\n').map(line => line.trim()).filter(line => IMAGE_PATTERN.test(line)).join('\n');
 
 async function upsertSetting(key, lang, value) {
   if (value) {
@@ -214,7 +216,7 @@ router.post('/settings', async (req, res) => {
       let value = text(body[key]).trim();
       // an unsafe scheme is silently treated as empty, never a validation error - this route has no 400 path
       if (URL_SETTING_KEYS.includes(key) && value && !URL_PATTERN.test(value)) value = '';
-      if (key === 'about_image' && value && !IMAGE_PATTERN.test(value)) value = '';
+      if (key === 'about_image' && value) value = imageLines(value);
       if (key === 'about_video' && value && !videoId(value)) value = '';
       await upsertSetting(key, '*', value);
     }

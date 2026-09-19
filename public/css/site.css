@@ -488,6 +488,24 @@ body:has(main.about) {
   background: var(--about-frame);
   border-radius: 100vw 100vw var(--r-sm) var(--r-sm);
 }
+/* The slideshow: every slide sits in the same grid cell so the frame keeps one size, and only the current one
+   is painted. The server marks the first slide, so a page with no JavaScript shows that one and nothing moves. */
+.about-slides { display: grid; }
+.about-slide { grid-area: 1 / 1; opacity: 0; transition: opacity 600ms ease; }
+.about-slide.is-current { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .about-slide { transition: none; } }
+.about-slide-dots { display: flex; justify-content: center; gap: var(--sp-2); margin-top: var(--sp-4); }
+.about-slide-dots button {
+  width: 0.75rem;
+  height: 0.75rem;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--about-rule);
+  border-radius: 50%;
+}
+.about-slide-dots button:hover { border-color: var(--about-accent); }
+.about-slide-dots button[aria-current] { background: var(--about-accent); border-color: var(--about-accent); }
+
 .about-greeting { margin: 0; font-size: var(--fs-h3); color: var(--about-accent); }
 .about-name {
   margin: var(--sp-2) 0 var(--sp-6);

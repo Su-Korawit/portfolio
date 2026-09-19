@@ -62,7 +62,10 @@ const link = url => (url && URL_PATTERN.test(url) ? url : '');
 // Same idea for the about portrait's src, which is either a local '/uploads/<name>' or an absolute R2 URL.
 // Kept in step with IMAGE_PATTERN in admin.js, which filters the same value on the way in.
 const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
-const image = url => (url && IMAGE_PATTERN.test(url) ? url : '');
+// about_image holds one picture per line, so the portrait can be a slideshow. A line that is not a picture
+// URL is dropped rather than shown as a broken image, and the list is capped so a long paste cannot turn the
+// page into a hundred requests.
+const images = value => String(value || '').split('\n').map(line => line.trim()).filter(line => IMAGE_PATTERN.test(line)).slice(0, 8);
 
 // The text blocks of /about that exist in both languages. about_image, about_video and about_colors are one
 // value for the whole site, so they stay in settings (lang '*') and are read from res.locals.settings.
@@ -366,7 +369,7 @@ router.get('/about', async (req, res) => {
     aboutBody: body.value,
     // the images are filtered independently of the settings form's own filtering, the same reason as
     // repo_url/demo_url above: a row written straight into SQLite could otherwise put any scheme in an src
-    aboutImage: image(settings.about_image),
+    aboutImages: images(settings.about_image),
     aboutColors: colors(settings.about_colors),
     // only an id the parser recognised reaches the embed URL in the template, never the raw setting
     aboutVideo: video,

@@ -30,12 +30,12 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
       </label>
     </div>
     <div class="field-pair">
-      <label>รูปโค้งของคุณในหน้า About
-        <input name="about_image" value="<%= val('about_image') %>" placeholder="/uploads/" spellcheck="false">
+      <label>รูปโค้งของคุณในหน้า About (บรรทัดละ 1 รูป)
+        <textarea name="about_image" rows="4" class="editor-body" placeholder="/uploads/" spellcheck="false"><%= val('about_image') %></textarea>
       </label>
-      <label>อัปโหลดรูปโค้ง
-        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-upload-target="about_image">
-        <span class="field-hint">JPEG, PNG, GIF หรือ WebP ไม่เกิน 5 MB แล้ว URL ของรูปจะถูกใส่ในช่องด้านซ้ายให้ แนะนำรูปแนวตั้ง</span>
+      <label>อัปโหลดรูปโค้ง (เลือกได้หลายไฟล์)
+        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple data-upload-target="about_image" data-upload-mode="lines">
+        <span class="field-hint">JPEG, PNG, GIF หรือ WebP ไม่เกิน 5 MB ต่อไฟล์ แล้ว URL จะถูกต่อท้ายช่องด้านซ้ายบรรทัดละรูป แนะนำรูปแนวตั้ง ใส่ได้สูงสุด 8 รูป ถ้าใส่มากกว่า 1 รูป หน้าเว็บจะเล่นเป็นสไลด์</span>
       </label>
     </div>
     <div class="field-pair">

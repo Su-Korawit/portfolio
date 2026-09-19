@@ -45,6 +45,9 @@ module.exports = {
     aboutColorsLabel: 'สีที่ฉันชอบ:',
     aboutContactLabel: 'ติดต่อ:',
     aboutVideoTitle: 'รู้จักฉันมากขึ้น',
+    aboutSlidesLabel: 'เลือกรูป',
+    // {n} is the position of the picture in the slideshow
+    aboutSlideNumber: 'รูปที่ {n}',
     aboutVideoConsent: 'วิดีโอจะขึ้นตรงนี้หลังคุณกดยอมรับคุกกี้ ดูหรือแก้การตั้งค่าได้ที่',
     aboutVideoWatch: 'เปิดดูบน YouTube',
     navPrivacy: 'ความเป็นส่วนตัว',
@@ -128,6 +131,9 @@ module.exports = {
     aboutColorsLabel: 'My favorite colors:',
     aboutContactLabel: 'Contact:',
     aboutVideoTitle: 'Get to know me',
+    aboutSlidesLabel: 'Choose a picture',
+    // {n} is the position of the picture in the slideshow
+    aboutSlideNumber: 'Picture {n}',
     aboutVideoConsent: 'The video appears here once you accept cookies. Read or change that on the',
     aboutVideoWatch: 'Watch on YouTube',
     navPrivacy: 'Privacy',
