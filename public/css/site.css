@@ -65,6 +65,18 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 img { max-width: 100%; height: auto; }
+/* Only visible to a screen reader: a label or value that the layout already makes obvious to the eye.
+   Shared with the admin pages, which load this file before admin.css. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 a { color: var(--accent); text-underline-offset: 0.2em; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -425,10 +437,194 @@ a.tag:hover { background: var(--border); color: var(--text); }
 .project-summary { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-h3); }
 .project-links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-4) 0 0; font-weight: 600; }
 
-/* About page. .social-list is shared with the footer, which reads the same settings keys. */
-.about > * { max-width: var(--measure); }
-.about h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
-.about .prose { margin-bottom: var(--sp-8); }
+/* About page (spec 2.1). The page has its own warm palette and serif display type, a deliberate break from
+   the rest of the site, and it carries a dark counterpart so the theme toggle still works. The tokens hang
+   off the <body> of this page only - :has() picks it out without the layout templates needing a body class -
+   and --bg is redefined from them, so the header and footer sit on the same colour as the card instead of
+   framing it in white.
+   Contrast on the light page: --about-ink is 5.8:1 on --about-bg, and --about-accent, used only for display
+   type at 1.5rem and up and for the rules, is 4:1 - over the 3:1 that large text needs. */
+body:has(main.about) {
+  --about-bg:     light-dark(#EFE7E4, #1C1714);
+  --about-ink:    light-dark(#7A3B1F, #E8CFC2);
+  --about-accent: light-dark(#B0562E, #D98C5F);
+  --about-rule:   light-dark(#C9866A, #6A4636);
+  --about-frame:  light-dark(#DCD1CC, #2B2320);
+  --bg: var(--about-bg);
+}
+.about-card { color: var(--about-ink); }
+.about-card a { color: inherit; text-decoration-color: var(--about-rule); }
+.about-card a:hover { color: var(--about-accent); }
+/* Display type. --font-serif ends in Anuphan, so Latin gets a serif and Thai - which has no glyph in any of
+   the serif faces - lands on the one face this site ships with Thai glyphs, instead of a broken mix. */
+.about-head h1, .about-greeting, .about-name, .about-quote, .about-quote-source, .about-pill,
+.about-contact h2, .about-facts {
+  font-family: var(--font-serif);
+}
+.about-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding-block: var(--sp-3);
+  border-block: 1px solid var(--about-rule);
+}
+.about-head h1 { margin: 0; font-size: var(--fs-h2); font-weight: 600; color: var(--about-accent); }
+.about-star { flex: none; width: 1.25rem; height: 1.25rem; fill: var(--about-accent); }
+
+/* The rows of the page. Every row after the first is separated by a rule, and from 48rem up the two columns
+   inside a row are separated by a vertical one, the way the reference layout is ruled. */
+.about-row { padding-block: var(--sp-8); }
+.about-row + .about-row { border-top: 1px solid var(--about-rule); }
+.about-figure { margin: 0 0 var(--sp-6); }
+/* The arch: a semicircular top over straight sides. The radius is larger than half the width, so the browser
+   clamps it to exactly half and the top becomes a half-circle at any size. */
+.about-portrait {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: var(--about-frame);
+  border-radius: 100vw 100vw var(--r-sm) var(--r-sm);
+}
+.about-greeting { margin: 0; font-size: var(--fs-h3); color: var(--about-accent); }
+.about-name {
+  margin: var(--sp-2) 0 var(--sp-6);
+  font-size: clamp(2.5rem, 7vw, 4rem);
+  line-height: 1.05;
+  font-weight: 500;
+  color: var(--about-accent);
+  text-wrap: balance;
+}
+.about-intro .prose { max-width: none; margin-bottom: var(--sp-6); color: var(--about-ink); }
+.about-intro .prose > :first-child { margin-top: 0; }
+.about-intro .prose > :last-child { margin-bottom: 0; }
+
+/* The facts box: an outlined panel with the rings ornament in a cell of its own, as in the reference. */
+.about-facts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 1px solid var(--about-rule);
+  border-radius: var(--r-sm);
+}
+.about-facts ul { margin: 0; padding: var(--sp-4); list-style: none; }
+.about-facts li + li { margin-top: var(--sp-2); }
+.about-rings {
+  width: 5.5rem;
+  height: 5.5rem;
+  padding: var(--sp-3);
+  border-left: 1px solid var(--about-rule);
+  fill: none;
+  stroke: var(--about-rule);
+  stroke-width: 1;
+}
+
+/* The lower row: the swatches on one side, the video on the other. */
+.about-pill {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-6);
+  border: 1px solid var(--about-rule);
+  border-radius: var(--r-full);
+  color: var(--about-accent);
+  text-align: center;
+}
+.about-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(3.5rem, 1fr));
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.about-swatch { display: block; height: 3rem; border: 1px solid var(--about-frame); border-radius: var(--r-sm); }
+.about-video { margin-top: var(--sp-8); }
+/* the frame holds the shape so the row does not jump when the player finishes loading */
+.about-video-frame {
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--sp-4);
+  background: var(--about-frame);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.about-video-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+/* what stands in for the player until the reader accepts cookies: same box, no third-party request */
+.about-video-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6);
+  background: none;
+  border: 1px dashed var(--about-rule);
+  text-align: center;
+}
+.about-video-wait p { margin: 0; }
+
+/* The quote sits under the swatches, in small type so a long passage still fits the narrow column. The star
+   is centred on the rule that separates it from the swatches above. */
+.about-aside > * + * { margin-top: var(--sp-8); padding-top: var(--sp-8); border-top: 1px solid var(--about-rule); }
+.about-quote-wrap { position: relative; }
+.about-quote-wrap > .about-star {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding-inline: var(--sp-3);
+  background: var(--about-bg);
+  box-sizing: content-box;
+}
+/* The quotation marks are drawn by the block, one hung over each corner of the text, the way the reference
+   sets a quote. They are decoration, so the empty alt text after the slash keeps a screen reader from
+   reading stray punctuation around a <blockquote> that is already announced as a quote. */
+.about-quote-block {
+  position: relative;
+  margin: 0;
+  padding: var(--sp-6) var(--sp-4) var(--sp-4);
+}
+.about-quote-block::before, .about-quote-block::after {
+  position: absolute;
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--about-rule);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.about-quote-block::before { content: "\201C" / ""; top: 0; left: 0; }
+.about-quote-block::after { content: "\201D" / ""; right: 0; bottom: 0; transform: translateY(0.35em); }
+.about-quote { margin: 0; font-size: var(--fs-base); line-height: 1.65; color: var(--about-accent); }
+.about-quote-source { margin: var(--sp-3) 0 0; color: var(--about-ink); font-size: var(--fs-sm); }
+.about-quote-source cite { font-style: normal; }
+
+/* Contact sits under a rule at the foot of the page, like the reference. */
+.about-contact { padding-top: var(--sp-8); border-top: 1px solid var(--about-rule); }
+.about-contact h2 { margin: 0 0 var(--sp-4); font-size: var(--fs-h3); font-weight: 600; color: var(--about-accent); }
+.about-contact-cols { display: grid; gap: var(--sp-2) var(--sp-8); }
+.about-contact-lines { margin: 0; padding: 0; list-style: none; }
+.about-contact .social-list { margin: 0; }
+/* underlined, not colour alone: inside the card a link sits in the same ink as the text around it */
+.about-contact .social-list a { color: inherit; text-decoration: underline; text-decoration-color: var(--about-rule); }
+.about-contact .social-list a:hover { color: var(--about-accent); text-decoration-color: currentColor; }
+
+@media (min-width: 48rem) {
+  .about-head h1 { font-size: var(--fs-h1); }
+  .about-star { width: 1.75rem; height: 1.75rem; }
+  /* the portrait column is fixed so the text beside it keeps a comfortable measure at every width */
+  .about-row { display: grid; grid-template-columns: 20rem minmax(0, 1fr); gap: var(--sp-8); }
+  .about-row > :nth-child(2) { padding-left: var(--sp-8); border-left: 1px solid var(--about-rule); }
+  /* a row whose other half was never filled in gets the whole width instead of a narrow first column, but a
+     picture with no text beside it keeps a sane size rather than growing to the width of the page */
+  .about-row > :only-child { grid-column: 1 / -1; }
+  .about-figure:only-child .about-portrait { max-width: 20rem; }
+  .about-figure { margin: 0; }
+  .about-portrait { max-width: none; }
+  .about-video { margin-top: 0; }
+  .about-contact-cols { grid-template-columns: 1fr 1fr; }
+}
+
 .social-list { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-6) 0 0; padding: 0; list-style: none; }
 .social-list a { color: var(--text-muted); text-decoration: none; }
 .social-list a:hover { color: var(--text); text-decoration: underline; }

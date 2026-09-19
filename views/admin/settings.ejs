@@ -30,6 +30,72 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
       </label>
     </div>
     <div class="field-pair">
+      <label>รูปโค้งของคุณในหน้า About
+        <input name="about_image" value="<%= val('about_image') %>" placeholder="/uploads/" spellcheck="false">
+      </label>
+      <label>อัปโหลดรูปโค้ง
+        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-upload-target="about_image">
+        <span class="field-hint">JPEG, PNG, GIF หรือ WebP ไม่เกิน 5 MB แล้ว URL ของรูปจะถูกใส่ในช่องด้านซ้ายให้ แนะนำรูปแนวตั้ง</span>
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>คำอธิบายรูปโค้ง (alt) ภาษาไทย
+        <input name="th[about_image_alt]" value="<%= val('about_image_alt', 'th') %>">
+      </label>
+      <label>คำอธิบายรูปโค้ง (alt) ภาษาอังกฤษ
+        <input name="en[about_image_alt]" value="<%= val('about_image_alt', 'en') %>" lang="en">
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>ชื่อที่แสดงตัวใหญ่ ภาษาไทย
+        <input name="th[about_name]" value="<%= val('about_name', 'th') %>">
+      </label>
+      <label>ชื่อที่แสดงตัวใหญ่ ภาษาอังกฤษ
+        <input name="en[about_name]" value="<%= val('about_name', 'en') %>" lang="en">
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>ข้อมูลในกรอบ ภาษาไทย (บรรทัดละข้อ)
+        <textarea name="th[about_facts]" rows="4" class="editor-body"><%= val('about_facts', 'th') %></textarea>
+      </label>
+      <label>ข้อมูลในกรอบ ภาษาอังกฤษ (บรรทัดละข้อ)
+        <textarea name="en[about_facts]" rows="4" class="editor-body" lang="en"><%= val('about_facts', 'en') %></textarea>
+      </label>
+    </div>
+    <label>สีที่ชอบ
+      <input name="about_colors" value="<%= val('about_colors') %>" placeholder="#EDE7F6, #D1C4E9, #B39DDB, #9575CD" spellcheck="false">
+    </label>
+    <p class="field-hint">ใส่เป็นรหัสสี hex คั่นด้วยจุลภาค สูงสุด 8 สี ค่าที่ไม่ใช่ hex จะถูกข้าม</p>
+    <div class="field-pair">
+      <label>คำคม ภาษาไทย
+        <input name="th[about_quote]" value="<%= val('about_quote', 'th') %>">
+      </label>
+      <label>คำคม ภาษาอังกฤษ
+        <input name="en[about_quote]" value="<%= val('about_quote', 'en') %>" lang="en">
+      </label>
+    </div>
+    <div class="field-pair">
+      <label>ที่มาของคำคม ภาษาไทย
+        <input name="th[about_quote_source]" value="<%= val('about_quote_source', 'th') %>">
+      </label>
+      <label>ที่มาของคำคม ภาษาอังกฤษ
+        <input name="en[about_quote_source]" value="<%= val('about_quote_source', 'en') %>" lang="en">
+      </label>
+    </div>
+    <label>ลิงก์ YouTube (บล็อก "รู้จักฉันมากขึ้น")
+      <input name="about_video" value="<%= val('about_video') %>" placeholder="https://www.youtube.com/watch?v=..." spellcheck="false">
+    </label>
+    <p class="field-hint">วางลิงก์แบบไหนก็ได้ (youtube.com/watch, youtu.be, shorts) ถ้าอ่านรหัสวิดีโอไม่ได้ ระบบจะถือว่าว่างและไม่แสดงบล็อกนี้</p>
+    <div class="field-pair">
+      <label>ที่อยู่ติดต่อ ภาษาไทย (บรรทัดละข้อ)
+        <textarea name="th[about_contact]" rows="3" class="editor-body"><%= val('about_contact', 'th') %></textarea>
+      </label>
+      <label>ที่อยู่ติดต่อ ภาษาอังกฤษ (บรรทัดละข้อ)
+        <textarea name="en[about_contact]" rows="3" class="editor-body" lang="en"><%= val('about_contact', 'en') %></textarea>
+      </label>
+    </div>
+    <p class="field-hint">อีเมลกับลิงก์ social ด้านล่างจะขึ้นในบล็อกติดต่อของหน้า About ให้เอง</p>
+    <div class="field-pair">
       <label>Privacy ภาษาไทย (markdown)
         <textarea name="th[privacy_body]" rows="8" class="editor-body"><%= val('privacy_body', 'th') %></textarea>
       </label>
@@ -49,10 +115,13 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
       <label>X URL
         <input type="url" name="x_url" value="<%= val('x_url') %>">
       </label>
-      <label>อีเมล
-        <input type="email" name="email" value="<%= val('email') %>">
+      <label>Instagram URL
+        <input type="url" name="instagram_url" value="<%= val('instagram_url') %>">
       </label>
     </div>
+    <label>อีเมล
+      <input type="email" name="email" value="<%= val('email') %>">
+    </label>
     <p class="field-hint">ช่องไหนเว้นว่าง ระบบจะลบค่านั้นออกตอนบันทึก</p>
     <button type="submit">บันทึก</button>
   </form>
@@ -62,4 +131,5 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
     <button type="submit">ออกจากระบบทุกเครื่อง</button>
   </form>
 </main>
+<script src="/js/admin.js?v=<%= v %>" defer></script>
 <%- include('foot') %>

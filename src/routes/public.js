@@ -1,5 +1,6 @@
 const express = require('express');
 const { get, all } = require('../db');
+const { videoId } = require('../youtube');
 
 const router = express.Router();
 
@@ -57,6 +58,25 @@ const like = q => '%' + q.replace(/[!%_]/g, '!$&') + '%';
 // admin form and its own filtering) could still carry an unsafe scheme, so this route filters independently.
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const link = url => (url && URL_PATTERN.test(url) ? url : '');
+
+// Same idea for the about portrait's src, which is either a local '/uploads/<name>' or an absolute R2 URL.
+// Kept in step with IMAGE_PATTERN in admin.js, which filters the same value on the way in.
+const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
+const image = url => (url && IMAGE_PATTERN.test(url) ? url : '');
+
+// The text blocks of /about that exist in both languages. about_image, about_video and about_colors are one
+// value for the whole site, so they stay in settings (lang '*') and are read from res.locals.settings.
+const ABOUT_LANG_KEYS = [
+  'about_body', 'about_image_alt', 'about_name', 'about_facts', 'about_quote', 'about_quote_source', 'about_contact'
+];
+
+// The swatch row. Each colour ends up in a style attribute, so only a plain hex literal is kept - anything
+// else in the field is dropped rather than escaped, and the row is capped so a long paste cannot fill the page.
+const HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+const colors = value => String(value || '').split(/[\s,]+/).filter(c => HEX_PATTERN.test(c)).slice(0, 8);
+
+// The facts box and the contact block are textareas the owner writes one item per line.
+const linesOf = ({ value, lang }) => ({ lang, items: value.split('\n').map(line => line.trim()).filter(Boolean).slice(0, 8) });
 
 // Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
@@ -316,17 +336,46 @@ router.get('/tags/:slug', async (req, res, next) => {
   });
 });
 
-// About (spec 2.1): about_body falls back to the other language when the current one is empty, and the
-// wrapper gets a lang attribute only then, the same convention as the foreign card in post-card.ejs.
+// About (spec 2.1). Every block of the page is a setting the owner fills in, and every one of them is
+// optional: a block with nothing in it is left out rather than shown empty. Each piece of text falls back to
+// the other language on its own, so a half-translated page shows the reader as much of their own language as
+// exists, and pick() reports which language won so the template can mark the odd one out with lang=.
 router.get('/about', async (req, res) => {
-  const { lang, other, t } = res.locals;
-  const rows = await all("SELECT lang, value FROM settings WHERE key = 'about_body' AND lang IN ('th', 'en')");
-  const byLang = {};
-  for (const row of rows) byLang[row.lang] = row.value;
-  const aboutLang = byLang[lang] ? lang : (byLang[other] ? other : lang);
+  const { lang, other, t, settings } = res.locals;
+  const rows = await all(
+    `SELECT key, lang, value FROM settings
+     WHERE key IN (${ABOUT_LANG_KEYS.map(() => '?').join(', ')}) AND lang IN ('th', 'en')`,
+    ABOUT_LANG_KEYS
+  );
+  const byKey = {};
+  for (const row of rows) (byKey[row.key] ||= {})[row.lang] = row.value;
+  // { value, lang }: the reader's language when it has something, otherwise the other one. lang is what the
+  // template compares against res.locals.lang to decide whether the block needs a lang attribute.
+  const pick = key => {
+    const values = byKey[key] || {};
+    const from = values[lang] ? lang : (values[other] ? other : lang);
+    return { value: values[from] || '', lang: from };
+  };
+  const body = pick('about_body');
+  // the cookie bar asks about the embed only when there is one to ask about (partials/consent.ejs)
+  const video = videoId(settings.about_video);
+  res.locals.hasEmbed = Boolean(video);
   res.render('about', {
-    aboutLang,
-    aboutBody: byLang[aboutLang] || '',
+    // aboutLang/aboutBody keep the names the body has always had, since the prose block still reads them
+    aboutLang: body.lang,
+    aboutBody: body.value,
+    // the images are filtered independently of the settings form's own filtering, the same reason as
+    // repo_url/demo_url above: a row written straight into SQLite could otherwise put any scheme in an src
+    aboutImage: image(settings.about_image),
+    aboutColors: colors(settings.about_colors),
+    // only an id the parser recognised reaches the embed URL in the template, never the raw setting
+    aboutVideo: video,
+    name: pick('about_name'),
+    quote: pick('about_quote'),
+    quoteSource: pick('about_quote_source'),
+    facts: linesOf(pick('about_facts')),
+    contact: linesOf(pick('about_contact')),
+    imageAlt: pick('about_image_alt'),
     meta: {
       title: t.navAbout,
       canonical: '/' + lang + '/about',

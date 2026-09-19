@@ -5,6 +5,7 @@ const multer = require('multer');
 const { run, get, all, transaction } = require('../db');
 const { toSlug } = require('../slug');
 const uploads = require('../uploads');
+const { videoId } = require('../youtube');
 
 const router = express.Router();
 
@@ -171,12 +172,24 @@ router.post('/upload', async (req, res) => {
 // Settings (spec 2.4): plain inputs and a textarea, no tabs and no per-field status. An empty field deletes
 // that row and a value upserts it. The form always submits this fixed set of keys, so session_epoch (which
 // is not one of them) is never touched by saving settings.
-const GLOBAL_SETTING_KEYS = ['site_name', 'github_url', 'linkedin_url', 'x_url', 'email'];
-const LANG_SETTING_KEYS = ['tagline', 'about_body', 'privacy_body'];
+const GLOBAL_SETTING_KEYS = [
+  'site_name', 'about_image', 'about_video', 'about_colors',
+  'github_url', 'linkedin_url', 'x_url', 'instagram_url', 'email'
+];
+const LANG_SETTING_KEYS = [
+  'tagline', 'about_body', 'about_image_alt', 'about_name', 'about_facts',
+  'about_quote', 'about_quote_source', 'about_contact', 'privacy_body'
+];
 // github_url/linkedin_url/x_url become href in about.ejs, footer.ejs and privacy.ejs, where <%= %> escapes HTML
 // but lets a javascript: link through. The same pattern as admin-projects.js's URL_PATTERN.
 const URL_PATTERN = /^https?:\/\/\S+$/i;
-const URL_SETTING_KEYS = ['github_url', 'linkedin_url', 'x_url'];
+const URL_SETTING_KEYS = ['github_url', 'linkedin_url', 'x_url', 'instagram_url'];
+// about_image, the portrait on /about, becomes an <img src>. /admin/upload answers with '/uploads/<name>'
+// locally and an absolute R2 URL in production, so both shapes are allowed and nothing else is: '//host/x'
+// and a javascript: or data: value typed into the field by hand are treated as empty, the same silent
+// handling as the URLs above. about_video goes the same way through the YouTube link parser: a value with no
+// video id in it is stored as empty rather than kept around to fail silently on the page.
+const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
 
 async function upsertSetting(key, lang, value) {
   if (value) {
@@ -201,6 +214,8 @@ router.post('/settings', async (req, res) => {
       let value = text(body[key]).trim();
       // an unsafe scheme is silently treated as empty, never a validation error - this route has no 400 path
       if (URL_SETTING_KEYS.includes(key) && value && !URL_PATTERN.test(value)) value = '';
+      if (key === 'about_image' && value && !IMAGE_PATTERN.test(value)) value = '';
+      if (key === 'about_video' && value && !videoId(value)) value = '';
       await upsertSetting(key, '*', value);
     }
     for (const key of LANG_SETTING_KEYS) {
