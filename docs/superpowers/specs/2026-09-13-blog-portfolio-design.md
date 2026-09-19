@@ -1198,7 +1198,7 @@ LIMIT 20
 ชื่อ                  ตั้งโดย    อายุ        ใช้ทำอะไร                                    ประเภท
 ta_admin              server    30 วัน      login ของ admin ส่งเฉพาะ path /admin          จำเป็น
 lang                  server    1 ปี        จำภาษาล่าสุดที่อ่าน ใช้ตอนเข้า /                  จำเป็นต่อการทำงาน
-consent               browser   180 วัน     จำว่าผู้อ่านยอมรับหรือปฏิเสธ cookie สถิติ          จำเป็น
+consent               browser   180 วัน     จำคำตอบเรื่องคุกกี้ที่ต้องขอความยินยอม หรือจำว่ารับทราบแล้ว  จำเป็น
 _ga และ _ga_*         Google    2 ปี        สถิติผู้เข้าชม มีเฉพาะหลังผู้อ่านกดยอมรับ           สถิติ ต้องได้รับความยินยอม
 YouTube               YouTube   YouTube กำหนด เล่นวิดีโอที่ฝังในหน้า About มีเฉพาะหลังกดยอมรับ  วิดีโอฝัง ต้องได้รับความยินยอม
 theme (localStorage)  browser   ไม่หมดอายุ   จำธีมสว่างหรือมืด ไม่ถูกส่งไป server             จำเป็นต่อการทำงาน
@@ -1233,7 +1233,9 @@ if (req.cookies.lang !== lang) {
 
 - public router ตั้ง `res.locals.publicPage = true`, `res.locals.consent = req.cookies.consent` และ `res.locals.gaId = process.env.GA_MEASUREMENT_ID || ''`
 - template อ่านสามค่านี้ผ่าน `locals.publicPage`, `locals.consent` และ `locals.gaId` จึงไม่ต้องเพิ่มค่า default ระดับ app และหน้าใต้ `/admin` รวมถึง preview จะไม่มีแถบและไม่มี analytics เลย
-- `partials/consent.ejs` ถูก include ท้าย `<body>` และ render แถบก็ต่อเมื่อ `locals.publicPage` เป็นจริง และ `locals.consent` ไม่ใช่ `granted` หรือ `denied` หน้าจอจึงไม่กะพริบ
+- `partials/consent.ejs` ถูก include ท้าย `<body>` และ render แถบก็ต่อเมื่อ `locals.publicPage` เป็นจริง และผู้อ่านยังไม่ได้ตอบสิ่งที่หน้านั้นถาม หน้าจอจึงไม่กะพริบ
+- cookie `consent` มีได้ 3 ค่า `granted` `denied` และ `acknowledged` โดยปุ่ม รับทราบ บันทึกค่าหลัง ไม่ใช่ `denied` เพราะหน้าที่ไม่มีอะไรให้ยินยอมไม่ได้ถามคำถามไว้ ถ้านับเป็นการปฏิเสธจะกลายเป็นปฏิเสธสิ่งที่ผู้อ่านไม่เคยถูกถาม (เคยเป็นแบบนั้น กดรับทราบที่หน้าแรกแล้ววิดีโอในหน้า About ค้างถาวรและแถบไม่กลับมาถามอีก)
+- หน้าที่มีอะไรให้ยินยอม (`gaId` หรือ `hasEmbed`) นับว่าตอบแล้วเฉพาะ `granted` หรือ `denied` ส่วนหน้าที่ไม่มีนับว่าตอบแล้วทั้งสามค่า
 - แถบวางชิดขอบล่างแบบไม่บังเนื้อหาและไม่เป็น modal
 - route ของ `/about` ตั้ง `res.locals.hasEmbed` เมื่อหน้านั้นมีวิดีโอให้ฝัง
 - ถ้ามี `gaId` หรือ `hasEmbed` แถบมีปุ่ม ยอมรับ กับ ปฏิเสธ ขนาดและน้ำหนักเท่ากัน พร้อมลิงก์ไปหน้า privacy ข้อความในแถบบอกตามที่มีจริง (สถิติ / วิดีโอฝัง / ทั้งสองอย่าง)
