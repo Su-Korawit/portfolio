@@ -67,22 +67,7 @@ nothing to migrate by hand.
 
 Everything on `/about` — the name, the intro, the facts box, the swatches, the quote, the YouTube link and
 the contact lines — is a setting, so a fresh database starts with none of it. Fill it in at
-`/admin/settings`, or put the values in `scripts/about-seed.json` and run the seeder against the same
-database the app uses:
-
-```
-npm run seed:about                       # applies scripts/about-seed.json
-npm run seed:about -- my-values.json     # or another file
-npm run seed:about -- --dry-run          # prints what it would write, writes nothing
-```
-
-A blank value in the file is skipped, so re-running it never wipes something already filled in from the
-admin page; `null` clears a setting on purpose. Values are filtered exactly as the admin form filters them,
-and an unknown key or a rejected value stops the run before anything is written.
-
-Point it at the right database the same way the app does: with `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`
-set it writes to Turso, otherwise to the local SQLite file under `DATA_DIR`. `npm run seed:about` reads
-`.env` if there is one.
+`/admin/settings`; each block stays hidden until it has a value.
 
 ## Free-tier limits worth knowing
 

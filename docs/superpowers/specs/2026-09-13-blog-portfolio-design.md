@@ -544,8 +544,6 @@ privacy_body   th, en    /privacy (markdown)
 session_epoch  *         ออกจากระบบทุกเครื่อง (ข้อ 4.3) ไม่อยู่ในฟอร์ม settings
 ```
 
-- key ที่มีทั้งหมดกับกฎการกรองค่าอยู่ใน `src/settings.js` ที่เดียว ทั้งฟอร์ม admin และ `scripts/seed-about.js` เรียกใช้ตัวเดียวกัน ค่าที่เขียนด้วยสคริปต์จึงถูกกรองเหมือนค่าที่พิมพ์ในฟอร์ม
-- `scripts/seed-about.js` อ่านไฟล์ JSON (ค่าเริ่มต้น `scripts/about-seed.json`) แล้ว upsert ค่าในนั้น ค่าว่างถูกข้าม (เพื่อไม่ให้ไฟล์ template ลบของที่กรอกไว้แล้ว) ใส่ `null` เพื่อสั่งลบ key ที่ไม่รู้จักหรือค่าที่ฟอร์มไม่รับทำให้หยุดก่อนเขียนอะไรลงไปเลย และมี `--dry-run` ให้ดูก่อน
 - ในหน้า settings เป็น input และ textarea ธรรมดา ไม่มี tab และไม่มีสถานะ
 - ชื่อ field ใช้แบบเดียวกับ editor ค่าที่แยกภาษาเป็น `th[tagline]` หรือ `en[about_body]` ส่วนค่าที่ไม่ขึ้นกับภาษาใช้ชื่อตรงๆ เช่น `site_name` หรือ `github_url`
 - ถ้าช่องไหนว่าง ตอนบันทึกจะ DELETE row นั้น ถ้ามีค่าจะ upsert ด้วย `ON CONFLICT(key, lang)`
