@@ -236,15 +236,17 @@ const hasNext = rows.length > 10;
 
 #### About
 
-หน้า About เป็นการ์ดใบเดียวที่มีชุดสีกับฟอนต์ของตัวเอง (โทนอบอุ่น ตัวอักษร serif) แยกจากหน้าอื่น และมีชุดสีสำหรับโหมดมืดคู่กัน token ทั้งหมดอยู่ใน `.about-card` ไม่มีใครนอกการ์ดอ่านค่าเหล่านี้
+หน้า About มีชุดสีกับฟอนต์ของตัวเอง (โทนอบอุ่น ตัวอักษร serif) แยกจากหน้าอื่น และมีชุดสีสำหรับโหมดมืดคู่กัน token ผูกไว้กับ `body:has(main.about)` แล้วนิยาม `--bg` ทับจาก token นั้น พื้นหลังทั้งหน้ารวม header กับ footer จึงเป็นสีเดียวกับเนื้อหา ไม่ใช่กรอบขาวล้อมการ์ด
 
-เรียงบนลงล่าง: หัวการ์ด (`navAbout` + ดาว 4 แฉก) / รูปโค้งกับกลุ่มแนะนำตัว / แถบสีที่ชอบกับคำคม คู่กับรูปที่สอง / บล็อกติดต่อ
+เรียงบนลงล่าง: หัวหน้า (`navAbout` + ดาว 4 แฉก) / รูปโค้งกับกลุ่มแนะนำตัว / แถบสีที่ชอบ คู่กับวิดีโอ YouTube / คำคมเต็มความกว้าง / บล็อกติดต่อ
 
 - ทุกบล็อกเป็น settings และเป็น optional บล็อกที่ยังไม่มีค่าจะไม่ถูก render เลย ไม่ใช่ render เป็นช่องว่าง
-- ข้อความแต่ละบล็อก fallback ข้ามภาษาเป็นอิสระต่อกัน (`about_body`, `about_name`, `about_facts`, `about_quote`, `about_photo_caption`, `about_contact`, `about_image_alt`) บล็อกที่ fallback จะใส่ `lang` ของภาษาต้นทางไว้ที่ element ครอบ ส่วน alt ของรูปใส่ `lang` ไว้ที่ `img` เพราะ alt ใส่ markup ไม่ได้
+- ข้อความแต่ละบล็อก fallback ข้ามภาษาเป็นอิสระต่อกัน (`about_body`, `about_name`, `about_facts`, `about_quote`, `about_quote_source`, `about_contact`, `about_image_alt`) บล็อกที่ fallback จะใส่ `lang` ของภาษาต้นทางไว้ที่ element ครอบ ส่วน alt ของรูปใส่ `lang` ไว้ที่ `img` เพราะ alt ใส่ markup ไม่ได้
 - กลุ่มแนะนำตัว: `aboutGreeting` จาก strings.js + `about_name` + `about_body` (markdown) + กรอบข้อมูลจาก `about_facts` ซึ่งเป็น textarea บรรทัดละข้อ (สูงสุด 8)
 - `about_colors` เป็นรหัสสี hex คั่นด้วยจุลภาค (สูงสุด 8) ค่าที่ไม่ใช่ hex ถูกตัดทิ้งเพราะค่านี้ลงไปอยู่ใน style attribute
-- `about_contact` เป็น textarea บรรทัดละข้อเช่นกัน แสดงคู่กับอีเมลและ social links ที่อ่านจาก settings `lang='*'` ถ้าค่าไหนว่างก็ไม่ต้องแสดง
+- `about_video` รับลิงก์ YouTube รูปแบบไหนก็ได้ แล้วดึงเฉพาะรหัสวิดีโอ 11 ตัวอักษรออกมาด้วย `src/youtube.js` ค่าที่อ่านรหัสไม่ได้ถือว่าว่าง `iframe` จึงมีแต่ `https://www.youtube-nocookie.com/embed/<id>` ที่ประกอบจากรหัสนั้น ไม่เคยเป็นค่าดิบจาก settings หัวข้อของบล็อกมาจาก `aboutVideoTitle` ใน strings.js
+- คำคมกินเต็มความกว้างเพราะข้อความอาจยาว มีดาวคั่นกลางเส้นด้านบน และมีที่มาจาก `about_quote_source` อยู่ใต้คำคมใน `cite`
+- `about_contact` เป็น textarea บรรทัดละข้อเช่นกัน แสดงคู่กับอีเมลและ social links (GitHub, LinkedIn, X, Instagram) ที่อ่านจาก settings `lang='*'` ถ้าค่าไหนว่างก็ไม่ต้องแสดง
 - จอตั้งแต่ 48rem ขึ้นไปแต่ละแถวเป็นสองคอลัมน์คั่นด้วยเส้น จอแคบกว่านั้นเรียงลงมาเป็นคอลัมน์เดียว แถวที่มีของแค่ฝั่งเดียวกินความกว้างเต็มแถว
 
 ### 2.2 การเลือกภาษาและการสลับภาษา
@@ -529,13 +531,14 @@ about_image_alt th, en   alt ของรูปนั้น
 about_name     th, en    ชื่อตัวใหญ่ในหน้า /about
 about_facts    th, en    ข้อมูลในกรอบ บรรทัดละข้อ
 about_quote    th, en    คำคม
-about_photo    *         รูปที่สอง (ข้างคำคม)
-about_photo_caption th, en ป้ายใต้รูปที่สอง ใช้เป็น alt ด้วย
+about_quote_source th, en ที่มาของคำคม
+about_video    *         ลิงก์ YouTube ของบล็อก "รู้จักฉันมากขึ้น"
 about_colors   *         สีที่ชอบ เป็น hex คั่นด้วยจุลภาค
 about_contact  th, en    ที่อยู่ติดต่อ บรรทัดละข้อ
 github_url     *         footer และ About
 linkedin_url   *
 x_url          *
+instagram_url  *
 email          *
 privacy_body   th, en    /privacy (markdown)
 session_epoch  *         ออกจากระบบทุกเครื่อง (ข้อ 4.3) ไม่อยู่ในฟอร์ม settings

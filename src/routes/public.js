@@ -1,5 +1,6 @@
 const express = require('express');
 const { get, all } = require('../db');
+const { videoId } = require('../youtube');
 
 const router = express.Router();
 
@@ -63,10 +64,10 @@ const link = url => (url && URL_PATTERN.test(url) ? url : '');
 const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
 const image = url => (url && IMAGE_PATTERN.test(url) ? url : '');
 
-// The text blocks of /about that exist in both languages. about_image, about_photo and about_colors are one
+// The text blocks of /about that exist in both languages. about_image, about_video and about_colors are one
 // value for the whole site, so they stay in settings (lang '*') and are read from res.locals.settings.
 const ABOUT_LANG_KEYS = [
-  'about_body', 'about_image_alt', 'about_name', 'about_facts', 'about_quote', 'about_photo_caption', 'about_contact'
+  'about_body', 'about_image_alt', 'about_name', 'about_facts', 'about_quote', 'about_quote_source', 'about_contact'
 ];
 
 // The swatch row. Each colour ends up in a style attribute, so only a plain hex literal is kept - anything
@@ -363,11 +364,12 @@ router.get('/about', async (req, res) => {
     // the images are filtered independently of the settings form's own filtering, the same reason as
     // repo_url/demo_url above: a row written straight into SQLite could otherwise put any scheme in an src
     aboutImage: image(settings.about_image),
-    aboutPhoto: image(settings.about_photo),
     aboutColors: colors(settings.about_colors),
+    // only an id the parser recognised reaches the embed URL in the template, never the raw setting
+    aboutVideo: videoId(settings.about_video),
     name: pick('about_name'),
     quote: pick('about_quote'),
-    photoCaption: pick('about_photo_caption'),
+    quoteSource: pick('about_quote_source'),
     facts: linesOf(pick('about_facts')),
     contact: linesOf(pick('about_contact')),
     imageAlt: pick('about_image_alt'),

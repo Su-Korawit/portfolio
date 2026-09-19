@@ -63,7 +63,7 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
       </label>
     </div>
     <label>สีที่ชอบ
-      <input name="about_colors" value="<%= val('about_colors') %>" placeholder="#FFFFFF, #B8C4C4, #D9BBA4, #000000" spellcheck="false">
+      <input name="about_colors" value="<%= val('about_colors') %>" placeholder="#EDE7F6, #D1C4E9, #B39DDB, #9575CD" spellcheck="false">
     </label>
     <p class="field-hint">ใส่เป็นรหัสสี hex คั่นด้วยจุลภาค สูงสุด 8 สี ค่าที่ไม่ใช่ hex จะถูกข้าม</p>
     <div class="field-pair">
@@ -75,23 +75,17 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
       </label>
     </div>
     <div class="field-pair">
-      <label>รูปที่สอง (ข้างคำคม)
-        <input name="about_photo" value="<%= val('about_photo') %>" placeholder="/uploads/" spellcheck="false">
+      <label>ที่มาของคำคม ภาษาไทย
+        <input name="th[about_quote_source]" value="<%= val('about_quote_source', 'th') %>">
       </label>
-      <label>อัปโหลดรูปที่สอง
-        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-upload-target="about_photo">
-        <span class="field-hint">JPEG, PNG, GIF หรือ WebP ไม่เกิน 5 MB แล้ว URL ของรูปจะถูกใส่ในช่องด้านซ้ายให้</span>
-      </label>
-    </div>
-    <div class="field-pair">
-      <label>ป้ายใต้รูปที่สอง ภาษาไทย
-        <input name="th[about_photo_caption]" value="<%= val('about_photo_caption', 'th') %>">
-      </label>
-      <label>ป้ายใต้รูปที่สอง ภาษาอังกฤษ
-        <input name="en[about_photo_caption]" value="<%= val('about_photo_caption', 'en') %>" lang="en">
+      <label>ที่มาของคำคม ภาษาอังกฤษ
+        <input name="en[about_quote_source]" value="<%= val('about_quote_source', 'en') %>" lang="en">
       </label>
     </div>
-    <p class="field-hint">ป้ายใต้รูปที่สองถูกใช้เป็นคำอธิบายรูป (alt) ด้วย</p>
+    <label>ลิงก์ YouTube (บล็อก "รู้จักฉันมากขึ้น")
+      <input name="about_video" value="<%= val('about_video') %>" placeholder="https://www.youtube.com/watch?v=..." spellcheck="false">
+    </label>
+    <p class="field-hint">วางลิงก์แบบไหนก็ได้ (youtube.com/watch, youtu.be, shorts) ถ้าอ่านรหัสวิดีโอไม่ได้ ระบบจะถือว่าว่างและไม่แสดงบล็อกนี้</p>
     <div class="field-pair">
       <label>ที่อยู่ติดต่อ ภาษาไทย (บรรทัดละข้อ)
         <textarea name="th[about_contact]" rows="3" class="editor-body"><%= val('about_contact', 'th') %></textarea>
@@ -121,10 +115,13 @@ const val = (key, lang) => settings[key + ':' + (lang || '*')] || '';
       <label>X URL
         <input type="url" name="x_url" value="<%= val('x_url') %>">
       </label>
-      <label>อีเมล
-        <input type="email" name="email" value="<%= val('email') %>">
+      <label>Instagram URL
+        <input type="url" name="instagram_url" value="<%= val('instagram_url') %>">
       </label>
     </div>
+    <label>อีเมล
+      <input type="email" name="email" value="<%= val('email') %>">
+    </label>
     <p class="field-hint">ช่องไหนเว้นว่าง ระบบจะลบค่านั้นออกตอนบันทึก</p>
     <button type="submit">บันทึก</button>
   </form>

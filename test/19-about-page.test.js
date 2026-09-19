@@ -21,11 +21,12 @@ test('19 about page blocks', async () => {
     r = await h.req('/admin/settings');
     assert.ok(r.text.includes('name="about_image" value=""'), r.text);
     assert.ok(r.text.includes('data-upload-target="about_image"'), r.text);
-    assert.ok(r.text.includes('data-upload-target="about_photo"'), r.text);
+    assert.ok(r.text.includes('name="about_video" value=""'), r.text);
+    assert.ok(r.text.includes('name="instagram_url" value=""'), r.text);
+    assert.ok(r.text.includes('name="th[about_quote_source]" value=""'), r.text);
     assert.ok(r.text.includes('name="th[about_name]" value=""'), r.text);
     assert.ok(r.text.includes('name="about_colors" value=""'), r.text);
     assert.ok(r.text.includes('name="en[about_quote]" value=""'), r.text);
-    assert.ok(r.text.includes('name="th[about_photo_caption]" value=""'), r.text);
     assert.ok(/<textarea[^>]*name="th\[about_facts\]"/.test(r.text), r.text);
     assert.ok(/<textarea[^>]*name="en\[about_contact\]"/.test(r.text), r.text);
     assert.ok(r.text.includes('<script src="/js/admin.js'), r.text);
@@ -33,7 +34,8 @@ test('19 about page blocks', async () => {
     const filled = {
       site_name: 'พอร์ตของผม',
       about_image: '/uploads/me.webp',
-      about_photo: '/uploads/cat.webp',
+      about_video: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30',
+      instagram_url: 'https://instagram.com/example',
       // the third value is not a hex colour and is dropped rather than escaped into the style attribute
       about_colors: '#FFFFFF, #B8C4C4, red, #000',
       email: 'hello@example.com',
@@ -43,20 +45,20 @@ test('19 about page blocks', async () => {
         about_name: 'กรวิชญ์',
         about_facts: 'อายุ 22 ปี\n\nอยู่กรุงเทพ',
         about_quote: 'ใจดีแล้วสวย',
-        about_photo_caption: 'แมวของผม: คริสตัล',
+        about_quote_source: 'วอลเดน',
         about_contact: '123 ถนนใดก็ได้\n02-345-6789'
       },
       en: {
         about_body: 'Hello',
         about_image_alt: 'Me by the sea',
         about_name: 'Korawit',
-        about_quote: 'Kindness is beautiful.',
-        about_photo_caption: 'My cat: Crystal'
+        about_quote: 'Kindness is beautiful.'
       }
     };
     r = await h.req('/admin/settings', { method: 'POST', form: filled });
     assert.equal(r.status, 303);
-    assert.deepEqual(await get("SELECT value FROM settings WHERE key = 'about_photo' AND lang = '*'"), { value: '/uploads/cat.webp' });
+    // the link is stored as it was pasted; the page turns it into an id of its own
+    assert.deepEqual(await get("SELECT value FROM settings WHERE key = 'about_video' AND lang = '*'"), { value: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30' });
     assert.deepEqual(await get("SELECT value FROM settings WHERE key = 'about_name' AND lang = 'th'"), { value: 'กรวิชญ์' });
 
     // the saved values come back into the form
@@ -79,7 +81,12 @@ test('19 about page blocks', async () => {
     assert.ok(r.text.includes('style="background: #000"'), r.text);
     assert.ok(!r.text.includes('background: red'), r.text);
     assert.ok(r.text.includes('<blockquote class="about-quote">ใจดีแล้วสวย</blockquote>'), r.text);
-    assert.ok(r.text.includes('<img class="about-photo" src="/uploads/cat.webp" alt="แมวของผม: คริสตัล"'), r.text);
+    assert.ok(r.text.includes('<cite>วอลเดน</cite>'), r.text);
+    // the embed is built from the parsed id on the nocookie host, never from the pasted link
+    assert.ok(r.text.includes('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"'), r.text);
+    assert.ok(r.text.includes('title="รู้จักฉันมากขึ้น"'), r.text);
+    assert.ok(!r.text.includes('watch?v='), r.text);
+    assert.ok(r.text.includes('<li><a href="https://instagram.com/example">Instagram</a></li>'), r.text);
     assert.ok(r.text.includes('<li>02-345-6789</li>'), r.text);
     assert.ok(r.text.includes('<li><a href="mailto:hello@example.com">hello@example.com</a></li>'), r.text);
 
@@ -95,9 +102,13 @@ test('19 about page blocks', async () => {
 
     // an unsafe or malformed picture value is treated as empty on save, the same silent handling as the URLs
     for (const bad of ['javascript:alert(1)', '//evil.example.com/me.png', 'me.webp']) {
-      await h.req('/admin/settings', { method: 'POST', form: { ...filled, about_image: bad, about_photo: bad } });
+      await h.req('/admin/settings', { method: 'POST', form: { ...filled, about_image: bad } });
       assert.equal(await get("SELECT value FROM settings WHERE key = 'about_image' AND lang = '*'"), undefined, bad);
-      assert.equal(await get("SELECT value FROM settings WHERE key = 'about_photo' AND lang = '*'"), undefined, bad);
+    }
+    // a link with no video id in it is stored as empty rather than kept to fail silently on the page
+    for (const bad of ['https://evil.example.com/watch?v=dQw4w9WgXcQ', 'javascript:alert(1)', 'not a link']) {
+      await h.req('/admin/settings', { method: 'POST', form: { ...filled, about_video: bad } });
+      assert.equal(await get("SELECT value FROM settings WHERE key = 'about_video' AND lang = '*'"), undefined, bad);
     }
 
     // a row written straight into SQLite skips the form's filtering, so /about filters again on the way out
@@ -125,6 +136,7 @@ test('19 about page blocks', async () => {
     assert.ok(!r.text.includes('about-portrait'), r.text);
     assert.ok(!r.text.includes('about-quote'), r.text);
     assert.ok(!r.text.includes('about-swatch'), r.text);
+    assert.ok(!r.text.includes('youtube-nocookie'), r.text);
     // the contact block stays, because the email alone is enough to fill it
     assert.ok(r.text.includes('<li><a href="mailto:hello@example.com">hello@example.com</a></li>'), r.text);
   } finally {

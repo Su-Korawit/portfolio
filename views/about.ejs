@@ -5,11 +5,12 @@
 const social = [
   ['github_url', 'GitHub'],
   ['linkedin_url', 'LinkedIn'],
-  ['x_url', 'X']
+  ['x_url', 'X'],
+  ['instagram_url', 'Instagram']
 ];
 const hasSocial = social.some(([key]) => settings[key]) || settings.email;
 const hasIntro = Boolean(aboutImage || name.value || aboutBody || facts.items.length);
-const hasLower = Boolean(aboutColors.length || quote.value || aboutPhoto);
+const hasLower = Boolean(aboutColors.length || aboutVideo);
 const hasContact = Boolean(contact.items.length || hasSocial);
 -%>
 <%- include('partials/head') %>
@@ -54,34 +55,35 @@ const hasContact = Boolean(contact.items.length || hasSocial);
 <% } -%>
 <% if (hasLower) { -%>
     <div class="about-row about-row-lower">
-<% if (aboutColors.length || quote.value) { -%>
-      <div class="about-aside">
 <% if (aboutColors.length) { -%>
-        <div class="about-colors">
-          <p class="about-pill" id="about-colors-label"><%= t.aboutColorsLabel %></p>
-          <ul class="about-swatches" aria-labelledby="about-colors-label">
+      <div class="about-colors">
+        <p class="about-pill" id="about-colors-label"><%= t.aboutColorsLabel %></p>
+        <ul class="about-swatches" aria-labelledby="about-colors-label">
 <% for (const color of aboutColors) { -%>
-            <li><span class="about-swatch" style="background: <%= color %>"></span><span class="sr-only"><%= color %></span></li>
+          <li><span class="about-swatch" style="background: <%= color %>"></span><span class="sr-only"><%= color %></span></li>
 <% } -%>
-          </ul>
-        </div>
-<% } -%>
-<% if (quote.value) { -%>
-        <div class="about-quote-block">
-          <%- include('partials/about-star') %>
-          <blockquote class="about-quote"<% if (quote.lang !== lang) { %> lang="<%= quote.lang %>"<% } %>><%= quote.value %></blockquote>
-        </div>
-<% } -%>
+        </ul>
       </div>
 <% } -%>
-<% if (aboutPhoto) { -%>
-      <figure class="about-photo-figure">
-        <img class="about-photo" src="<%= aboutPhoto %>" alt="<%= photoCaption.value %>"<% if (photoCaption.value && photoCaption.lang !== lang) { %> lang="<%= photoCaption.lang %>"<% } %> loading="lazy" decoding="async">
-<% if (photoCaption.value) { -%>
-        <figcaption class="about-pill"<% if (photoCaption.lang !== lang) { %> lang="<%= photoCaption.lang %>"<% } %>><%= photoCaption.value %></figcaption>
+<% if (aboutVideo) { -%>
+      <div class="about-video">
+        <div class="about-video-frame">
+          <iframe src="https://www.youtube-nocookie.com/embed/<%= aboutVideo %>" title="<%= t.aboutVideoTitle %>" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <p class="about-pill"><%= t.aboutVideoTitle %></p>
+      </div>
+<% } -%>
+    </div>
+<% } -%>
+<% if (quote.value) { -%>
+    <div class="about-row about-row-quote">
+      <%- include('partials/about-star') %>
+      <figure class="about-quote-block">
+        <blockquote class="about-quote"<% if (quote.lang !== lang) { %> lang="<%= quote.lang %>"<% } %>><%= quote.value %></blockquote>
+<% if (quoteSource.value) { -%>
+        <figcaption class="about-quote-source"<% if (quoteSource.lang !== lang) { %> lang="<%= quoteSource.lang %>"<% } %>><cite><%= quoteSource.value %></cite></figcaption>
 <% } -%>
       </figure>
-<% } -%>
     </div>
 <% } -%>
 <% if (hasContact) { -%>

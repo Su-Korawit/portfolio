@@ -437,27 +437,28 @@ a.tag:hover { background: var(--border); color: var(--text); }
 .project-summary { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-h3); }
 .project-links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-4) 0 0; font-weight: 600; }
 
-/* About page (spec 2.1). The page is a card with its own warm palette and serif display type, a deliberate
-   break from the rest of the site, and it carries a dark counterpart so the theme toggle still works. The
-   tokens are local to the card: nothing outside .about-card reads them.
-   Contrast on the light card: --about-ink is 5.8:1 on --about-bg, and --about-accent, used only for display
+/* About page (spec 2.1). The page has its own warm palette and serif display type, a deliberate break from
+   the rest of the site, and it carries a dark counterpart so the theme toggle still works. The tokens hang
+   off the <body> of this page only - :has() picks it out without the layout templates needing a body class -
+   and --bg is redefined from them, so the header and footer sit on the same colour as the card instead of
+   framing it in white.
+   Contrast on the light page: --about-ink is 5.8:1 on --about-bg, and --about-accent, used only for display
    type at 1.5rem and up and for the rules, is 4:1 - over the 3:1 that large text needs. */
-.about-card {
+body:has(main.about) {
   --about-bg:     light-dark(#EFE7E4, #1C1714);
   --about-ink:    light-dark(#7A3B1F, #E8CFC2);
   --about-accent: light-dark(#B0562E, #D98C5F);
   --about-rule:   light-dark(#C9866A, #6A4636);
   --about-frame:  light-dark(#DCD1CC, #2B2320);
-  padding: var(--sp-6) var(--sp-4) var(--sp-8);
-  background: var(--about-bg);
-  color: var(--about-ink);
-  border-radius: var(--r-md);
+  --bg: var(--about-bg);
 }
+.about-card { color: var(--about-ink); }
 .about-card a { color: inherit; text-decoration-color: var(--about-rule); }
 .about-card a:hover { color: var(--about-accent); }
 /* Display type. --font-serif ends in Anuphan, so Latin gets a serif and Thai - which has no glyph in any of
    the serif faces - lands on the one face this site ships with Thai glyphs, instead of a broken mix. */
-.about-head h1, .about-greeting, .about-name, .about-quote, .about-pill, .about-contact h2, .about-facts {
+.about-head h1, .about-greeting, .about-name, .about-quote, .about-quote-source, .about-pill,
+.about-contact h2, .about-facts {
   font-family: var(--font-serif);
 }
 .about-head {
@@ -471,7 +472,7 @@ a.tag:hover { background: var(--border); color: var(--text); }
 .about-head h1 { margin: 0; font-size: var(--fs-h2); font-weight: 600; color: var(--about-accent); }
 .about-star { flex: none; width: 1.25rem; height: 1.25rem; fill: var(--about-accent); }
 
-/* The rows of the card. Every row after the first is separated by a rule, and from 48rem up the two columns
+/* The rows of the page. Every row after the first is separated by a rule, and from 48rem up the two columns
    inside a row are separated by a vertical one, the way the reference layout is ruled. */
 .about-row { padding-block: var(--sp-8); }
 .about-row + .about-row { border-top: 1px solid var(--about-rule); }
@@ -520,8 +521,7 @@ a.tag:hover { background: var(--border); color: var(--text); }
   stroke-width: 1;
 }
 
-/* The lower row: swatches and the quote on one side, the second picture on the other. */
-.about-aside > * + * { margin-top: var(--sp-8); padding-top: var(--sp-8); border-top: 1px solid var(--about-rule); }
+/* The lower row: the swatches on one side, the video on the other. */
 .about-pill {
   margin: 0;
   padding: var(--sp-2) var(--sp-6);
@@ -539,9 +539,20 @@ a.tag:hover { background: var(--border); color: var(--text); }
   list-style: none;
 }
 .about-swatch { display: block; height: 3rem; border: 1px solid var(--about-frame); border-radius: var(--r-sm); }
-.about-quote-block { position: relative; text-align: center; }
-/* the star sits centred on the rule above the quote, with the card colour behind it masking the line */
-.about-quote-block .about-star {
+.about-video { margin-top: var(--sp-8); }
+/* the frame holds the shape so the row does not jump when the player finishes loading */
+.about-video-frame {
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--sp-4);
+  background: var(--about-frame);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.about-video-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+/* The quote spans the whole width, with the star centred on the rule above it. */
+.about-row-quote { position: relative; text-align: center; }
+.about-row-quote > .about-star {
   position: absolute;
   top: 0;
   left: 50%;
@@ -550,24 +561,17 @@ a.tag:hover { background: var(--border); color: var(--text); }
   background: var(--about-bg);
   box-sizing: content-box;
 }
+.about-quote-block { max-width: var(--measure-wide); margin: 0 auto; }
 /* The quotation marks are drawn by the block itself: the text is already a <blockquote>, so repeating them
-   as content would have a screen reader read stray punctuation. */
-.about-quote { margin: 0; font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.2; color: var(--about-accent); }
+   in the markup would have a screen reader read stray punctuation. */
+.about-quote { margin: 0; font-size: clamp(1.375rem, 2.6vw, 1.875rem); line-height: 1.4; color: var(--about-accent); }
 .about-quote::before, .about-quote::after { color: var(--about-rule); }
 .about-quote::before { content: "\201C"; }
 .about-quote::after { content: "\201D"; }
-.about-photo-figure { margin: var(--sp-8) 0 0; }
-.about-photo {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  background: var(--about-frame);
-  border-radius: var(--r-sm);
-}
-.about-photo-figure figcaption { margin-top: var(--sp-4); }
+.about-quote-source { margin: var(--sp-4) 0 0; color: var(--about-ink); font-size: var(--fs-base); }
+.about-quote-source cite { font-style: normal; }
 
-/* Contact sits under a rule at the foot of the card, like the reference. */
+/* Contact sits under a rule at the foot of the page, like the reference. */
 .about-contact { padding-top: var(--sp-8); border-top: 1px solid var(--about-rule); }
 .about-contact h2 { margin: 0 0 var(--sp-4); font-size: var(--fs-h3); font-weight: 600; color: var(--about-accent); }
 .about-contact-cols { display: grid; gap: var(--sp-2) var(--sp-8); }
@@ -578,20 +582,21 @@ a.tag:hover { background: var(--border); color: var(--text); }
 .about-contact .social-list a:hover { color: var(--about-accent); text-decoration-color: currentColor; }
 
 @media (min-width: 48rem) {
-  .about-card { padding: var(--sp-8) var(--sp-8) var(--sp-12); }
   .about-head h1 { font-size: var(--fs-h1); }
   .about-star { width: 1.75rem; height: 1.75rem; }
   /* the portrait column is fixed so the text beside it keeps a comfortable measure at every width */
   .about-row { display: grid; grid-template-columns: 20rem minmax(0, 1fr); gap: var(--sp-8); }
   .about-row > :nth-child(2) { padding-left: var(--sp-8); border-left: 1px solid var(--about-rule); }
   /* a row whose other half was never filled in gets the whole width instead of a narrow first column, but a
-     picture with no text beside it keeps a sane size rather than growing to the width of the card */
+     picture with no text beside it keeps a sane size rather than growing to the width of the page */
   .about-row > :only-child { grid-column: 1 / -1; }
   .about-figure:only-child .about-portrait { max-width: 20rem; }
-  .about-photo-figure:only-child .about-photo { max-width: 32rem; }
+  /* the quote row is one block, so the two-column rule above must not land on the figure inside it */
+  .about-row-quote { display: block; }
+  .about-row.about-row-quote > * { padding-left: 0; border-left: 0; }
   .about-figure { margin: 0; }
   .about-portrait { max-width: none; }
-  .about-photo-figure { margin: 0; }
+  .about-video { margin-top: 0; }
   .about-contact-cols { grid-template-columns: 1fr 1fr; }
 }
 
