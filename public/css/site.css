@@ -15,14 +15,15 @@
   --syn-com:       light-dark(#6B6B63, #8E8E88);
   --syn-typ:       light-dark(#8A5A00, #D9BE79);
   --font-sans:     "Anuphan", system-ui, sans-serif;
-  /* Reading font for long-form text. Latin falls through the serif faces a desktop is likely to have and ends
-     at the generic serif; Thai has no glyph in any of them, so a Thai character walks past the whole list and
-     lands on Anuphan. Anuphan sits after the generic on purpose - before it, Latin would take it too and the
-     body would come out sans on a machine with no Charter or Georgia. */
-  --font-serif:    Charter, "Bitstream Charter", "Iowan Old Style", "Source Serif 4", Georgia, Cambria, "Times New Roman", serif, "Anuphan";
+  /* Reading font for long-form text. Self-hosted, like Anuphan, so an article looks the same on every device
+     instead of picking up whatever serif (or none) happens to be installed. Thai has no glyph in it, so a Thai
+     character walks past it and lands on Anuphan; the generic serif after it only covers a font load failing. */
+  --font-serif:    "Source Serif 4", "Anuphan", serif;
   /* What long-form text is set in. Thai overrides it back to the sans below. */
   --font-read:     var(--font-serif);
-  --font-mono:     ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, "Anuphan", monospace;
+  /* Self-hosted for the same reason as --font-serif: code should look the same on every device, not follow
+     whichever coding font (or lack of one) the reader's OS ships with. */
+  --font-mono:     "IBM Plex Mono", "Anuphan", monospace;
   --fs-sm: 0.875rem;  --fs-base: 1rem;  --fs-h3: 1.25rem;  --fs-h2: 1.5rem;  --fs-h1: 2rem;
   /* Reading sizes: article body, article title and the title of a card in a feed */
   --fs-read: 1.25rem;  --fs-title: 2.25rem;  --fs-card: 1.375rem;
@@ -49,6 +50,38 @@
   font-weight: 300 700;
   font-display: swap;
   src: url("/fonts/anuphan-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Source Serif 4 variable 400-700, latin only (Thai reads in Anuphan instead, see --font-serif above). src and
+   unicode-range come from fonts.googleapis.com css2. Not preloaded like Anuphan: only the pages with prose
+   (posts, projects, About, privacy) use it, so it should load lazily on those instead of on every page. */
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-italic-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* IBM Plex Mono regular, latin only (a Thai identifier in a code block is not a case this site's code blocks
+   need to cover). src and unicode-range come from fonts.googleapis.com css2. Also lazy: only pages with a code
+   block or the admin editor load it. */
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -455,8 +488,9 @@ body:has(main.about) {
 .about-card { color: var(--about-ink); }
 .about-card a { color: inherit; text-decoration-color: var(--about-rule); }
 .about-card a:hover { color: var(--about-accent); }
-/* Display type. --font-serif ends in Anuphan, so Latin gets a serif and Thai - which has no glyph in any of
-   the serif faces - lands on the one face this site ships with Thai glyphs, instead of a broken mix. */
+/* Display type. --font-serif puts Anuphan before the generic serif fallback, so Latin gets Source Serif 4 and
+   Thai - which has no glyph in it - lands on the one face this site ships with Thai glyphs, instead of a
+   broken mix. */
 .about-head h1, .about-greeting, .about-name, .about-quote, .about-quote-source, .about-pill,
 .about-contact h2, .about-facts {
   font-family: var(--font-serif);
