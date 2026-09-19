@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { start, get, run } = require('./helpers');
+const strings = require('../src/strings');
 
 // /about is built out of settings: two pictures and the swatch row are one value for the whole site
 // (lang '*'), every piece of text has a Thai and an English row. Each block is optional and each one falls
@@ -82,13 +83,36 @@ test('19 about page blocks', async () => {
     assert.ok(!r.text.includes('background: red'), r.text);
     assert.ok(r.text.includes('<blockquote class="about-quote">ใจดีแล้วสวย</blockquote>'), r.text);
     assert.ok(r.text.includes('<cite>วอลเดน</cite>'), r.text);
-    // the embed is built from the parsed id on the nocookie host, never from the pasted link
-    assert.ok(r.text.includes('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"'), r.text);
-    assert.ok(r.text.includes('title="รู้จักฉันมากขึ้น"'), r.text);
-    assert.ok(!r.text.includes('watch?v='), r.text);
     assert.ok(r.text.includes('<li><a href="https://instagram.com/example">Instagram</a></li>'), r.text);
     assert.ok(r.text.includes('<li>02-345-6789</li>'), r.text);
     assert.ok(r.text.includes('<li><a href="mailto:hello@example.com">hello@example.com</a></li>'), r.text);
+
+    // The video waits for consent: with no answer yet the page makes no request to YouTube at all. The embed
+    // URL sits in a data attribute for the script to use once the reader accepts, and the block offers a plain
+    // link out in the meantime. GA is not configured in these tests, so the accept button is there for the
+    // embed alone - without it the reader would have no way to say yes.
+    assert.ok(r.text.includes('class="about-video-frame about-video-wait"'), r.text);
+    assert.ok(r.text.includes('data-embed-src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"'), r.text);
+    assert.ok(!r.text.includes('<iframe'), r.text);
+    assert.ok(r.text.includes('href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"'), r.text);
+    assert.ok(r.text.includes(strings.th.consentTextEmbed), r.text);
+    assert.ok(r.text.includes('<button type="button" data-consent="granted">'), r.text);
+
+    // once the reader has accepted, the server renders the player itself, built from the parsed id on the
+    // nocookie host - never from the link as it was pasted
+    r = await h.req('/th/about', { cookie: 'consent=granted' });
+    assert.ok(r.text.includes('<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="รู้จักฉันมากขึ้น"'), r.text);
+    assert.ok(!r.text.includes('about-video-wait'), r.text);
+    assert.ok(!r.text.includes('&amp;t=30'), r.text);
+    // rejecting leaves the placeholder in place
+    r = await h.req('/th/about', { cookie: 'consent=denied' });
+    assert.ok(r.text.includes('about-video-wait'), r.text);
+    assert.ok(!r.text.includes('<iframe'), r.text);
+
+    // the cookie table on /privacy lists the YouTube row while a video is set
+    r = await h.req('/th/privacy');
+    assert.ok(r.text.includes('>YouTube<'), r.text);
+    assert.ok(r.text.includes(strings.th.cookiePurposeYouTube), r.text);
 
     // /en/about uses the English text it has; about_facts and about_contact have no English row, so those two
     // blocks fall back and say so with lang="th" while the rest of the page stays English
@@ -137,6 +161,9 @@ test('19 about page blocks', async () => {
     assert.ok(!r.text.includes('about-quote'), r.text);
     assert.ok(!r.text.includes('about-swatch'), r.text);
     assert.ok(!r.text.includes('youtube-nocookie'), r.text);
+    // with no video left, /privacy drops the YouTube row again
+    r = await h.req('/th/privacy');
+    assert.ok(!r.text.includes('>YouTube<'), r.text);
     // the contact block stays, because the email alone is enough to fill it
     assert.ok(r.text.includes('<li><a href="mailto:hello@example.com">hello@example.com</a></li>'), r.text);
   } finally {

@@ -1198,8 +1198,11 @@ ta_admin              server    30 วัน      login ของ admin ส่�
 lang                  server    1 ปี        จำภาษาล่าสุดที่อ่าน ใช้ตอนเข้า /                  จำเป็นต่อการทำงาน
 consent               browser   180 วัน     จำว่าผู้อ่านยอมรับหรือปฏิเสธ cookie สถิติ          จำเป็น
 _ga และ _ga_*         Google    2 ปี        สถิติผู้เข้าชม มีเฉพาะหลังผู้อ่านกดยอมรับ           สถิติ ต้องได้รับความยินยอม
+YouTube               YouTube   YouTube กำหนด เล่นวิดีโอที่ฝังในหน้า About มีเฉพาะหลังกดยอมรับ  วิดีโอฝัง ต้องได้รับความยินยอม
 theme (localStorage)  browser   ไม่หมดอายุ   จำธีมสว่างหรือมืด ไม่ถูกส่งไป server             จำเป็นต่อการทำงาน
 ```
+
+- แถว `_ga` แสดงเฉพาะเมื่อมี `GA_MEASUREMENT_ID` และแถว YouTube แสดงเฉพาะเมื่อมี `about_video` ใน settings
 
 - ตารางนี้คือเนื้อหาหลักของหน้า privacy ถ้าเพิ่ม cookie ใหม่ต้องแก้ตารางนี้กับ `strings.js` ด้วย
 - การแบ่งประเภทข้างบนเป็นการตีความทางเทคนิค ไม่ใช่คำแนะนำทางกฎหมาย ถ้าวันหน้าเว็บเก็บข้อมูลส่วนบุคคลมากขึ้น ควรให้ผู้รู้ PDPA ตรวจหน้า privacy
@@ -1230,14 +1233,17 @@ if (req.cookies.lang !== lang) {
 - template อ่านสามค่านี้ผ่าน `locals.publicPage`, `locals.consent` และ `locals.gaId` จึงไม่ต้องเพิ่มค่า default ระดับ app และหน้าใต้ `/admin` รวมถึง preview จะไม่มีแถบและไม่มี analytics เลย
 - `partials/consent.ejs` ถูก include ท้าย `<body>` และ render แถบก็ต่อเมื่อ `locals.publicPage` เป็นจริง และ `locals.consent` ไม่ใช่ `granted` หรือ `denied` หน้าจอจึงไม่กะพริบ
 - แถบวางชิดขอบล่างแบบไม่บังเนื้อหาและไม่เป็น modal
-- ถ้ามี `gaId` แถบมีปุ่ม ยอมรับ กับ ปฏิเสธ ขนาดและน้ำหนักเท่ากัน พร้อมลิงก์ไปหน้า privacy
-- ถ้าไม่มี `gaId` แถบบอกว่าเว็บใช้เฉพาะ cookie ที่จำเป็น และมีปุ่ม รับทราบ ปุ่มเดียว ซึ่งบันทึกเป็น `denied`
+- route ของ `/about` ตั้ง `res.locals.hasEmbed` เมื่อหน้านั้นมีวิดีโอให้ฝัง
+- ถ้ามี `gaId` หรือ `hasEmbed` แถบมีปุ่ม ยอมรับ กับ ปฏิเสธ ขนาดและน้ำหนักเท่ากัน พร้อมลิงก์ไปหน้า privacy ข้อความในแถบบอกตามที่มีจริง (สถิติ / วิดีโอฝัง / ทั้งสองอย่าง)
+- ถ้าไม่มีทั้งคู่ แถบบอกว่าเว็บใช้เฉพาะ cookie ที่จำเป็น และมีปุ่ม รับทราบ ปุ่มเดียว ซึ่งบันทึกเป็น `denied`
+- วิดีโอ YouTube ไม่ถูกโหลดจนกว่าผู้อ่านจะกดยอมรับ ก่อนหน้านั้น server render เป็นกรอบเปล่าที่บอกเหตุผล พร้อมลิงก์เปิดดูบน YouTube และเก็บ URL ของ embed ไว้ใน `data-embed-src` หน้าเว็บจึงไม่ยิง request ออกไปหา Google เลยสักครั้ง
 - หน้า public โหลด `<script src="/js/consent.js?v=<%= v %>" defer data-ga-id="<%= locals.gaId %>">`
 
 `public/js/consent.js` ราว 25 บรรทัด ทำสี่อย่าง
 
-1. ตอนโหลด ถ้า cookie `consent` เป็น `granted` และมี GA ID ให้เรียก `loadGa(id)`
-2. กดปุ่มในแถบแล้วตั้ง `consent=granted` หรือ `denied` ด้วย `Max-Age=15552000; Path=/; SameSite=Lax` เพิ่ม `Secure` เมื่อหน้าเป็น https แล้วซ่อนแถบ ถ้ากดยอมรับให้เรียก `loadGa(id)` ทันทีโดยไม่ต้อง reload
+1. ตอนโหลด ถ้า cookie `consent` เป็น `granted` และมี GA ID ให้เรียก `loadGa(id)` แล้วเรียก `loadEmbeds()` เผื่อหน้าถูกเรียกคืนจาก back/forward cache
+2. กดปุ่มในแถบแล้วตั้ง `consent=granted` หรือ `denied` ด้วย `Max-Age=15552000; Path=/; SameSite=Lax` เพิ่ม `Secure` เมื่อหน้าเป็น https แล้วซ่อนแถบ ถ้ากดยอมรับให้เรียก `loadGa(id)` กับ `loadEmbeds()` ทันทีโดยไม่ต้อง reload
+   - `loadEmbeds()` แทนที่กรอบเปล่าด้วย `iframe` โดยอ่าน URL จาก `data-embed-src` ที่ server เขียนไว้ ไม่ประกอบ URL จากค่าที่ผู้ใช้กรอกเอง
 3. `loadGa(id)` เพิ่ม script `https://www.googletagmanager.com/gtag/js?id=...` แล้วเรียก `gtag('config', id, { cookie_domain: 'none' })`
 4. ปุ่ม ตั้งค่า cookie ใหม่ บนหน้า privacy ลบ cookie `consent`, `_ga` และทุกตัวที่ขึ้นต้นด้วย `_ga_` แล้ว reload เพื่อให้แถบกลับมา
 

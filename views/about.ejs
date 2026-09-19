@@ -67,9 +67,16 @@ const hasContact = Boolean(contact.items.length || hasSocial);
 <% } -%>
 <% if (aboutVideo) { -%>
       <div class="about-video">
+<% if (locals.consent === 'granted') { -%>
         <div class="about-video-frame">
           <iframe src="https://www.youtube-nocookie.com/embed/<%= aboutVideo %>" title="<%= t.aboutVideoTitle %>" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         </div>
+<% } else { -%>
+        <div class="about-video-frame about-video-wait" data-embed-src="https://www.youtube-nocookie.com/embed/<%= aboutVideo %>" data-embed-title="<%= t.aboutVideoTitle %>">
+          <p><%= t.aboutVideoConsent %> <a href="/<%= lang %>/privacy"><%= t.consentPrivacyLink %></a></p>
+          <p><a href="https://www.youtube.com/watch?v=<%= aboutVideo %>" rel="noopener external"><%= t.aboutVideoWatch %></a></p>
+        </div>
+<% } -%>
         <p class="about-pill"><%= t.aboutVideoTitle %></p>
       </div>
 <% } -%>

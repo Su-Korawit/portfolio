@@ -357,6 +357,9 @@ router.get('/about', async (req, res) => {
     return { value: values[from] || '', lang: from };
   };
   const body = pick('about_body');
+  // the cookie bar asks about the embed only when there is one to ask about (partials/consent.ejs)
+  const video = videoId(settings.about_video);
+  res.locals.hasEmbed = Boolean(video);
   res.render('about', {
     // aboutLang/aboutBody keep the names the body has always had, since the prose block still reads them
     aboutLang: body.lang,
@@ -366,7 +369,7 @@ router.get('/about', async (req, res) => {
     aboutImage: image(settings.about_image),
     aboutColors: colors(settings.about_colors),
     // only an id the parser recognised reaches the embed URL in the template, never the raw setting
-    aboutVideo: videoId(settings.about_video),
+    aboutVideo: video,
     name: pick('about_name'),
     quote: pick('about_quote'),
     quoteSource: pick('about_quote_source'),

@@ -9,6 +9,11 @@ const rows = [
 if (locals.gaId) {
   rows.push({ name: '_ga, _ga_*', setBy: 'Google', lifetime: t.cookieLifetime2y, purpose: t.cookiePurposeGa, category: t.cookieCategoryAnalytics });
 }
+// The embedded video is loaded only after the reader accepts, and only on /about, but its cookies belong in
+// this table all the same. The row is listed whenever a video is set at all.
+if (settings.about_video) {
+  rows.push({ name: 'YouTube', setBy: 'YouTube', lifetime: t.cookieLifetimeThirdParty, purpose: t.cookiePurposeYouTube, category: t.cookieCategoryEmbed });
+}
 rows.push({ name: 'theme (localStorage)', setBy: 'browser', lifetime: t.cookieLifetimeNone, purpose: t.cookiePurposeTheme, category: t.cookieCategoryFunctional });
 -%>
 <%- include('partials/head') %>
