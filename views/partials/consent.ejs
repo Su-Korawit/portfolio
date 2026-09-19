@@ -5,8 +5,16 @@
 // locals.hasEmbed is set by the about route when that page has a video to embed. Accept/reject appear
 // whenever there is something optional to answer for - analytics, the embed, or both - because a page with
 // only "acknowledge" gives the reader no way to say yes.
-const answered = locals.consent === 'granted' || locals.consent === 'denied';
+//
+// "Acknowledge" is stored as its own answer rather than as a refusal. A page with nothing optional on it
+// never asked a question, so taking that press as "no" would refuse, for the rest of the site, something the
+// reader was never offered - which is what happened before: acknowledging on the home page left the video on
+// /about stuck behind a notice that never came back. So a reader counts as answered only for what the page
+// in front of them actually asks: any answer settles a page with nothing optional, while a page that does
+// ask still asks until they say yes or no to it.
 const optional = Boolean(locals.gaId) || Boolean(locals.hasEmbed);
+const decided = locals.consent === 'granted' || locals.consent === 'denied';
+const answered = optional ? decided : decided || locals.consent === 'acknowledged';
 const text = locals.gaId && locals.hasEmbed ? t.consentTextBoth
   : locals.gaId ? t.consentTextAnalytics
   : locals.hasEmbed ? t.consentTextEmbed
@@ -22,7 +30,7 @@ const text = locals.gaId && locals.hasEmbed ? t.consentTextBoth
     <button type="button" data-consent="granted"><%= t.consentAccept %></button>
     <button type="button" data-consent="denied"><%= t.consentReject %></button>
 <% } else { -%>
-    <button type="button" data-consent="denied"><%= t.consentAcknowledge %></button>
+    <button type="button" data-consent="acknowledged"><%= t.consentAcknowledge %></button>
 <% } -%>
   </div>
 </div>

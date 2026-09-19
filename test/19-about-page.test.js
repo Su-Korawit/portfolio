@@ -109,6 +109,29 @@ test('19 about page blocks', async () => {
     assert.ok(r.text.includes('about-video-wait'), r.text);
     assert.ok(!r.text.includes('<iframe'), r.text);
 
+    // A page with nothing optional on it - no analytics in these tests, no video off /about - only says so,
+    // and its button records that the reader acknowledged the notice. Taking that press as a refusal would
+    // settle a question the reader was never asked, so /about still asks about the video afterwards. The
+    // reader is only counted as answered for what the page in front of them is actually asking.
+    r = await h.req('/th', { jar: false });
+    assert.ok(r.text.includes(strings.th.consentTextEssential), r.text);
+    assert.ok(r.text.includes('<button type="button" data-consent="acknowledged">'), r.text);
+    assert.ok(!r.text.includes('data-consent="granted"'), r.text);
+    r = await h.req('/th', { jar: false, cookie: 'consent=acknowledged' });
+    assert.ok(!r.text.includes('data-consent-bar'), r.text);
+    r = await h.req('/th/about', { jar: false, cookie: 'consent=acknowledged' });
+    assert.ok(r.text.includes('data-consent-bar'), r.text);
+    assert.ok(r.text.includes(strings.th.consentTextEmbed), r.text);
+    assert.ok(r.text.includes('<button type="button" data-consent="granted">'), r.text);
+    assert.ok(r.text.includes('about-video-wait'), r.text);
+    // saying yes or no to that question does settle it, on every page
+    for (const answer of ['granted', 'denied']) {
+      for (const path of ['/th', '/th/about']) {
+        r = await h.req(path, { jar: false, cookie: 'consent=' + answer });
+        assert.ok(!r.text.includes('data-consent-bar'), path + ' ' + answer + ': ' + r.text);
+      }
+    }
+
     // the cookie table on /privacy lists the YouTube row while a video is set
     r = await h.req('/th/privacy');
     assert.ok(r.text.includes('>YouTube<'), r.text);
