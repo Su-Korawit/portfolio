@@ -11,9 +11,6 @@ const hasSocial = social.some(([key]) => settings[key]) || settings.email;
 const hasIntro = Boolean(aboutImage || name.value || aboutBody || facts.items.length);
 const hasLower = Boolean(aboutColors.length || quote.value || aboutPhoto);
 const hasContact = Boolean(contact.items.length || hasSocial);
-// The four-pointed star that marks the corners of the layout, and the rings in the facts box. Both are
-// decoration with no meaning of their own, so they are hidden from assistive technology.
-const star = '<svg class="about-star" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 0c.9 8.1 3.9 11.1 12 12-8.1.9-11.1 3.9-12 12-.9-8.1-3.9-11.1-12-12C8.1 11.1 11.1 8.1 12 0Z"/></svg>';
 -%>
 <%- include('partials/head') %>
 <%- include('partials/header') %>
@@ -21,7 +18,7 @@ const star = '<svg class="about-star" viewBox="0 0 24 24" aria-hidden="true" foc
   <article class="about-card">
     <header class="about-head">
       <h1><%= t.navAbout %></h1>
-      <%- star %>
+      <%- include('partials/about-star') %>
     </header>
 <% if (hasIntro) { -%>
     <div class="about-row about-row-intro">
@@ -71,7 +68,7 @@ const star = '<svg class="about-star" viewBox="0 0 24 24" aria-hidden="true" foc
 <% } -%>
 <% if (quote.value) { -%>
         <div class="about-quote-block">
-          <%- star %>
+          <%- include('partials/about-star') %>
           <blockquote class="about-quote"<% if (quote.lang !== lang) { %> lang="<%= quote.lang %>"<% } %>><%= quote.value %></blockquote>
         </div>
 <% } -%>
