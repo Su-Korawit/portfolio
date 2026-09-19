@@ -2,9 +2,22 @@
 
 /* Header bar */
 .site-nav a[aria-current="page"] { color: var(--text); font-weight: 600; }
-.admin-view-site { color: var(--text-muted); text-decoration: none; }
+.admin-view-site { color: var(--text-muted); text-decoration: none; font-size: var(--fs-sm); }
 .admin-view-site:hover { color: var(--text); text-decoration: underline; }
 .admin-logout { margin: 0; }
+.admin-logout button { padding: var(--sp-1) var(--sp-3); border-color: var(--border); font-size: var(--fs-sm); }
+
+/* Only visible to a screen reader: the label of a field whose placeholder already says what it is */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 
 /* Forms */
 .admin-form { display: grid; gap: var(--sp-4); }
@@ -16,30 +29,50 @@
   border-inline-start: 3px solid var(--accent);
   border-radius: var(--r-sm);
 }
-.admin-login { max-width: 24rem; }
+.admin-login {
+  max-width: 24rem;
+  margin-inline: auto;
+  padding-block: var(--sp-12);
+}
+.admin-login h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-h2); }
+.admin-login button { justify-self: stretch; text-align: center; }
 
 /* Lists: on a narrow screen the table scrolls inside .table-scroll instead of squeezing the title column */
 .admin-empty { color: var(--text-muted); }
 .table-scroll { overflow-x: auto; }
 .admin-table { width: 100%; min-width: 36rem; border-collapse: collapse; }
-.admin-table th, .admin-table td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); }
-.admin-table th { text-align: start; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
-.admin-date { white-space: nowrap; }
+.admin-table th, .admin-table td { padding: var(--sp-3); border-bottom: 1px solid var(--border); }
+.admin-table th {
+  text-align: start;
+  padding-block: var(--sp-2);
+  border-bottom-color: var(--border-strong);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.admin-table tbody tr:hover { background: var(--surface-soft); }
+.admin-date { white-space: nowrap; color: var(--text-muted); font-size: var(--fs-sm); }
+/* a row is a line of text with small controls on it, not a row of buttons */
+.admin-table button { padding: var(--sp-1) var(--sp-3); border-color: var(--border); font-size: var(--fs-sm); }
+/* The title of a story is set the way it will be set on the site itself */
+.admin-table td a { color: var(--text); font-size: var(--fs-h3); font-weight: 600; text-decoration: none; }
+.admin-table td a:hover { text-decoration: underline; }
 
-/* Status chips: neutral words and colors, never red */
+/* Status chips: neutral words and colors, never red. Published is the one filled chip, in the same ink as the
+   page rather than the accent, so a long list reads as text with one mark on it. */
 .chip {
   display: inline-block;
-  padding: 0 var(--sp-2);
+  padding: 0 var(--sp-3);
   border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-full);
   font-size: var(--fs-sm);
   white-space: nowrap;
 }
-.chip-published { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-.chip-draft { background: var(--surface-soft); }
+.chip-published { background: var(--text); border-color: var(--text); color: var(--bg); }
+.chip-draft { background: var(--surface-soft); border-color: transparent; }
 .chip-none { border-style: dashed; color: var(--text-muted); }
 
-/* Page heading with an action beside it: post list and editor (Task 10) */
+/* Page heading with an action beside it: post list and editor */
 .page-head {
   display: flex;
   flex-wrap: wrap;
@@ -48,40 +81,88 @@
   gap: var(--sp-3) var(--sp-4);
   margin-bottom: var(--sp-6);
 }
-.page-head h1 { margin: 0; }
+.page-head h1 { margin: 0; font-size: var(--fs-h2); }
 .button-link {
   display: inline-block;
   padding: var(--sp-2) var(--sp-4);
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+  background: var(--text);
+  color: var(--bg);
+  border: 1px solid var(--text);
+  border-radius: var(--r-full);
   text-decoration: none;
 }
-.button-link:hover { border-color: var(--text); }
-.admin-table td a { color: var(--text); }
+.button-link:hover { opacity: 0.85; }
+/* A second-rank action next to a primary one, such as the preview button under a translation */
+.button-quiet { background: transparent; border-color: var(--border); color: var(--text-muted); }
+.button-quiet:hover { border-color: var(--text); color: var(--text); }
 
-/* Post editor. Each language is a <details> with its own lang, so :lang(th) in site.css sizes the Thai fields. */
-.editor .page-head { margin-bottom: 0; }
-.editor input:not([type="checkbox"]), .editor select, .editor textarea { width: 100%; }
+/* Post editor. Each language is a <details> with its own lang, so :lang(th) in site.css sizes the Thai fields.
+   The editor is a writing surface first: the title and the body sit in the middle of the page with no boxes
+   around them, at the size and in the serif they will have once published, and everything a post needs but
+   nobody reads while writing - slug, excerpt, SEO - waits below them under a quiet label. */
+.editor { max-width: var(--measure); }
+.editor .page-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin-bottom: 0;
+  padding-block: var(--sp-4);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.editor input:not([type="checkbox"], [type="file"]), .editor select, .editor textarea { width: 100%; }
 .editor textarea { resize: vertical; }
-.editor-body { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.editor .admin-form { gap: var(--sp-6); }
+.editor-shared { display: grid; gap: var(--sp-4); }
+.group-label {
+  margin: var(--sp-4) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+/* the line that separates writing from the fields nobody reads while writing */
+.translation-fields .group-label { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid var(--border); }
+.editor-shared .group-label { margin-top: 0; }
+.editor-body { font-family: var(--font-read); line-height: var(--lh-read); tab-size: 2; }
+
+/* The two fields that are actually written in: no border, no fill, just text on the page */
+.write-field .editor-title, .write-field .editor-body {
+  padding-inline: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.write-field .editor-title {
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.write-field .editor-body { font-size: var(--fs-read); min-height: 22rem; overflow: hidden; resize: none; }
+.write-field ::placeholder { color: var(--text-muted); opacity: 0.7; }
+.write-field:focus-within { outline: none; }
+
 .form-saved { margin: 0; padding: var(--sp-3) var(--sp-4); background: var(--surface-soft); border-radius: var(--r-sm); }
 .form-error > p { margin: 0; }
 .form-error > ul { margin: var(--sp-2) 0 0; padding-inline-start: var(--sp-6); }
 .field-hint { margin: 0; color: var(--text-muted); font-size: var(--fs-sm); }
 .field-error { font-size: var(--fs-sm); font-weight: 600; }
 .tag-options { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); margin: 0; padding: 0; border: 0; }
-.tag-options legend { margin-bottom: var(--sp-1); padding: 0; }
+.tag-options legend { margin-bottom: var(--sp-1); padding: 0; color: var(--text-muted); font-size: var(--fs-sm); }
 .admin-form .tag-options label { display: flex; align-items: center; gap: var(--sp-2); }
-.translation { border: 1px solid var(--border); border-radius: var(--r-md); }
-.translation > summary { padding: var(--sp-3) var(--sp-4); cursor: pointer; font-weight: 600; }
-.translation[open] > summary { border-bottom: 1px solid var(--border); }
-.translation-fields { display: grid; gap: var(--sp-4); padding: var(--sp-4); }
+.translation { border-top: 1px solid var(--border); }
+.translation > summary {
+  padding-block: var(--sp-4);
+  cursor: pointer;
+  font-weight: 600;
+}
+.summary-status { color: var(--text-muted); font-weight: 400; font-size: var(--fs-sm); }
+.summary-status::before { content: "·"; margin-inline: var(--sp-2); color: var(--border-strong); }
+.translation-fields { display: grid; gap: var(--sp-4); padding-bottom: var(--sp-8); }
 .field-pair { display: grid; gap: var(--sp-4); }
 .editor-delete { margin-top: var(--sp-12); padding-top: var(--sp-6); border-top: 1px solid var(--border); }
+.editor-delete button { border-color: var(--border); color: var(--text-muted); }
+.editor-delete button:hover { border-color: var(--text); color: var(--text); }
 
-/* Bar at the top of a post preview. views/post.ejs links this file only when it renders a preview (Task 11). */
+/* Bar at the top of a post preview. views/post.ejs links this file only when it renders a preview. */
 .preview-bar {
   margin: 0;
   padding: var(--sp-2) var(--gutter);
@@ -93,4 +174,7 @@
 
 @media (min-width: 40rem) {
   .field-pair { grid-template-columns: 1fr 1fr; align-items: start; }
+  /* site.css pins the public header once it is one row tall; on an admin page the bar that follows the editor
+     down the page is the one with the save button in it, so only one of the two is sticky. */
+  .site-header { position: static; backdrop-filter: none; }
 }

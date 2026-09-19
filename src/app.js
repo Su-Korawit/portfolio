@@ -2,6 +2,7 @@ const path = require('node:path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const md = require('./markdown');
+const { readingMinutes } = require('./reading-time');
 const strings = require('./strings');
 const { UPLOAD_DIR } = require('./db');
 const publicRouter = require('./routes/public');
@@ -22,6 +23,8 @@ app.locals.v = Date.now().toString(36);
 app.locals.md = md;
 app.locals.siteUrl = (process.env.SITE_URL || '').replace(/\/+$/, '');
 app.locals.formatDate = (lang, iso) => dateFormats[lang === 'en' ? 'en' : 'th'].format(new Date(iso));
+// "5 min read" next to the date of a post, in the language of the page the card or article is shown on
+app.locals.readTime = (t, markdown) => t.readTime.replace('{n}', readingMinutes(markdown));
 
 app.use((req, res, next) => {
   res.locals.lang = 'th';
