@@ -71,3 +71,6 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+
+# Scratch workspace for superpowers subagent-driven-development plans
+.superpowers/
