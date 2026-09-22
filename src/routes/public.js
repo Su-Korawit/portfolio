@@ -1,5 +1,6 @@
 const express = require('express');
 const { get, all } = require('../db');
+const { ensureCommentIdentity } = require('../comment-cookies');
 
 const router = express.Router();
 
@@ -164,13 +165,12 @@ router.get('/blog', async (req, res, next) => {
   });
 });
 
-router.get('/blog/:slug', async (req, res, next) => {
-  const { lang } = res.locals;
+async function loadPost(lang, slug) {
   const tr = await get(
     "SELECT * FROM post_translations WHERE lang = ? AND slug = ? AND status = 'published'",
-    [lang, req.params.slug]
+    [lang, slug]
   );
-  if (!tr) return next();
+  if (!tr) return null;
   const post = await get('SELECT id, cover_image FROM posts WHERE id = ?', [tr.post_id]);
   const siblings = await all(
     "SELECT lang, slug FROM post_translations WHERE post_id = ? AND status = 'published' ORDER BY lang DESC",
@@ -183,24 +183,41 @@ router.get('/blog/:slug', async (req, res, next) => {
     [tr.post_id]
   );
   const tags = tagRows.map(tag => ({ slug: tag.slug, name: lang === 'th' ? tag.name_th : tag.name_en }));
-  // hreflang only when both languages are published (spec 2.2)
   const alternates = siblings.length === 2
     ? siblings.map(s => ({ lang: s.lang, href: '/' + s.lang + '/blog/' + s.slug }))
     : [];
-  res.render('post', {
-    post,
-    tr,
-    tags,
+  return { post, tr, tags, alternates };
+}
+
+function postMeta(lang, tr, post, alternates) {
+  return {
+    title: tr.seo_title || tr.title,
+    description: tr.seo_description || tr.excerpt,
+    canonical: '/' + lang + '/blog/' + tr.slug,
     alternates,
-    preview: false,
-    meta: {
-      title: tr.seo_title || tr.title,
-      description: tr.seo_description || tr.excerpt,
-      canonical: '/' + lang + '/blog/' + tr.slug,
-      alternates,
-      image: post.cover_image,
-      type: 'article'
-    }
+    image: post.cover_image,
+    type: 'article'
+  };
+}
+
+// column เป็นค่าคงที่จากโค้ดเราเอง ('post_id'/'project_id') ไม่ใช่ข้อมูลจาก request จึงไม่ใช่ SQL injection
+async function loadComments(column, id) {
+  return all(`SELECT author_name, body, created_at FROM comments WHERE ${column} = ? ORDER BY created_at ASC`, [id]);
+}
+
+router.get('/blog/:slug', async (req, res, next) => {
+  const { lang } = res.locals;
+  const ctx = await loadPost(lang, req.params.slug);
+  if (!ctx) return next();
+  // ensureCommentIdentity runs only after we know the post exists, so a 404 never sets ta_nick/ta_csrf
+  ensureCommentIdentity(req, res, async () => {
+    const comments = await loadComments('post_id', ctx.post.id);
+    res.render('post', {
+      ...ctx,
+      comments,
+      preview: false,
+      meta: postMeta(lang, ctx.tr, ctx.post, ctx.alternates)
+    });
   });
 });
 
@@ -221,13 +238,12 @@ router.get('/projects', async (req, res) => {
   });
 });
 
-router.get('/projects/:slug', async (req, res, next) => {
-  const { lang } = res.locals;
+async function loadProject(lang, slug) {
   const tr = await get(
     "SELECT * FROM project_translations WHERE lang = ? AND slug = ? AND status = 'published'",
-    [lang, req.params.slug]
+    [lang, slug]
   );
-  if (!tr) return next();
+  if (!tr) return null;
   const project = await get('SELECT id, thumbnail, repo_url, demo_url FROM projects WHERE id = ?', [tr.project_id]);
   // filtered independently of the admin form's own validation, in case a row was written straight into SQLite
   project.repo_url = link(project.repo_url);
@@ -243,22 +259,35 @@ router.get('/projects/:slug', async (req, res, next) => {
     [tr.project_id]
   );
   const tags = tagRows.map(tag => ({ slug: tag.slug, name: lang === 'th' ? tag.name_th : tag.name_en }));
-  // hreflang only when both languages are published, the same rule as posts (spec 2.2)
   const alternates = siblings.length === 2
     ? siblings.map(s => ({ lang: s.lang, href: '/' + s.lang + '/projects/' + s.slug }))
     : [];
-  res.render('project', {
-    project,
-    tr,
-    tags,
-    meta: {
-      title: tr.title,
-      description: tr.summary,
-      canonical: '/' + lang + '/projects/' + tr.slug,
-      alternates,
-      image: project.thumbnail,
-      type: 'website'
-    }
+  return { project, tr, tags, alternates };
+}
+
+function projectMeta(lang, tr, project, alternates) {
+  return {
+    title: tr.title,
+    description: tr.summary,
+    canonical: '/' + lang + '/projects/' + tr.slug,
+    alternates,
+    image: project.thumbnail,
+    type: 'website'
+  };
+}
+
+router.get('/projects/:slug', async (req, res, next) => {
+  const { lang } = res.locals;
+  const ctx = await loadProject(lang, req.params.slug);
+  if (!ctx) return next();
+  // ensureCommentIdentity runs only after we know the project exists, so a 404 never sets ta_nick/ta_csrf
+  ensureCommentIdentity(req, res, async () => {
+    const comments = await loadComments('project_id', ctx.project.id);
+    res.render('project', {
+      ...ctx,
+      comments,
+      meta: projectMeta(lang, ctx.tr, ctx.project, ctx.alternates)
+    });
   });
 });
 
