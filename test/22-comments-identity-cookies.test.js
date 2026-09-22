@@ -32,12 +32,12 @@ test('22 comments identity cookies', async () => {
     r = await h.req('/th/blog', { jar: false });
     assert.ok(!r.setCookie.some(c => c.startsWith('ta_nick=') || c.startsWith('ta_csrf=')), r.setCookie.join(' | '));
 
-    // สโลกไม่มีจริง/ยังไม่เผยแพร่: 404 เหมือนเดิม ไม่ตั้งคุกกี้เพิ่ม (ใช้ jar เดิมที่มี lang/ta_nick/ta_csrf
-    // อยู่แล้ว เพื่อพิสูจน์ว่าไม่มี Set-Cookie ใหม่เลย ต่างจาก jar:false ที่จะเจอ lang ถูกตั้งใหม่ทุกครั้งอยู่แล้ว
-    // เพราะไม่ส่งคุกกี้เดิมไปเลย ซึ่งไม่เกี่ยวกับ comment identity ที่ Task นี้ทดสอบ)
-    r = await h.req('/th/blog/does-not-exist');
+    // สโลกไม่มีจริง/ยังไม่เผยแพร่: 404 เหมือนเดิม ไม่ตั้งคุกกี้ระบุตัวตน (client ใหม่จริง ๆ ผ่าน jar:false
+    // ตรวจเฉพาะ ta_nick/ta_csrf แบบเดียวกับ /th/about กับ /th/blog ด้านบน เพราะ deepEqual([]) จะโดน
+    // คุกกี้ lang ที่ไม่เกี่ยวข้องบัง ทำให้จับไม่ได้ถ้า ensureCommentIdentity กลับไปรันก่อนเช็ค 404 อีก)
+    r = await h.req('/th/blog/does-not-exist', { jar: false });
     assert.equal(r.status, 404);
-    assert.deepEqual(r.setCookie, []);
+    assert.ok(!r.setCookie.some(c => c.startsWith('ta_nick=') || c.startsWith('ta_csrf=')), r.setCookie.join(' | '));
   } finally {
     await h.stop();
   }
