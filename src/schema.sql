@@ -73,3 +73,15 @@ CREATE TABLE IF NOT EXISTS settings (
   value  TEXT NOT NULL,
   PRIMARY KEY (key, lang)
 );
+
+CREATE TABLE IF NOT EXISTS comments (
+  id          INTEGER PRIMARY KEY,
+  post_id     INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+  project_id  INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+  author_name TEXT NOT NULL,
+  body        TEXT NOT NULL,
+  created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  CHECK ((post_id IS NULL) <> (project_id IS NULL))
+);
+CREATE INDEX IF NOT EXISTS comments_post ON comments (post_id, created_at);
+CREATE INDEX IF NOT EXISTS comments_project ON comments (project_id, created_at);
