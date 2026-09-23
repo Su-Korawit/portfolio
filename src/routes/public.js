@@ -1,6 +1,7 @@
 const express = require('express');
-const { get, all } = require('../db');
-const { ensureCommentIdentity } = require('../comment-cookies');
+const { get, all, run } = require('../db');
+const commentCookies = require('../comment-cookies');
+const rateLimit = require('../rate-limit');
 
 const router = express.Router();
 
@@ -59,6 +60,41 @@ const like = q => '%' + q.replace(/[!%_]/g, '!$&') + '%';
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const link = url => (url && URL_PATTERN.test(url) ? url : '');
 
+const COMMENT_MIN = 2;
+const COMMENT_MAX = 2000;
+
+// คืนค่า { ok: true, value } หรือ { ok: false, key } โดย key เป็นคีย์ของ src/strings.js
+function validateCommentBody(raw) {
+  const body = typeof raw === 'string' ? raw.trim() : '';
+  if (body.length < COMMENT_MIN) return { ok: false, key: 'commentTooShort' };
+  if (body.length > COMMENT_MAX) return { ok: false, key: 'commentTooLong' };
+  return { ok: true, value: body };
+}
+
+// ตรวจ honeypot -> CSRF -> rate-limit -> ความยาวข้อความ ตามลำดับนี้เสมอ (spec ส่วนที่ 4): สามอย่างแรกตอบเหมือน
+// สำเร็จเงียบๆ โดยไม่บันทึกอะไร เพื่อไม่ให้เป็นสัญญาณบอกบอทว่าโดนจับได้เพราะอะไร มีแค่ผิดความยาวเท่านั้นที่บอกผู้ใช้จริง
+async function submitComment(req, res, column, id) {
+  if (typeof req.body.website === 'string' && req.body.website !== '') return { status: 'silent' };
+  if (!commentCookies.checkCsrf(req)) return { status: 'silent' };
+  if (!rateLimit.allow(req.ip)) return { status: 'silent' };
+  const parsed = validateCommentBody(req.body.body);
+  if (!parsed.ok) return { status: 'invalid', key: parsed.key };
+  await run(`INSERT INTO comments (${column}, author_name, body) VALUES (?, ?, ?)`, [id, res.locals.nickname, parsed.value]);
+  return { status: 'ok' };
+}
+
+// เชื่อถือเฉพาะ path ของ Referer ไม่สนใจ host เลย: ค่าที่คืนใช้สร้าง relative redirect กลับเข้าเว็บนี้เองเท่านั้น
+// (ไม่เคยเอา host ของ Referer ไปต่อเป็น URL ปลายทาง) จึงไม่มีช่อง open redirect ให้ต้องตรวจ host เพิ่ม
+// เช็คแค่รูปแบบ path ว่าเป็นหน้าในเว็บนี้จริง (ขึ้นต้นด้วย /th/ หรือ /en/) ไม่งั้น fallback ไปหน้าแรกของภาษานั้น
+function safeReferer(req, lang) {
+  const header = req.get('Referer') || '';
+  try {
+    const { pathname, search } = new URL(header);
+    if (/^\/(th|en)\//.test(pathname)) return pathname + search;
+  } catch {}
+  return '/' + lang;
+}
+
 // Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
 // still finds the post on /en/search, shown as its own English card. Title matches sort first.
@@ -110,6 +146,9 @@ function pageNumber(req) {
   const page = Number(req.query.page || 1);
   return Number.isSafeInteger(page) && page >= 1 ? page : null;
 }
+
+// comment form เล็กมาก (ข้อความ <=2000 ตัวอักษร + honeypot + csrf token) 20kb เผื่อเหลือเฟือแล้ว
+router.use(express.urlencoded({ extended: true, limit: '20kb' }));
 
 router.use(async (req, res, next) => {
   res.locals.settings = await loadSettings(res.locals.lang);
@@ -210,7 +249,7 @@ router.get('/blog/:slug', async (req, res, next) => {
   const ctx = await loadPost(lang, req.params.slug);
   if (!ctx) return next();
   // ensureCommentIdentity runs only after we know the post exists, so a 404 never sets ta_nick/ta_csrf
-  ensureCommentIdentity(req, res, async () => {
+  commentCookies.ensureCommentIdentity(req, res, async () => {
     const comments = await loadComments('post_id', ctx.post.id);
     res.render('post', {
       ...ctx,
@@ -218,6 +257,28 @@ router.get('/blog/:slug', async (req, res, next) => {
       preview: false,
       meta: postMeta(lang, ctx.tr, ctx.post, ctx.alternates)
     });
+  });
+});
+
+router.post('/blog/:slug/comments', async (req, res, next) => {
+  const { lang, t } = res.locals;
+  const ctx = await loadPost(lang, req.params.slug);
+  if (!ctx) return next();
+  // ensureCommentIdentity runs only after we know the post exists, so a 404 never sets ta_nick/ta_csrf
+  commentCookies.ensureCommentIdentity(req, res, async () => {
+    const result = await submitComment(req, res, 'post_id', ctx.post.id);
+    if (result.status === 'invalid') {
+      const comments = await loadComments('post_id', ctx.post.id);
+      return res.status(400).render('post', {
+        ...ctx,
+        comments,
+        preview: false,
+        commentError: t[result.key],
+        commentValue: req.body.body,
+        meta: postMeta(lang, ctx.tr, ctx.post, ctx.alternates)
+      });
+    }
+    res.redirect(303, '/' + lang + '/blog/' + ctx.tr.slug + '#comments');
   });
 });
 
@@ -281,13 +342,35 @@ router.get('/projects/:slug', async (req, res, next) => {
   const ctx = await loadProject(lang, req.params.slug);
   if (!ctx) return next();
   // ensureCommentIdentity runs only after we know the project exists, so a 404 never sets ta_nick/ta_csrf
-  ensureCommentIdentity(req, res, async () => {
+  commentCookies.ensureCommentIdentity(req, res, async () => {
     const comments = await loadComments('project_id', ctx.project.id);
     res.render('project', {
       ...ctx,
       comments,
       meta: projectMeta(lang, ctx.tr, ctx.project, ctx.alternates)
     });
+  });
+});
+
+router.post('/projects/:slug/comments', async (req, res, next) => {
+  const { lang, t } = res.locals;
+  const ctx = await loadProject(lang, req.params.slug);
+  if (!ctx) return next();
+  // ensureCommentIdentity runs only after we know the project exists, so a 404 never sets ta_nick/ta_csrf
+  commentCookies.ensureCommentIdentity(req, res, async () => {
+    const result = await submitComment(req, res, 'project_id', ctx.project.id);
+    if (result.status === 'invalid') {
+      const comments = await loadComments('project_id', ctx.project.id);
+      return res.status(400).render('project', {
+        ...ctx,
+        comments,
+        preview: false,
+        commentError: t[result.key],
+        commentValue: req.body.body,
+        meta: projectMeta(lang, ctx.tr, ctx.project, ctx.alternates)
+      });
+    }
+    res.redirect(303, '/' + lang + '/projects/' + ctx.tr.slug + '#comments');
   });
 });
 
@@ -342,6 +425,11 @@ router.get('/about', async (req, res) => {
       type: 'website'
     }
   });
+});
+
+router.post('/reroll-nickname', (req, res) => {
+  if (commentCookies.checkCsrf(req)) commentCookies.clearNickname(res);
+  res.redirect(303, safeReferer(req, res.locals.lang));
 });
 
 // Search (spec 4.1): q is trimmed and cut to 100 characters. Under 2 characters left, the form is shown with a

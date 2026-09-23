@@ -9,6 +9,10 @@ const adminRouter = require('./routes/admin');
 
 const app = express();
 
+// rate-limit ของ comment ต้องอ้างอิง IP จริงของผู้อ่าน ไม่ใช่ IP ของ reverse proxy บน Render/Fly.io
+// ค่า 1 หมายถึงเชื่อ hop เดียวจาก proxy เท่านั้น (ไม่ใช่ true ซึ่งเชื่อทุก hop และเปิดช่องปลอม X-Forwarded-For ได้)
+app.set('trust proxy', 1);
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
 app.disable('x-powered-by');
