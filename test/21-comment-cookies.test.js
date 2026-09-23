@@ -17,7 +17,7 @@ test('21 comment cookies', () => {
   // ไม่มีคุกกี้เลย: สุ่มชื่อและ csrf ใหม่ทั้งคู่ แล้วตั้งคุกกี้
   {
     const { req, res, cookies } = fakeReqRes();
-    ensureCommentIdentity(req, res, () => {});
+    ensureCommentIdentity(req, res);
     assert.match(res.locals.nickname, /^[ก-๙]+[1-9][0-9]{1,2}$/);
     assert.match(res.locals.csrfToken, /^[A-Za-z0-9_-]{32,}$/);
     assert.ok(cookies.some(c => c.name === NICK_COOKIE && c.value === res.locals.nickname));
@@ -27,7 +27,7 @@ test('21 comment cookies', () => {
   // คุกกี้เดิมถูกต้อง: ใช้ซ้ำ ไม่ตั้งคุกกี้ใหม่
   {
     const { req, res, cookies } = fakeReqRes({ [NICK_COOKIE]: 'ใจดี482', [CSRF_COOKIE]: 'a'.repeat(32) });
-    ensureCommentIdentity(req, res, () => {});
+    ensureCommentIdentity(req, res);
     assert.equal(res.locals.nickname, 'ใจดี482');
     assert.equal(res.locals.csrfToken, 'a'.repeat(32));
     assert.equal(cookies.length, 0);
@@ -36,17 +36,9 @@ test('21 comment cookies', () => {
   // คุกกี้ nickname ถูกแก้ให้ผิดรูปแบบ: สุ่มใหม่เงียบๆ ไม่ error
   {
     const { req, res } = fakeReqRes({ [NICK_COOKIE]: '<script>alert(1)</script>' });
-    ensureCommentIdentity(req, res, () => {});
+    ensureCommentIdentity(req, res);
     assert.notEqual(res.locals.nickname, '<script>alert(1)</script>');
     assert.match(res.locals.nickname, /^[ก-๙]+[1-9][0-9]{1,2}$/);
-  }
-
-  // next() ถูกเรียกเสมอ
-  {
-    const { req, res } = fakeReqRes();
-    let called = false;
-    ensureCommentIdentity(req, res, () => { called = true; });
-    assert.equal(called, true);
   }
 
   // checkCsrf: ตรงกันผ่าน ไม่ตรง/ไม่มีคุกกี้ไม่ผ่าน
@@ -54,6 +46,9 @@ test('21 comment cookies', () => {
   assert.equal(checkCsrf({ signedCookies: { [CSRF_COOKIE]: 'abc' }, body: { _csrf: 'xyz' } }), false);
   assert.equal(checkCsrf({ signedCookies: {}, body: { _csrf: 'abc' } }), false);
   assert.equal(checkCsrf({ signedCookies: { [CSRF_COOKIE]: 'abc' }, body: {} }), false);
+  // req.body ไม่มี key เลย: body-parser ปล่อย req.body เป็น undefined เมื่อ Content-Type ไม่ตรง
+  // application/x-www-form-urlencoded - checkCsrf ต้องไม่ throw และตอบ false
+  assert.equal(checkCsrf({ signedCookies: { [CSRF_COOKIE]: 'abc' } }), false);
 
   // clearNickname: เรียก res.clearCookie ด้วยชื่อและ attribute ที่ตรงกับตอนตั้ง (path ต้องตรงถึงจะล้างได้จริง)
   {

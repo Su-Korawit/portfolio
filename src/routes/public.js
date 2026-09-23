@@ -74,10 +74,12 @@ function validateCommentBody(raw) {
 // ตรวจ honeypot -> CSRF -> rate-limit -> ความยาวข้อความ ตามลำดับนี้เสมอ (spec ส่วนที่ 4): สามอย่างแรกตอบเหมือน
 // สำเร็จเงียบๆ โดยไม่บันทึกอะไร เพื่อไม่ให้เป็นสัญญาณบอกบอทว่าโดนจับได้เพราะอะไร มีแค่ผิดความยาวเท่านั้นที่บอกผู้ใช้จริง
 async function submitComment(req, res, column, id) {
-  if (typeof req.body.website === 'string' && req.body.website !== '') return { status: 'silent' };
+  // req.body เป็น undefined ได้เมื่อ body-parser เจอ Content-Type ที่ไม่ตรง application/x-www-form-urlencoded
+  const body = req.body || {};
+  if (typeof body.website === 'string' && body.website !== '') return { status: 'silent' };
   if (!commentCookies.checkCsrf(req)) return { status: 'silent' };
   if (!rateLimit.allow(req.ip)) return { status: 'silent' };
-  const parsed = validateCommentBody(req.body.body);
+  const parsed = validateCommentBody(body.body);
   if (!parsed.ok) return { status: 'invalid', key: parsed.key };
   await run(`INSERT INTO comments (${column}, author_name, body) VALUES (?, ?, ?)`, [id, res.locals.nickname, parsed.value]);
   return { status: 'ok' };
@@ -222,6 +224,7 @@ async function loadPost(lang, slug) {
     [tr.post_id]
   );
   const tags = tagRows.map(tag => ({ slug: tag.slug, name: lang === 'th' ? tag.name_th : tag.name_en }));
+  // hreflang only when both languages are published (spec 2.2)
   const alternates = siblings.length === 2
     ? siblings.map(s => ({ lang: s.lang, href: '/' + s.lang + '/blog/' + s.slug }))
     : [];
@@ -249,14 +252,13 @@ router.get('/blog/:slug', async (req, res, next) => {
   const ctx = await loadPost(lang, req.params.slug);
   if (!ctx) return next();
   // ensureCommentIdentity runs only after we know the post exists, so a 404 never sets ta_nick/ta_csrf
-  commentCookies.ensureCommentIdentity(req, res, async () => {
-    const comments = await loadComments('post_id', ctx.post.id);
-    res.render('post', {
-      ...ctx,
-      comments,
-      preview: false,
-      meta: postMeta(lang, ctx.tr, ctx.post, ctx.alternates)
-    });
+  commentCookies.ensureCommentIdentity(req, res);
+  const comments = await loadComments('post_id', ctx.post.id);
+  res.render('post', {
+    ...ctx,
+    comments,
+    preview: false,
+    meta: postMeta(lang, ctx.tr, ctx.post, ctx.alternates)
   });
 });
 
@@ -265,21 +267,20 @@ router.post('/blog/:slug/comments', async (req, res, next) => {
   const ctx = await loadPost(lang, req.params.slug);
   if (!ctx) return next();
   // ensureCommentIdentity runs only after we know the post exists, so a 404 never sets ta_nick/ta_csrf
-  commentCookies.ensureCommentIdentity(req, res, async () => {
-    const result = await submitComment(req, res, 'post_id', ctx.post.id);
-    if (result.status === 'invalid') {
-      const comments = await loadComments('post_id', ctx.post.id);
-      return res.status(400).render('post', {
-        ...ctx,
-        comments,
-        preview: false,
-        commentError: t[result.key],
-        commentValue: req.body.body,
-        meta: postMeta(lang, ctx.tr, ctx.post, ctx.alternates)
-      });
-    }
-    res.redirect(303, '/' + lang + '/blog/' + ctx.tr.slug + '#comments');
-  });
+  commentCookies.ensureCommentIdentity(req, res);
+  const result = await submitComment(req, res, 'post_id', ctx.post.id);
+  if (result.status === 'invalid') {
+    const comments = await loadComments('post_id', ctx.post.id);
+    return res.status(400).render('post', {
+      ...ctx,
+      comments,
+      preview: false,
+      commentError: t[result.key],
+      commentValue: (req.body || {}).body,
+      meta: postMeta(lang, ctx.tr, ctx.post, ctx.alternates)
+    });
+  }
+  res.redirect(303, '/' + lang + '/blog/' + ctx.tr.slug + '#comments');
 });
 
 router.get('/projects', async (req, res) => {
@@ -320,6 +321,7 @@ async function loadProject(lang, slug) {
     [tr.project_id]
   );
   const tags = tagRows.map(tag => ({ slug: tag.slug, name: lang === 'th' ? tag.name_th : tag.name_en }));
+  // hreflang only when both languages are published, the same rule as posts (spec 2.2)
   const alternates = siblings.length === 2
     ? siblings.map(s => ({ lang: s.lang, href: '/' + s.lang + '/projects/' + s.slug }))
     : [];
@@ -342,13 +344,12 @@ router.get('/projects/:slug', async (req, res, next) => {
   const ctx = await loadProject(lang, req.params.slug);
   if (!ctx) return next();
   // ensureCommentIdentity runs only after we know the project exists, so a 404 never sets ta_nick/ta_csrf
-  commentCookies.ensureCommentIdentity(req, res, async () => {
-    const comments = await loadComments('project_id', ctx.project.id);
-    res.render('project', {
-      ...ctx,
-      comments,
-      meta: projectMeta(lang, ctx.tr, ctx.project, ctx.alternates)
-    });
+  commentCookies.ensureCommentIdentity(req, res);
+  const comments = await loadComments('project_id', ctx.project.id);
+  res.render('project', {
+    ...ctx,
+    comments,
+    meta: projectMeta(lang, ctx.tr, ctx.project, ctx.alternates)
   });
 });
 
@@ -357,21 +358,20 @@ router.post('/projects/:slug/comments', async (req, res, next) => {
   const ctx = await loadProject(lang, req.params.slug);
   if (!ctx) return next();
   // ensureCommentIdentity runs only after we know the project exists, so a 404 never sets ta_nick/ta_csrf
-  commentCookies.ensureCommentIdentity(req, res, async () => {
-    const result = await submitComment(req, res, 'project_id', ctx.project.id);
-    if (result.status === 'invalid') {
-      const comments = await loadComments('project_id', ctx.project.id);
-      return res.status(400).render('project', {
-        ...ctx,
-        comments,
-        preview: false,
-        commentError: t[result.key],
-        commentValue: req.body.body,
-        meta: projectMeta(lang, ctx.tr, ctx.project, ctx.alternates)
-      });
-    }
-    res.redirect(303, '/' + lang + '/projects/' + ctx.tr.slug + '#comments');
-  });
+  commentCookies.ensureCommentIdentity(req, res);
+  const result = await submitComment(req, res, 'project_id', ctx.project.id);
+  if (result.status === 'invalid') {
+    const comments = await loadComments('project_id', ctx.project.id);
+    return res.status(400).render('project', {
+      ...ctx,
+      comments,
+      preview: false,
+      commentError: t[result.key],
+      commentValue: (req.body || {}).body,
+      meta: projectMeta(lang, ctx.tr, ctx.project, ctx.alternates)
+    });
+  }
+  res.redirect(303, '/' + lang + '/projects/' + ctx.tr.slug + '#comments');
 });
 
 // Posts with one tag (spec 2.1). The tag is looked up first: an unknown slug is a 404, and a tag without a

@@ -43,6 +43,8 @@ test('17 consent, analytics and privacy', async () => {
     assert.ok(r.text.includes('>lang<'), r.text);
     assert.ok(r.text.includes('>consent<'), r.text);
     assert.ok(r.text.includes('_ga'), r.text);
+    assert.ok(r.text.includes('ta_nick'), r.text);
+    assert.ok(r.text.includes('ta_csrf'), r.text);
 
     // the footer's link to privacy is on every public page
     r = await h.req('/en/blog');

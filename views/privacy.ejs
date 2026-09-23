@@ -4,7 +4,9 @@
 const rows = [
   { name: 'ta_admin', setBy: 'server', lifetime: t.cookieLifetime30d, purpose: t.cookiePurposeAdmin, category: t.cookieCategoryNecessary },
   { name: 'lang', setBy: 'server', lifetime: t.cookieLifetime1y, purpose: t.cookiePurposeLang, category: t.cookieCategoryFunctional },
-  { name: 'consent', setBy: 'browser', lifetime: t.cookieLifetime180d, purpose: t.cookiePurposeConsent, category: t.cookieCategoryNecessary }
+  { name: 'consent', setBy: 'browser', lifetime: t.cookieLifetime180d, purpose: t.cookiePurposeConsent, category: t.cookieCategoryNecessary },
+  { name: 'ta_nick', setBy: 'server', lifetime: t.cookieLifetime1y, purpose: t.cookiePurposeNick, category: t.cookieCategoryFunctional },
+  { name: 'ta_csrf', setBy: 'server', lifetime: t.cookieLifetime1d, purpose: t.cookiePurposeCsrf, category: t.cookieCategoryNecessary }
 ];
 if (locals.gaId) {
   rows.push({ name: '_ga, _ga_*', setBy: 'Google', lifetime: t.cookieLifetime2y, purpose: t.cookiePurposeGa, category: t.cookieCategoryAnalytics });

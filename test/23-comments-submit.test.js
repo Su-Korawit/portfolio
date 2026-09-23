@@ -89,7 +89,7 @@ test('23 comments submit', async () => {
     rows = await all('SELECT * FROM comments WHERE post_id = ?', [postId]);
     assert.equal(rows.length, 1);
 
-    // slug ไม่มีจริง: 404 เหมือน route GET
+    // slug ไม่มีจริง: 404 เหมือน route GET ไม่ตั้งคุกกี้ระบุตัวตน (แบบเดียวกับ test 22 สำหรับ GET)
     r = await h.req('/th/blog/does-not-exist/comments', {
       method: 'POST',
       jar: false,
@@ -97,6 +97,20 @@ test('23 comments submit', async () => {
       form: { body: 'สวัสดี', _csrf: CSRF, website: '' }
     });
     assert.equal(r.status, 404);
+    assert.ok(!r.setCookie.some(c => c.startsWith('ta_nick=') || c.startsWith('ta_csrf=')), r.setCookie.join(' | '));
+
+    // Content-Type ไม่ตรง application/x-www-form-urlencoded: body-parser ปล่อย req.body เป็น undefined
+    // (ไม่ใช่ {}) - checkCsrf/submitComment ต้องไม่ throw, CSRF ตกเงียบๆ (303) และไม่บันทึกคอมเมนต์
+    r = await h.req('/th/blog/a/comments', {
+      method: 'POST',
+      jar: false,
+      cookie: csrfCookie,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ body: 'test', _csrf: CSRF, website: '' })
+    });
+    assert.equal(r.status, 303);
+    rows = await all('SELECT * FROM comments WHERE post_id = ?', [postId]);
+    assert.equal(rows.length, 1);
 
     // โปรเจกต์ก็รับคอมเมนต์ได้เหมือนกัน (ใช้ h เดิม ไม่เปิด server ใหม่ ดูหมายเหตุด้านบนไฟล์)
     const projectId = await insertProject({ th: { slug: 'p', title: 'P' } });
