@@ -1,0 +1,47 @@
+<%
+const nick = nickname;
+-%>
+<section id="comments" class="comments">
+  <h2><%= t.commentsHeading %> (<%= comments.length %>)</h2>
+  <div class="comment-form-identity">
+    <span class="avatar avatar-<%= avatarIndex(nick) %>" aria-hidden="true"></span>
+    <span><%= t.commentAs %> <strong><%= nick %></strong></span>
+    ·
+    <button type="submit" form="reroll-nickname-form" class="link-button"><%= t.commentReroll %></button>
+  </div>
+  <form class="comment-form" method="post" action="<%= commentAction %>">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="comment-form-honeypot" aria-hidden="true">
+      <label>Website
+        <input type="text" name="website" tabindex="-1" autocomplete="off">
+      </label>
+    </div>
+<% if (locals.commentError) { -%>
+    <p class="form-error" role="alert"><%= commentError %></p>
+<% } -%>
+    <textarea name="body" placeholder="<%= t.commentPlaceholder %>" minlength="2" maxlength="2000" required><%= locals.commentValue || '' %></textarea>
+    <div class="comment-form-footer">
+      <span class="comment-counter"></span>
+      <button type="submit"><%= t.commentSubmit %></button>
+    </div>
+  </form>
+  <form id="reroll-nickname-form" method="post" action="/<%= lang %>/reroll-nickname" hidden>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  </form>
+<% if (comments.length === 0) { -%>
+  <p class="comment-empty"><%= t.commentEmpty %></p>
+<% } else { -%>
+  <ul class="comment-list">
+<% for (const c of comments) { -%>
+    <li class="comment">
+      <span class="avatar avatar-<%= avatarIndex(c.author_name) %>" aria-hidden="true"></span>
+      <div class="comment-body">
+        <p class="comment-meta"><strong><%= c.author_name %></strong> <time datetime="<%= c.created_at %>"><%= formatDate(lang, c.created_at) %></time></p>
+        <p class="comment-text"><%= c.body %></p>
+      </div>
+    </li>
+<% } -%>
+  </ul>
+<% } -%>
+</section>
+<script src="/js/comments.js?v=<%= v %>" defer></script>

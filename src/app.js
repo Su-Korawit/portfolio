@@ -27,6 +27,15 @@ app.locals.md = md;
 app.locals.siteUrl = (process.env.SITE_URL || '').replace(/\/+$/, '');
 app.locals.formatDate = (lang, iso) => dateFormats[lang === 'en' ? 'en' : 'th'].format(new Date(iso));
 
+// วนไล่ code point ของชื่อรวมกันแล้ว mod 6 -> class avatar-0 ถึง avatar-5 (spec ส่วนที่ 6)
+// ไม่ต้องเป๊ะทางสถิติ แค่ deterministic พอให้คนเดิมได้สีเดิมเสมอ
+function avatarIndex(name) {
+  let hash = 0;
+  for (const ch of String(name)) hash = (hash + ch.codePointAt(0)) % 6;
+  return hash;
+}
+app.locals.avatarIndex = avatarIndex;
+
 app.use((req, res, next) => {
   res.locals.lang = 'th';
   res.locals.other = 'en';

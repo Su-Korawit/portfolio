@@ -26,6 +26,9 @@
       <%- md.render(tr.body_markdown) %>
     </div>
   </article>
+<% if (!locals.preview) { -%>
+  <%- include('partials/comments', { comments, commentAction: '/' + lang + '/blog/' + tr.slug + '/comments' }) %>
+<% } -%>
   <p class="post-back"><a href="/<%= lang %>/blog"><%= t.backToBlog %></a></p>
 </main>
 <%- include('partials/footer') %>

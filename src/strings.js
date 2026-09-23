@@ -67,7 +67,15 @@ module.exports = {
     consentPrivacyLink: 'หน้าความเป็นส่วนตัว',
     consentAccept: 'ยอมรับ',
     consentReject: 'ปฏิเสธ',
-    consentAcknowledge: 'รับทราบ'
+    consentAcknowledge: 'รับทราบ',
+    commentsHeading: 'ความคิดเห็น',
+    commentPlaceholder: 'แชร์ความคิดเห็นของคุณ…',
+    commentSubmit: 'โพสต์',
+    commentAs: 'คอมเมนต์ในชื่อ',
+    commentReroll: 'สุ่มชื่อใหม่',
+    commentEmpty: 'ยังไม่มีความคิดเห็น เป็นคนแรกที่คอมเมนต์ได้เลย',
+    commentTooShort: 'กรุณาพิมพ์ความคิดเห็นอย่างน้อย 2 ตัวอักษร',
+    commentTooLong: 'ความคิดเห็นยาวเกิน 2000 ตัวอักษร'
   },
   en: {
     skipToContent: 'Skip to content',
@@ -137,6 +145,14 @@ module.exports = {
     consentPrivacyLink: 'privacy page',
     consentAccept: 'Accept',
     consentReject: 'Reject',
-    consentAcknowledge: 'Acknowledge'
+    consentAcknowledge: 'Acknowledge',
+    commentsHeading: 'Comments',
+    commentPlaceholder: 'Share your thoughts…',
+    commentSubmit: 'Post',
+    commentAs: 'Commenting as',
+    commentReroll: 'Get a new name',
+    commentEmpty: 'No comments yet — be the first to say something.',
+    commentTooShort: 'Please write at least 2 characters.',
+    commentTooLong: 'Comments must be 2000 characters or fewer.'
   }
 };

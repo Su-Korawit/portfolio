@@ -344,3 +344,33 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
 .cookie-table th, .cookie-table td { text-align: start; padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); vertical-align: top; }
 .cookie-table th { font-weight: 600; }
 .privacy [data-consent-reset] { margin-top: var(--sp-6); }
+
+/* Comments (spec docs/superpowers/specs/2026-09-22-comments-design.md ส่วนที่ 6) */
+.comments { margin-top: var(--sp-12); }
+.comments h2 { font-size: var(--fs-h2); margin-bottom: var(--sp-4); }
+
+.comment-form-identity { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); font-size: var(--fs-sm); color: var(--text-muted); }
+.comment-form { margin-bottom: var(--sp-8); }
+.comment-form-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.comment-form textarea { width: 100%; min-height: 4.5rem; resize: vertical; border-radius: var(--r-md); }
+.comment-form-footer { display: flex; justify-content: space-between; align-items: center; margin-top: var(--sp-2); }
+.comment-counter { font-size: var(--fs-sm); color: var(--text-muted); }
+
+.link-button { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+.link-button:hover { border: none; color: var(--text); }
+
+.comment-list { list-style: none; margin: 0; padding: 0; }
+.comment { display: flex; gap: var(--sp-3); padding: var(--sp-4) 0; border-top: 1px solid var(--border); }
+.comment-body { min-width: 0; }
+.comment-meta { margin: 0 0 var(--sp-1); font-size: var(--fs-sm); }
+.comment-meta time { color: var(--text-muted); margin-left: var(--sp-2); }
+.comment-text { margin: 0; white-space: pre-wrap; overflow-wrap: break-word; }
+.comment-empty { color: var(--text-muted); padding: var(--sp-4) 0; border-top: 1px solid var(--border); }
+
+.avatar { flex: none; width: 2rem; height: 2rem; border-radius: 50%; }
+.avatar-0 { background: light-dark(#D9EBFF, #26415E); }
+.avatar-1 { background: light-dark(#FFE3D9, #5E3A26); }
+.avatar-2 { background: light-dark(#E3FFD9, #3A5E26); }
+.avatar-3 { background: light-dark(#F3D9FF, #4A265E); }
+.avatar-4 { background: light-dark(#FFF3D9, #5E4E26); }
+.avatar-5 { background: light-dark(#D9FFF3, #265E4E); }
