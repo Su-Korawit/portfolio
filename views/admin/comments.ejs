@@ -1,0 +1,37 @@
+<%- include('head', { title: 'ความคิดเห็น', section: 'comments' }) %>
+<main id="main">
+  <div class="page-head">
+    <h1>ความคิดเห็น</h1>
+  </div>
+<% if (comments.length === 0) { -%>
+  <p class="admin-empty">ยังไม่มีความคิดเห็น</p>
+<% } else { -%>
+  <div class="table-scroll">
+    <table class="admin-table">
+      <thead>
+        <tr><th scope="col">ชื่อ</th><th scope="col">ข้อความ</th><th scope="col">บทความ/โปรเจกต์</th><th scope="col">เวลา</th><th scope="col">จัดการ</th></tr>
+      </thead>
+      <tbody>
+<% for (const c of comments) {
+     const path = (c.kind === 'post' ? '/blog/' : '/projects/') + c.slug;
+-%>
+        <tr>
+          <td><%= c.author_name %></td>
+          <td class="comment-admin-body"><%= c.body %></td>
+          <td>
+<% if (c.slug) { -%>
+            <a href="/<%= c.link_lang %><%= path %>" target="_blank" rel="noopener"><%= c.title || '(ไม่มีชื่อ)' %></a>
+<% } else { -%>
+            <%= c.title || '(ไม่มีชื่อ)' %> (ไม่ได้เผยแพร่แล้ว)
+<% } -%>
+          </td>
+          <td><%= formatDate('th', c.created_at) %></td>
+          <td><form method="post" action="/admin/comments/<%= c.id %>/delete" onsubmit="return confirm('ลบความคิดเห็นนี้?')"><button type="submit">ลบ</button></form></td>
+        </tr>
+<% } -%>
+      </tbody>
+    </table>
+  </div>
+<% } -%>
+</main>
+<%- include('foot') %>
