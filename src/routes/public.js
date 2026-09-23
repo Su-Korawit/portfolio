@@ -2,6 +2,7 @@ const express = require('express');
 const { get, all, run } = require('../db');
 const commentCookies = require('../comment-cookies');
 const rateLimit = require('../rate-limit');
+const { videoId } = require('../youtube');
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ const PAGE_SIZE = 10;
 // translation is published, otherwise as the published translation in the other language.
 // post_id breaks ties, so two posts with the same published_at never swap places between pages.
 const LIST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
   WHERE t.status = 'published'
@@ -38,7 +39,7 @@ const PROJECT_LIST_SQL = `
 // The tag page lists posts only (spec 2.1). This is LIST_SQL with one more join that keeps the posts of one tag,
 // so the fallback and the order are the same as /blog. Parameters: [tagId, lang, lang, limit, offset].
 const TAG_LIST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
   JOIN post_tags pt ON pt.post_id = t.post_id AND pt.tag_id = ?
@@ -97,11 +98,33 @@ function safeReferer(req, lang) {
   return '/' + lang;
 }
 
+// Same idea for the about portrait's src, which is either a local '/uploads/<name>' or an absolute R2 URL.
+// Kept in step with IMAGE_PATTERN in admin.js, which filters the same value on the way in.
+const IMAGE_PATTERN = /^(https?:\/\/\S+|\/[^\s/]\S*)$/i;
+// about_image holds one picture per line, so the portrait can be a slideshow. A line that is not a picture
+// URL is dropped rather than shown as a broken image, and the list is capped so a long paste cannot turn the
+// page into a hundred requests.
+const images = value => String(value || '').split('\n').map(line => line.trim()).filter(line => IMAGE_PATTERN.test(line)).slice(0, 8);
+
+// The text blocks of /about that exist in both languages. about_image, about_video and about_colors are one
+// value for the whole site, so they stay in settings (lang '*') and are read from res.locals.settings.
+const ABOUT_LANG_KEYS = [
+  'about_body', 'about_image_alt', 'about_name', 'about_facts', 'about_quote', 'about_quote_source', 'about_contact'
+];
+
+// The swatch row. Each colour ends up in a style attribute, so only a plain hex literal is kept - anything
+// else in the field is dropped rather than escaped, and the row is capped so a long paste cannot fill the page.
+const HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+const colors = value => String(value || '').split(/[\s,]+/).filter(c => HEX_PATTERN.test(c)).slice(0, 8);
+
+// The facts box and the contact block are textareas the owner writes one item per line.
+const linesOf = ({ value, lang }) => ({ lang, items: value.split('\n').map(line => line.trim()).filter(Boolean).slice(0, 8) });
+
 // Same fallback as LIST_SQL, but the EXISTS clause matches the search term against every published
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
-// still finds the post on /en/search, shown as its own English card. Title matches sort first.
+// still finds the post when searching from /en, shown as its own English card. Title matches sort first.
 const SEARCH_POST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
   WHERE t.status = 'published'
@@ -163,13 +186,37 @@ router.use(async (req, res, next) => {
   next();
 });
 
+// Home, and the search form that used to live on its own page (spec 4.1). q is trimmed and cut to 100
+// characters; under 2 characters left nothing is queried, so a bare "/" - and a stray one-character q -
+// still gets the usual featured and latest sections, with a hint under the form.
 router.get('/', async (req, res) => {
-  const { lang, settings } = res.locals;
+  const { lang, t, settings } = res.locals;
+  const q = String(req.query.q || '').trim().slice(0, 100);
+  if (q.length >= 2) {
+    const params = { $lang: lang, $q: like(q) };
+    // Results replace the featured and latest sections. noindex, and no canonical or hreflang, keeps a result
+    // page out of search engines while "/" itself stays indexed.
+    return res.render('home', {
+      q,
+      searching: true,
+      tooShort: false,
+      featured: [],
+      posts: [],
+      foundProjects: await all(SEARCH_PROJECT_SQL, params),
+      foundPosts: await all(SEARCH_POST_SQL, params),
+      meta: { title: t.searchTitle, noindex: true }
+    });
+  }
   const featured = await all(PROJECT_LIST_SQL, [1, lang, lang]);
   const posts = await all(LIST_SQL, [lang, lang, 5, 0]);
   res.render('home', {
+    q,
+    searching: false,
+    tooShort: q.length > 0,
     featured,
     posts,
+    foundProjects: [],
+    foundPosts: [],
     meta: {
       description: settings.tagline,
       canonical: '/' + lang,
@@ -404,17 +451,46 @@ router.get('/tags/:slug', async (req, res, next) => {
   });
 });
 
-// About (spec 2.1): about_body falls back to the other language when the current one is empty, and the
-// wrapper gets a lang attribute only then, the same convention as the foreign card in post-card.ejs.
+// About (spec 2.1). Every block of the page is a setting the owner fills in, and every one of them is
+// optional: a block with nothing in it is left out rather than shown empty. Each piece of text falls back to
+// the other language on its own, so a half-translated page shows the reader as much of their own language as
+// exists, and pick() reports which language won so the template can mark the odd one out with lang=.
 router.get('/about', async (req, res) => {
-  const { lang, other, t } = res.locals;
-  const rows = await all("SELECT lang, value FROM settings WHERE key = 'about_body' AND lang IN ('th', 'en')");
-  const byLang = {};
-  for (const row of rows) byLang[row.lang] = row.value;
-  const aboutLang = byLang[lang] ? lang : (byLang[other] ? other : lang);
+  const { lang, other, t, settings } = res.locals;
+  const rows = await all(
+    `SELECT key, lang, value FROM settings
+     WHERE key IN (${ABOUT_LANG_KEYS.map(() => '?').join(', ')}) AND lang IN ('th', 'en')`,
+    ABOUT_LANG_KEYS
+  );
+  const byKey = {};
+  for (const row of rows) (byKey[row.key] ||= {})[row.lang] = row.value;
+  // { value, lang }: the reader's language when it has something, otherwise the other one. lang is what the
+  // template compares against res.locals.lang to decide whether the block needs a lang attribute.
+  const pick = key => {
+    const values = byKey[key] || {};
+    const from = values[lang] ? lang : (values[other] ? other : lang);
+    return { value: values[from] || '', lang: from };
+  };
+  const body = pick('about_body');
+  // the cookie bar asks about the embed only when there is one to ask about (partials/consent.ejs)
+  const video = videoId(settings.about_video);
+  res.locals.hasEmbed = Boolean(video);
   res.render('about', {
-    aboutLang,
-    aboutBody: byLang[aboutLang] || '',
+    // aboutLang/aboutBody keep the names the body has always had, since the prose block still reads them
+    aboutLang: body.lang,
+    aboutBody: body.value,
+    // the images are filtered independently of the settings form's own filtering, the same reason as
+    // repo_url/demo_url above: a row written straight into SQLite could otherwise put any scheme in an src
+    aboutImages: images(settings.about_image),
+    aboutColors: colors(settings.about_colors),
+    // only an id the parser recognised reaches the embed URL in the template, never the raw setting
+    aboutVideo: video,
+    name: pick('about_name'),
+    quote: pick('about_quote'),
+    quoteSource: pick('about_quote_source'),
+    facts: linesOf(pick('about_facts')),
+    contact: linesOf(pick('about_contact')),
+    imageAlt: pick('about_image_alt'),
     meta: {
       title: t.navAbout,
       canonical: '/' + lang + '/about',
@@ -432,26 +508,11 @@ router.post('/reroll-nickname', (req, res) => {
   res.redirect(303, safeReferer(req, res.locals.lang));
 });
 
-// Search (spec 4.1): q is trimmed and cut to 100 characters. Under 2 characters left, the form is shown with a
-// hint and no query runs at all - noindex is still set, and there is no canonical or hreflang on this page.
-router.get('/search', async (req, res) => {
-  const { t } = res.locals;
+// The search form and its results moved onto the home page, so /search only redirects old links there,
+// keeping q. 301 rather than 302: the page is gone for good and a client may stop asking for it.
+router.get('/search', (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 100);
-  const tooShort = q.length < 2;
-  let projects = [];
-  let posts = [];
-  if (!tooShort) {
-    const params = { $lang: res.locals.lang, $q: like(q) };
-    projects = await all(SEARCH_PROJECT_SQL, params);
-    posts = await all(SEARCH_POST_SQL, params);
-  }
-  res.render('search', {
-    q,
-    tooShort,
-    projects,
-    posts,
-    meta: { title: t.navSearch, noindex: true }
-  });
+  res.redirect(301, '/' + res.locals.lang + (q ? '?q=' + encodeURIComponent(q) : ''));
 });
 
 // Privacy (spec 4.2). privacy_body is markdown the owner writes in admin settings, one row per language with

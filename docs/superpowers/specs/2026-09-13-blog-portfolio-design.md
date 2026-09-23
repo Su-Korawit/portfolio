@@ -157,7 +157,8 @@ GET     /tags/:slug      /en/tags/sqlite?page=2       โพสต์ที่�
 GET     /projects        /th/projects                 โปรเจกต์ทั้งหมด ไม่แบ่งหน้า
 GET     /projects/:slug  /th/projects/talkalways      รายละเอียดโปรเจกต์
 GET     /about           /th/about                    About และ social links
-GET     /search          /th/search?q=docker          ค้นหาบทความและโปรเจกต์ (ข้อ 4.1)
+GET     /?q=...          /th?q=docker                 ค้นหาบทความและโปรเจกต์ บนหน้าแรก (ข้อ 4.1)
+GET     /search          /th/search?q=docker          redirect 301 ไปหน้าแรก เก็บลิงก์เก่าไว้
 GET     /privacy         /en/privacy                  cookie ที่ใช้และนโยบายความเป็นส่วนตัว (ข้อ 4.2)
 ```
 
@@ -235,9 +236,19 @@ const hasNext = rows.length > 10;
 
 #### About
 
-- body ของหน้า About มาจาก `about_body` ของภาษาปัจจุบัน
-- ถ้าภาษานั้นยังว่าง ให้ใช้ของอีกภาษา และใส่ `lang` ของภาษานั้นไว้ที่ element ครอบ body
-- social links อ่านจาก settings ที่ `lang='*'` ถ้าค่าไหนว่างก็ไม่ต้องแสดง
+หน้า About มีชุดสีกับฟอนต์ของตัวเอง (โทนอบอุ่น ตัวอักษร serif) แยกจากหน้าอื่น และมีชุดสีสำหรับโหมดมืดคู่กัน token ผูกไว้กับ `body:has(main.about)` แล้วนิยาม `--bg` ทับจาก token นั้น พื้นหลังทั้งหน้ารวม header กับ footer จึงเป็นสีเดียวกับเนื้อหา ไม่ใช่กรอบขาวล้อมการ์ด
+
+เรียงบนลงล่าง: หัวหน้า (`navAbout` + ดาว 4 แฉก) / รูปโค้งกับกลุ่มแนะนำตัว / คอลัมน์ซ้ายเป็นแถบสีที่ชอบแล้วต่อด้วยคำคม คอลัมน์ขวาเป็นวิดีโอ YouTube / บล็อกติดต่อ
+
+- ทุกบล็อกเป็น settings และเป็น optional บล็อกที่ยังไม่มีค่าจะไม่ถูก render เลย ไม่ใช่ render เป็นช่องว่าง
+- ข้อความแต่ละบล็อก fallback ข้ามภาษาเป็นอิสระต่อกัน (`about_body`, `about_name`, `about_facts`, `about_quote`, `about_quote_source`, `about_contact`, `about_image_alt`) บล็อกที่ fallback จะใส่ `lang` ของภาษาต้นทางไว้ที่ element ครอบ ส่วน alt ของรูปใส่ `lang` ไว้ที่ `img` เพราะ alt ใส่ markup ไม่ได้
+- กลุ่มแนะนำตัว: `aboutGreeting` จาก strings.js + `about_name` + `about_body` (markdown) + กรอบข้อมูลจาก `about_facts` ซึ่งเป็น textarea บรรทัดละข้อ (สูงสุด 8)
+- `about_image` เก็บบรรทัดละ 1 รูป (สูงสุด 8) บรรทัดที่ไม่ใช่ URL รูปถูกตัดทิ้งทั้งตอนบันทึกและตอน render ถ้ามีรูปเดียวแสดงเป็น `img` ธรรมดา ถ้ามากกว่านั้นกลายเป็นสไลด์: server render ทุกสไลด์โดยให้รูปแรกแสดงอยู่ หน้าเว็บจึงถูกต้องตั้งแต่ก่อน `public/js/about.js` ทำงานและตอนปิด JavaScript สไลด์ที่ไม่ได้แสดงมี `aria-hidden` เพื่อไม่ให้ screen reader อ่าน alt ซ้ำทุกสไลด์ มีจุดกดเลือกรูปใต้กรอบ เลื่อนเองทุก 5 วินาที หยุดเมื่อเมาส์ชี้หรือโฟกัสอยู่ในกรอบ และไม่เลื่อนเองเลยเมื่อผู้อ่านตั้ง `prefers-reduced-motion: reduce` (จุดยังกดได้)
+- `about_colors` เป็นรหัสสี hex คั่นด้วยจุลภาค (สูงสุด 8) ค่าที่ไม่ใช่ hex ถูกตัดทิ้งเพราะค่านี้ลงไปอยู่ใน style attribute
+- `about_video` รับลิงก์ YouTube รูปแบบไหนก็ได้ แล้วดึงเฉพาะรหัสวิดีโอ 11 ตัวอักษรออกมาด้วย `src/youtube.js` ค่าที่อ่านรหัสไม่ได้ถือว่าว่าง `iframe` จึงมีแต่ `https://www.youtube-nocookie.com/embed/<id>` ที่ประกอบจากรหัสนั้น ไม่เคยเป็นค่าดิบจาก settings หัวข้อของบล็อกมาจาก `aboutVideoTitle` ใน strings.js
+- คำคมอยู่ใต้แถบสี คั่นด้วยเส้นที่มีดาวอยู่กลาง ตัวอักษรเล็กเพื่อให้ข้อความยาวยังอยู่ในคอลัมน์แคบได้ มีเครื่องหมายคำพูดขนาดใหญ่คร่อมมุมบนซ้ายกับล่างขวาเป็นลวดลาย (`content: "…" / ""` จึงไม่ถูกอ่านออกเสียง) และมีที่มาจาก `about_quote_source` อยู่ใต้คำคมใน `cite`
+- `about_contact` เป็น textarea บรรทัดละข้อเช่นกัน แสดงคู่กับอีเมลและ social links (GitHub, LinkedIn, X, Instagram) ที่อ่านจาก settings `lang='*'` ถ้าค่าไหนว่างก็ไม่ต้องแสดง
+- จอตั้งแต่ 48rem ขึ้นไปแต่ละแถวเป็นสองคอลัมน์คั่นด้วยเส้น จอแคบกว่านั้นเรียงลงมาเป็นคอลัมน์เดียว แถวที่มีของแค่ฝั่งเดียวกินความกว้างเต็มแถว
 
 ### 2.2 การเลือกภาษาและการสลับภาษา
 
@@ -516,9 +527,19 @@ key            lang      ใช้ที่
 site_name      *         <title>, header
 tagline        th, en    หน้าแรก (ข้อความธรรมดา)
 about_body     th, en    /about (markdown)
+about_image    *         รูปโค้งของเจ้าของเว็บในหน้า /about บรรทัดละ 1 รูป (path /uploads/... หรือ URL เต็ม)
+about_image_alt th, en   alt ของรูปนั้น
+about_name     th, en    ชื่อตัวใหญ่ในหน้า /about
+about_facts    th, en    ข้อมูลในกรอบ บรรทัดละข้อ
+about_quote    th, en    คำคม
+about_quote_source th, en ที่มาของคำคม
+about_video    *         ลิงก์ YouTube ของบล็อก "รู้จักฉันมากขึ้น"
+about_colors   *         สีที่ชอบ เป็น hex คั่นด้วยจุลภาค
+about_contact  th, en    ที่อยู่ติดต่อ บรรทัดละข้อ
 github_url     *         footer และ About
 linkedin_url   *
 x_url          *
+instagram_url  *
 email          *
 privacy_body   th, en    /privacy (markdown)
 session_epoch  *         ออกจากระบบทุกเครื่อง (ข้อ 4.3) ไม่อยู่ในฟอร์ม settings
@@ -598,6 +619,7 @@ talkalways/
     js/theme.js             ปุ่มสลับธีม
     js/admin.js             upload และแทรกรูป
     js/consent.js           แถบ cookie และโหลด Google Analytics (ข้อ 4.2)
+    js/about.js             สไลด์รูปโค้งในหน้า About โหลดเฉพาะหน้าที่มีรูปมากกว่า 1 รูป
     favicon.svg             placeholder จนกว่าเจ้าของจะเลือกแบรนด์ อ้างจาก <link rel="icon"> ใน head
   scripts/
     hash-password.js        สร้าง ADMIN_PASSWORD_HASH
@@ -615,7 +637,7 @@ talkalways/
     routes/admin-projects.js
   views/
     partials/head.ejs  partials/header.ejs  partials/footer.ejs  partials/post-card.ejs  partials/consent.ejs
-    home.ejs  blog.ejs  post.ejs  projects.ejs  project.ejs  about.ejs  error.ejs  search.ejs  privacy.ejs
+    home.ejs  blog.ejs  post.ejs  projects.ejs  project.ejs  about.ejs  error.ejs  privacy.ejs
     admin/head.ejs  admin/foot.ejs  admin/login.ejs
     admin/posts.ejs  admin/post-edit.ejs  admin/projects.ejs  admin/project-edit.ejs
     admin/tags.ejs  admin/settings.ejs
@@ -628,7 +650,7 @@ talkalways/
 ```
 
 - `blog.ejs` ใช้กับทั้งหน้า blog index และหน้า tag
-- `post-card.ejs` เป็น partial เพราะใช้ในสี่หน้า รวมหน้า search
+- `post-card.ejs` เป็น partial เพราะใช้ในสี่หน้า รวมผลการค้นหาบนหน้าแรก
 - admin posts กับ projects เขียนแยกไฟล์ และยอมให้โค้ดซ้ำกันบางส่วน ไม่ทำ generic "translatable entity" helper เพราะสอง editor ต่างกันพอสมควร
 - ไม่มีไฟล์ `auth.js`, `seo.js`, `i18n.js` หรือ middleware แยก เพราะแต่ละอย่างใช้แค่ที่เดียว
 - EJS ใช้ `include` ไม่ใช้ `express-ejs-layouts`
@@ -943,11 +965,11 @@ module.exports = { start, insertPost, insertProject, get, all };
     - บันทึก settings ผ่านฟอร์ม admin โดยให้ `th[about_body]` เป็น `**หนา**` และปล่อย `github_url` ว่าง
     - `/th/about` ต้องมี `<strong>หนา</strong>` และไม่มีลิงก์ GitHub
 15. **search**
-    - โพสต์ th published ที่ body มีคำว่า `ญี่ปุ่น` ต้องขึ้นใน `/th/search?q=ญี่ปุ่น` ส่วนโพสต์ draft ที่มีคำเดียวกันต้องไม่ขึ้น
-    - โพสต์ที่ published ทั้ง th และ en โดยคำค้นมีแค่ในฉบับไทย ต้องขึ้นใน `/en/search` เป็นการ์ดภาษาอังกฤษ
+    - โพสต์ th published ที่ body มีคำว่า `ญี่ปุ่น` ต้องขึ้นใน `/th?q=ญี่ปุ่น` ส่วนโพสต์ draft ที่มีคำเดียวกันต้องไม่ขึ้น
+    - โพสต์ที่ published ทั้ง th และ en โดยคำค้นมีแค่ในฉบับไทย ต้องขึ้นใน `/en?q=...` เป็นการ์ดภาษาอังกฤษ
     - `q=100%` ต้องเจอเฉพาะโพสต์ที่มีข้อความ `100%` จริง
     - โปรเจกต์ published ที่ summary มีคำค้นต้องขึ้นในส่วนโปรเจกต์
-    - หน้า search มี `noindex` และ `q` ยาว 500 ตัวอักษรได้ 200
+    - หน้าที่มีผลการค้นหามี `noindex` และ `q` ยาว 500 ตัวอักษรได้ 200
 16. **cookie ภาษา**
     - `GET /en/blog` ที่ไม่มี cookie ต้องได้ `Set-Cookie` ที่ขึ้นต้นด้วย `lang=en` และมี `HttpOnly`
     - `GET /` พร้อม `Cookie: lang=en` และ `Accept-Language: th` ได้ 302 ไป `/en` และ `Vary` มี `Cookie`
@@ -1043,7 +1065,7 @@ module.exports = { start, insertPost, insertProject, get, all };
 
 #### Phase 6: Search, cookie และ privacy
 
-- หน้า `/search` พร้อม query ของบทความและโปรเจกต์ และลิงก์ค้นหาใน header
+- ฟอร์มค้นหาบนหน้าแรก พร้อม query ของบทความและโปรเจกต์
 - cookie `lang` และลำดับการเลือกภาษาที่ `/`
 - แถบ consent, `public/js/consent.js`, หน้า `/privacy` และ key `privacy_body` ในหน้า admin settings
 - tests ข้อ 15, 16 และ 17
@@ -1125,16 +1147,17 @@ find /var/backups -mtime +7 -delete
 ### 4.1 Search
 
 ```
-GET  /th/search?q=...   /en/search?q=...   ค้นบทความและโปรเจกต์ที่ published
+GET  /th?q=...   /en?q=...   ค้นบทความและโปรเจกต์ที่ published บนหน้าแรก
 ```
 
-- header เพิ่มลิงก์ ค้นหา / Search ส่วนฟอร์มอยู่บนหน้า `/search` หน้าเดียว header จึงไม่มีช่องค้นหาและไม่ต้องใช้ JS
-- ฟอร์มเป็น `<form role="search" method="get">` ที่มี `<input type="search" name="q" maxlength="100">`
-- `q` ถูก trim แล้วตัดให้ไม่เกิน 100 ตัวอักษร ถ้าเหลือไม่ถึง 2 ตัวอักษร ให้แสดงฟอร์มกับข้อความแนะนำโดยไม่ query
-- ผลลัพธ์แสดงโปรเจกต์ไม่เกิน 10 รายการ ต่อด้วยบทความไม่เกิน 20 รายการ ไม่มีการแบ่งหน้า
+- ไม่มีแท็บ ค้นหา / Search ใน header และไม่มีหน้า `/search` แยก ฟอร์มอยู่ใต้ intro บนหน้าแรก จึงไม่ต้องใช้ JS
+- ฟอร์มเป็น `<form role="search" method="get">` ที่ action ชี้ไป `/<lang>` มี `<input type="search" name="q" maxlength="100">`
+- `q` ถูก trim แล้วตัดให้ไม่เกิน 100 ตัวอักษร ถ้าเหลือไม่ถึง 2 ตัวอักษร หน้าแรกยังแสดงโปรเจกต์เด่นกับบทความล่าสุดตามปกติ และเพิ่มข้อความแนะนำใต้ฟอร์มเมื่อผู้อ่านพิมพ์มาแล้วแต่สั้นเกินไป
+- เมื่อค้นจริง ผลลัพธ์แทนที่ส่วนโปรเจกต์เด่นกับบทความล่าสุด แสดงโปรเจกต์ไม่เกิน 10 รายการ ต่อด้วยบทความไม่เกิน 20 รายการ ไม่มีการแบ่งหน้า
 - บทความใช้ `post-card.ejs` เดิม การ์ดของอีกภาษาได้ badge และ `lang` แบบเดียวกับหน้า list
-- หน้า search ส่ง `meta.noindex = true` ให้ `head.ejs` ใส่ `<meta name="robots" content="noindex">` และไม่มี canonical หรือ hreflang
-- ลิงก์สลับภาษาบนหน้า search พก `q` ไปด้วย เช่น `/en/search?q=docker`
+- หน้าที่มีผลการค้นหาส่ง `meta.noindex = true` ให้ `head.ejs` ใส่ `<meta name="robots" content="noindex">` และไม่มี canonical หรือ hreflang ส่วนหน้าแรกเปล่า ๆ ยังมี canonical และ hreflang ตามเดิม
+- ลิงก์สลับภาษาพก `q` ไปด้วย เช่น `/en?q=docker`
+- `/th/search` และ `/en/search` redirect 301 ไปหน้าแรกของภาษานั้นพร้อม `q` เพื่อไม่ให้ลิงก์เก่าตาย
 - `q` แสดงกลับบนหน้าด้วย `<%= %>` เท่านั้น
 
 ```js
@@ -1175,10 +1198,13 @@ LIMIT 20
 ชื่อ                  ตั้งโดย    อายุ        ใช้ทำอะไร                                    ประเภท
 ta_admin              server    30 วัน      login ของ admin ส่งเฉพาะ path /admin          จำเป็น
 lang                  server    1 ปี        จำภาษาล่าสุดที่อ่าน ใช้ตอนเข้า /                  จำเป็นต่อการทำงาน
-consent               browser   180 วัน     จำว่าผู้อ่านยอมรับหรือปฏิเสธ cookie สถิติ          จำเป็น
+consent               browser   180 วัน     จำคำตอบเรื่องคุกกี้ที่ต้องขอความยินยอม หรือจำว่ารับทราบแล้ว  จำเป็น
 _ga และ _ga_*         Google    2 ปี        สถิติผู้เข้าชม มีเฉพาะหลังผู้อ่านกดยอมรับ           สถิติ ต้องได้รับความยินยอม
+YouTube               YouTube   YouTube กำหนด เล่นวิดีโอที่ฝังในหน้า About มีเฉพาะหลังกดยอมรับ  วิดีโอฝัง ต้องได้รับความยินยอม
 theme (localStorage)  browser   ไม่หมดอายุ   จำธีมสว่างหรือมืด ไม่ถูกส่งไป server             จำเป็นต่อการทำงาน
 ```
+
+- แถว `_ga` แสดงเฉพาะเมื่อมี `GA_MEASUREMENT_ID` และแถว YouTube แสดงเฉพาะเมื่อมี `about_video` ใน settings
 
 - ตารางนี้คือเนื้อหาหลักของหน้า privacy ถ้าเพิ่ม cookie ใหม่ต้องแก้ตารางนี้กับ `strings.js` ด้วย
 - การแบ่งประเภทข้างบนเป็นการตีความทางเทคนิค ไม่ใช่คำแนะนำทางกฎหมาย ถ้าวันหน้าเว็บเก็บข้อมูลส่วนบุคคลมากขึ้น ควรให้ผู้รู้ PDPA ตรวจหน้า privacy
@@ -1207,16 +1233,21 @@ if (req.cookies.lang !== lang) {
 
 - public router ตั้ง `res.locals.publicPage = true`, `res.locals.consent = req.cookies.consent` และ `res.locals.gaId = process.env.GA_MEASUREMENT_ID || ''`
 - template อ่านสามค่านี้ผ่าน `locals.publicPage`, `locals.consent` และ `locals.gaId` จึงไม่ต้องเพิ่มค่า default ระดับ app และหน้าใต้ `/admin` รวมถึง preview จะไม่มีแถบและไม่มี analytics เลย
-- `partials/consent.ejs` ถูก include ท้าย `<body>` และ render แถบก็ต่อเมื่อ `locals.publicPage` เป็นจริง และ `locals.consent` ไม่ใช่ `granted` หรือ `denied` หน้าจอจึงไม่กะพริบ
+- `partials/consent.ejs` ถูก include ท้าย `<body>` และ render แถบก็ต่อเมื่อ `locals.publicPage` เป็นจริง และผู้อ่านยังไม่ได้ตอบสิ่งที่หน้านั้นถาม หน้าจอจึงไม่กะพริบ
+- cookie `consent` มีได้ 3 ค่า `granted` `denied` และ `acknowledged` โดยปุ่ม รับทราบ บันทึกค่าหลัง ไม่ใช่ `denied` เพราะหน้าที่ไม่มีอะไรให้ยินยอมไม่ได้ถามคำถามไว้ ถ้านับเป็นการปฏิเสธจะกลายเป็นปฏิเสธสิ่งที่ผู้อ่านไม่เคยถูกถาม (เคยเป็นแบบนั้น กดรับทราบที่หน้าแรกแล้ววิดีโอในหน้า About ค้างถาวรและแถบไม่กลับมาถามอีก)
+- หน้าที่มีอะไรให้ยินยอม (`gaId` หรือ `hasEmbed`) นับว่าตอบแล้วเฉพาะ `granted` หรือ `denied` ส่วนหน้าที่ไม่มีนับว่าตอบแล้วทั้งสามค่า
 - แถบวางชิดขอบล่างแบบไม่บังเนื้อหาและไม่เป็น modal
-- ถ้ามี `gaId` แถบมีปุ่ม ยอมรับ กับ ปฏิเสธ ขนาดและน้ำหนักเท่ากัน พร้อมลิงก์ไปหน้า privacy
-- ถ้าไม่มี `gaId` แถบบอกว่าเว็บใช้เฉพาะ cookie ที่จำเป็น และมีปุ่ม รับทราบ ปุ่มเดียว ซึ่งบันทึกเป็น `denied`
+- route ของ `/about` ตั้ง `res.locals.hasEmbed` เมื่อหน้านั้นมีวิดีโอให้ฝัง
+- ถ้ามี `gaId` หรือ `hasEmbed` แถบมีปุ่ม ยอมรับ กับ ปฏิเสธ ขนาดและน้ำหนักเท่ากัน พร้อมลิงก์ไปหน้า privacy ข้อความในแถบบอกตามที่มีจริง (สถิติ / วิดีโอฝัง / ทั้งสองอย่าง)
+- ถ้าไม่มีทั้งคู่ แถบบอกว่าเว็บใช้เฉพาะ cookie ที่จำเป็น และมีปุ่ม รับทราบ ปุ่มเดียว ซึ่งบันทึกเป็น `denied`
+- วิดีโอ YouTube ไม่ถูกโหลดจนกว่าผู้อ่านจะกดยอมรับ ก่อนหน้านั้น server render เป็นกรอบเปล่าที่บอกเหตุผล พร้อมลิงก์เปิดดูบน YouTube และเก็บ URL ของ embed ไว้ใน `data-embed-src` หน้าเว็บจึงไม่ยิง request ออกไปหา Google เลยสักครั้ง
 - หน้า public โหลด `<script src="/js/consent.js?v=<%= v %>" defer data-ga-id="<%= locals.gaId %>">`
 
 `public/js/consent.js` ราว 25 บรรทัด ทำสี่อย่าง
 
-1. ตอนโหลด ถ้า cookie `consent` เป็น `granted` และมี GA ID ให้เรียก `loadGa(id)`
-2. กดปุ่มในแถบแล้วตั้ง `consent=granted` หรือ `denied` ด้วย `Max-Age=15552000; Path=/; SameSite=Lax` เพิ่ม `Secure` เมื่อหน้าเป็น https แล้วซ่อนแถบ ถ้ากดยอมรับให้เรียก `loadGa(id)` ทันทีโดยไม่ต้อง reload
+1. ตอนโหลด ถ้า cookie `consent` เป็น `granted` และมี GA ID ให้เรียก `loadGa(id)` แล้วเรียก `loadEmbeds()` เผื่อหน้าถูกเรียกคืนจาก back/forward cache
+2. กดปุ่มในแถบแล้วตั้ง `consent=granted` หรือ `denied` ด้วย `Max-Age=15552000; Path=/; SameSite=Lax` เพิ่ม `Secure` เมื่อหน้าเป็น https แล้วซ่อนแถบ ถ้ากดยอมรับให้เรียก `loadGa(id)` กับ `loadEmbeds()` ทันทีโดยไม่ต้อง reload
+   - `loadEmbeds()` แทนที่กรอบเปล่าด้วย `iframe` โดยอ่าน URL จาก `data-embed-src` ที่ server เขียนไว้ ไม่ประกอบ URL จากค่าที่ผู้ใช้กรอกเอง
 3. `loadGa(id)` เพิ่ม script `https://www.googletagmanager.com/gtag/js?id=...` แล้วเรียก `gtag('config', id, { cookie_domain: 'none' })`
 4. ปุ่ม ตั้งค่า cookie ใหม่ บนหน้า privacy ลบ cookie `consent`, `_ga` และทุกตัวที่ขึ้นต้นด้วย `_ga_` แล้ว reload เพื่อให้แถบกลับมา
 
@@ -1329,7 +1360,7 @@ jobs:
 44. helmet และ migration tool: ตอนนี้มีแค่ schema.sql แบบ CREATE IF NOT EXISTS ถ้าจะแก้ schema ทีหลังให้เขียน ALTER เอง
 45. ลิงก์จากชิปแท็กในหน้าโปรเจกต์: หน้า tag แสดงเฉพาะโพสต์
 46. script ตรวจขนาด repo ใน Phase 0: brand-mockup.png ย้ายไป archive โดยไม่ต้องตัดสินใจอะไรเพิ่ม
-47. FTS5, การไฮไลต์คำค้น, คำแนะนำระหว่างพิมพ์ และช่องค้นหาใน header: `LIKE` กับหน้า `/search` หน้าเดียวพอสำหรับเว็บขนาดนี้
+47. FTS5, การไฮไลต์คำค้น, คำแนะนำระหว่างพิมพ์ และช่องค้นหาใน header: `LIKE` กับฟอร์มเดียวบนหน้าแรกพอสำหรับเว็บขนาดนี้
 48. Google Consent Mode, การแบ่ง cookie หลายหมวดให้ติ๊กเลือก และการเก็บประวัติการยินยอมลง DB: มี analytics ตัวเดียว ปุ่มยอมรับกับปฏิเสธจึงพอ
 49. CI บน Windows และ CD: server เป็น Linux และยังไม่ได้เลือก host
 

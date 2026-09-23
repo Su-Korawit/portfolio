@@ -41,4 +41,29 @@ md.linkify.match = (text) => {
 };
 md.linkify.matchAtStart = (text) => trimThai(matchAtStart(text));
 
+// A paragraph that holds nothing but one image becomes a <figure>, and the alt text is repeated below it as a
+// <figcaption> - the way a picture sits in a long-form article, captioned rather than floating in a paragraph.
+// The caption is pushed as a text token, so markdown-it's renderer escapes it like any other text.
+md.core.ruler.push('image_figure', state => {
+  const tokens = state.tokens;
+  for (let i = 0; i + 2 < tokens.length; i++) {
+    if (tokens[i].type !== 'paragraph_open' || tokens[i + 2].type !== 'paragraph_close') continue;
+    const inline = tokens[i + 1];
+    if (inline.type !== 'inline') continue;
+    const children = inline.children.filter(token => token.type !== 'text' || token.content.trim());
+    if (children.length !== 1 || children[0].type !== 'image') continue;
+
+    tokens[i].tag = 'figure';
+    tokens[i + 2].tag = 'figure';
+    inline.children = children;
+
+    const alt = children[0].content;
+    if (!alt) continue;
+    const open = new state.Token('figcaption_open', 'figcaption', 1);
+    const text = new state.Token('text', '', 0);
+    text.content = alt;
+    inline.children.push(open, text, new state.Token('figcaption_close', 'figcaption', -1));
+  }
+});
+
 module.exports = md;

@@ -1,10 +1,10 @@
 <%
 const otherAlt = (meta.alternates || []).find(alt => alt.lang === other);
 let switchHref = '/' + other;
-if (locals.q !== undefined) {
-  // Search page (Task 17): meta carries no canonical or alternates on this page (spec 4.1), so without this
-  // branch the switch link would fall back to the bare "/other" below and drop the query the reader typed.
-  switchHref = '/' + other + '/search' + (locals.q ? '?q=' + encodeURIComponent(locals.q) : '');
+if (locals.q) {
+  // Home page with a search term (spec 4.1): a result page carries no canonical or alternates, so without
+  // this branch the switch link would fall back to the bare "/other" below and drop what the reader typed.
+  switchHref = '/' + other + '?q=' + encodeURIComponent(locals.q);
 } else if (otherAlt) {
   switchHref = otherAlt.href.split('?')[0];
 } else if (meta.canonical) {
@@ -18,7 +18,6 @@ if (locals.q !== undefined) {
     <a href="/<%= lang %>/blog"><%= t.navBlog %></a>
     <a href="/<%= lang %>/projects"><%= t.navProjects %></a>
     <a href="/<%= lang %>/about"><%= t.navAbout %></a>
-    <a href="/<%= lang %>/search"><%= t.navSearch %></a>
   </nav>
   <a class="lang-switch" href="<%= switchHref %>" lang="<%= other %>" hreflang="<%= other %>"><%= t.switchLang %></a>
   <button type="button" class="theme-toggle" data-theme-toggle aria-label="<%= t.themeToggle %>">

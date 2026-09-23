@@ -63,6 +63,12 @@ nothing to migrate by hand.
    so canonical/og:url tags and the `Secure` admin cookie (only set when `NODE_ENV=production`)
    line up.
 
+## Filling in the about page
+
+Everything on `/about` — the name, the intro, the facts box, the swatches, the quote, the YouTube link and
+the contact lines — is a setting, so a fresh database starts with none of it. Fill it in at
+`/admin/settings`; each block stays hidden until it has a value.
+
 ## Free-tier limits worth knowing
 
 - Render's free web service **sleeps after 15 minutes idle** and takes ~30-50s to wake on the next

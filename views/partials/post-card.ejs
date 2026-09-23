@@ -5,15 +5,17 @@ const heading = 'h' + (locals.level || 2);
 <article class="card"<% if (foreign) { %> lang="<%= card.lang %>"<% } %>>
   <div class="card-body">
     <<%= heading %> class="card-title"><a href="/<%= card.lang %>/blog/<%= card.slug %>"><%= card.title %></a></<%= heading %>>
+<% if (card.excerpt) { -%>
+    <p class="excerpt"><%= card.excerpt %></p>
+<% } -%>
     <p class="card-meta"<% if (foreign) { %> lang="<%= lang %>"<% } %>>
       <time datetime="<%= card.published_at %>"><%= formatDate(lang, card.published_at) %></time>
+      <span class="meta-dot" aria-hidden="true">·</span>
+      <span><%= readTime(t, card.body_markdown) %></span>
 <% if (foreign) { -%>
       <span class="badge"><%= t.badgeOtherLang %></span>
 <% } -%>
     </p>
-<% if (card.excerpt) { -%>
-    <p class="excerpt"><%= card.excerpt %></p>
-<% } -%>
   </div>
 <% if (card.cover_image) { -%>
   <img class="card-thumb" src="<%= card.cover_image %>" alt="" loading="lazy">

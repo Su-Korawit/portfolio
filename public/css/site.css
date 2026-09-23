@@ -15,12 +15,22 @@
   --syn-com:       light-dark(#6B6B63, #8E8E88);
   --syn-typ:       light-dark(#8A5A00, #D9BE79);
   --font-sans:     "Anuphan", system-ui, sans-serif;
-  --font-mono:     ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, "Anuphan", monospace;
+  /* Reading font for long-form text. Self-hosted, like Anuphan, so an article looks the same on every device
+     instead of picking up whatever serif (or none) happens to be installed. Thai has no glyph in it, so a Thai
+     character walks past it and lands on Anuphan; the generic serif after it only covers a font load failing. */
+  --font-serif:    "Source Serif 4", "Anuphan", serif;
+  /* What long-form text is set in. Thai overrides it back to the sans below. */
+  --font-read:     var(--font-serif);
+  /* Self-hosted for the same reason as --font-serif: code should look the same on every device, not follow
+     whichever coding font (or lack of one) the reader's OS ships with. */
+  --font-mono:     "IBM Plex Mono", "Anuphan", monospace;
   --fs-sm: 0.875rem;  --fs-base: 1rem;  --fs-h3: 1.25rem;  --fs-h2: 1.5rem;  --fs-h1: 2rem;
-  --lh-body: 1.65;  --lh-tight: 1.25;
+  /* Reading sizes: article body, article title and the title of a card in a feed */
+  --fs-read: 1.25rem;  --fs-title: 2.25rem;  --fs-card: 1.375rem;
+  --lh-body: 1.65;  --lh-tight: 1.25;  --lh-read: 1.75;
   --sp-1: 0.25rem;  --sp-2: 0.5rem;  --sp-3: 0.75rem;  --sp-4: 1rem;  --sp-6: 1.5rem;  --sp-8: 2rem;  --sp-12: 3rem;
-  --r-sm: 4px;  --r-md: 8px;
-  --measure: 42rem;  --page: 64rem;  --gutter: 1rem;
+  --r-sm: 4px;  --r-md: 8px;  --r-full: 999px;
+  --measure: 42rem;  --measure-wide: 52rem;  --page: 64rem;  --gutter: 1rem;
 }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"]  { color-scheme: dark; }
@@ -43,6 +53,38 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Source Serif 4 variable 400-700, latin only (Thai reads in Anuphan instead, see --font-serif above). src and
+   unicode-range come from fonts.googleapis.com css2. Not preloaded like Anuphan: only the pages with prose
+   (posts, projects, About, privacy) use it, so it should load lazily on those instead of on every page. */
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/source-serif-4-italic-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* IBM Plex Mono regular, latin only (a Thai identifier in a code block is not a case this site's code blocks
+   need to cover). src and unicode-range come from fonts.googleapis.com css2. Also lazy: only pages with a code
+   block or the admin editor load it. */
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* Base */
 *, *::before, *::after { box-sizing: border-box; }
 body {
@@ -53,8 +95,21 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 img { max-width: 100%; height: auto; }
+/* Only visible to a screen reader: a label or value that the layout already makes obvious to the eye.
+   Shared with the admin pages, which load this file before admin.css. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 a { color: var(--accent); text-underline-offset: 0.2em; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -62,7 +117,7 @@ button {
   padding: var(--sp-2) var(--sp-4);
   background: var(--surface);
   border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-full);
   cursor: pointer;
 }
 button:hover { border-color: var(--text); }
@@ -74,7 +129,9 @@ input, select, textarea {
 }
 
 /* Typography: Thai needs a larger size and taller lines so stacked marks do not touch the line above */
-:lang(th) { --fs-base: 1.125rem; --lh-body: 1.9; --lh-tight: 1.45; }
+/* Thai reads in Anuphan, the only face this site ships with Thai glyphs. A serif body would set the Latin words
+   inside a Thai sentence in a system serif and the Thai around them in Anuphan, which splits one line in two. */
+:lang(th) { --fs-base: 1.125rem; --lh-body: 1.9; --lh-tight: 1.45; --fs-read: 1.1875rem; --lh-read: 1.95; --font-read: var(--font-sans); }
 body, .prose, .card, .excerpt { font-size: var(--fs-base); line-height: var(--lh-body); }
 h1, h2, h3 { line-height: var(--lh-tight); text-wrap: balance; font-weight: 600; }
 h1 { font-size: var(--fs-h1); }
@@ -97,7 +154,7 @@ main { flex: 1 0 auto; padding-block: var(--sp-8) var(--sp-12); }
   position: absolute;
   top: var(--sp-2);
   left: var(--sp-2);
-  z-index: 1;
+  z-index: 30;
   padding: var(--sp-2) var(--sp-4);
   background: var(--surface);
   color: var(--text);
@@ -116,9 +173,9 @@ main { flex: 1 0 auto; padding-block: var(--sp-8) var(--sp-12); }
   border-bottom: 1px solid var(--border);
 }
 .site-name, .site-nav a, .lang-switch { text-decoration: none; }
-.site-name { margin-inline-end: auto; color: var(--text); font-weight: 600; }
+.site-name { margin-inline-end: auto; color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
 .site-nav { order: 1; flex-basis: 100%; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-6); }
-.site-nav a, .lang-switch { color: var(--text-muted); }
+.site-nav a, .lang-switch { color: var(--text-muted); font-size: var(--fs-sm); }
 .site-name:hover, .site-nav a:hover, .lang-switch:hover { color: var(--text); text-decoration: underline; }
 .theme-toggle {
   display: inline-grid;
@@ -142,32 +199,54 @@ main { flex: 1 0 auto; padding-block: var(--sp-8) var(--sp-12); }
 .site-footer p { margin: 0; }
 
 .home { display: flex; flex-direction: column; gap: var(--sp-12); }
-.intro h1 { margin: 0; }
+.intro { max-width: var(--measure); }
+.intro h1 { margin: 0; font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .tagline { margin: var(--sp-3) 0 0; max-width: var(--measure); color: var(--text-muted); font-size: var(--fs-h3); }
 
 .error-page > * { max-width: var(--measure); }
 .error-page h1 { margin: 0 0 var(--sp-4); }
 .error-page p { margin: 0 0 var(--sp-4); color: var(--text-muted); }
 
-/* Prose: rendered markdown of posts, projects, About and privacy */
-.prose { max-width: var(--measure); }
+/* Prose: rendered markdown of posts, projects, About and privacy. Serif, because this is the part of the page
+   that is read line after line rather than scanned. */
+.prose { max-width: var(--measure); font-family: var(--font-read); }
+.prose h2, .prose h3 { font-family: var(--font-sans); letter-spacing: -0.01em; }
 .prose h2 { margin: var(--sp-12) 0 var(--sp-4); }
 .prose h3 { margin: var(--sp-8) 0 var(--sp-3); }
 .prose p, .prose ul, .prose ol, .prose blockquote, .prose table { margin: 0 0 var(--sp-6); }
 .prose ul, .prose ol { padding-inline-start: var(--sp-6); }
 .prose li + li { margin-top: var(--sp-2); }
-.prose blockquote { padding-inline-start: var(--sp-4); margin-inline: 0; border-inline-start: 3px solid var(--border-strong); color: var(--text-muted); }
-.prose img { display: block; border-radius: var(--r-md); }
+.prose blockquote {
+  padding-inline-start: var(--sp-6);
+  margin-inline: 0;
+  border-inline-start: 3px solid var(--text);
+  color: var(--text-muted);
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose img { display: block; border-radius: var(--r-sm); }
 .prose hr { margin: var(--sp-12) 0; border: 0; border-top: 1px solid var(--border); }
-.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.prose table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-family: var(--font-sans); }
 .prose th, .prose td { padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); }
 .prose :not(pre) > code { padding: 0.125em 0.375em; background: var(--surface-soft); border-radius: var(--r-sm); font-size: 0.875em; }
+
+/* A paragraph holding one image alone becomes a <figure> in src/markdown.js, with the alt text repeated as the
+   caption. It may run wider than the text column, the way a figure does on a long-form reading page. */
+.prose figure { margin: var(--sp-8) 0; }
+/* width: auto so a small image keeps its own size instead of being blown up to the column width */
+.prose figure img { width: auto; max-width: 100%; margin-inline: auto; }
+.prose figcaption {
+  margin-top: var(--sp-3);
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
 
 /* Code blocks and syntax colors. Comments stay upright because Thai has no italic. */
 pre { background: var(--code-bg); overflow-x: auto; padding: var(--sp-4);
       border: 1px solid var(--border); border-radius: var(--r-md); tab-size: 2; }
 pre, code { font-family: var(--font-mono); }
-pre { font-size: var(--fs-sm); }
+pre { font-size: var(--fs-sm); line-height: 1.6; }
 .prose pre { margin: 0 calc(var(--gutter) * -1) var(--sp-6); border-inline: 0; border-radius: 0; }
 .hljs-keyword, .hljs-built_in, .hljs-literal, .hljs-name, .hljs-selector-tag  { color: var(--syn-key); }
 .hljs-string, .hljs-regexp, .hljs-symbol, .hljs-addition                      { color: var(--syn-str); }
@@ -180,15 +259,28 @@ pre { font-size: var(--fs-sm); }
   .site-header, main, .site-footer { padding-inline: var(--sp-8); }
   .site-nav { order: 0; flex-basis: auto; margin-inline-end: var(--sp-2); }
   .prose pre { margin-inline: 0; border-inline: 1px solid var(--border); border-radius: var(--r-md); }
+  /* The bar follows the reader down the page once it is one row tall. On a narrow screen the nav wraps to a
+     second row, which would take too much of the screen to keep pinned. */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+  }
 }
 
 @media (min-width: 64rem) {
   main { padding-block-start: var(--sp-12); }
+  /* Figures reach past the text column on a wide screen, centred on it */
+  .prose figure { width: var(--measure-wide); margin-inline: calc((var(--measure) - var(--measure-wide)) / 2); }
 }
 
-/* Post lists and cards (Task 9). The blog index is a list divided by thin rules, not a card grid. */
+/* Post lists and cards. A feed of posts is a list divided by thin rules, never a grid of boxes: title, a short
+   excerpt and one line of meta, with the cover image as a small thumbnail beside it. Titles are set in the
+   interface sans and only the excerpt is serif, the same split as the post page: sans to scan, serif to read. */
 .blog > * { max-width: var(--measure); }
-.blog h1 { margin: 0 0 var(--sp-6); }
+.blog h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .empty { color: var(--text-muted); }
 .section-head {
   display: flex;
@@ -198,14 +290,26 @@ pre { font-size: var(--fs-sm); }
   gap: var(--sp-2) var(--sp-4);
   max-width: var(--measure);
   margin-bottom: var(--sp-2);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--border);
 }
-.section-head h2 { margin: 0; }
+.section-head h2 { margin: 0; font-size: var(--fs-h3); letter-spacing: -0.01em; }
+.section-head a { font-size: var(--fs-sm); }
 .post-list { max-width: var(--measure); }
-.card { position: relative; display: flex; align-items: flex-start; gap: var(--sp-6); padding-block: var(--sp-6); }
-.card:first-child { padding-block-start: var(--sp-2); }
+.card { position: relative; display: flex; align-items: flex-start; gap: var(--sp-4); padding-block: var(--sp-6); }
+.card:first-child { padding-block-start: var(--sp-4); }
 .card + .card { border-top: 1px solid var(--border); }
 .card-body { flex: 1; min-width: 0; }
-.card-title { margin: 0; font-size: var(--fs-h3); }
+.card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  font-size: var(--fs-card);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
 .card-title a { color: var(--text); text-decoration: none; }
 .card-title a::after { content: ""; position: absolute; inset: 0; }
 .card:hover .card-title a { text-decoration: underline; }
@@ -213,22 +317,37 @@ pre { font-size: var(--fs-sm); }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--sp-1) var(--sp-3);
-  margin: var(--sp-1) 0 0;
+  gap: var(--sp-1) var(--sp-2);
+  margin: var(--sp-3) 0 0;
   color: var(--text-muted);
   font-size: var(--fs-sm);
 }
-.badge { padding: 0 var(--sp-2); border: 1px solid var(--border-strong); border-radius: var(--r-sm); }
+/* The dot between two pieces of meta. It is decoration, so it is hidden from assistive technology in the markup. */
+.meta-dot { color: var(--border-strong); }
+.badge {
+  padding: 0 var(--sp-2);
+  background: var(--surface-soft);
+  border-radius: var(--r-full);
+  font-size: var(--fs-sm);
+}
 /* line-height stays var(--lh-body) from the typography rule, so the clamp does not cut Thai marks on the first line */
 .excerpt {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
   margin: var(--sp-2) 0 0;
   color: var(--text-muted);
+  font-family: var(--font-read);
 }
-.card-thumb { display: none; }
+.card-thumb {
+  display: block;
+  flex: none;
+  width: 5.5rem;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
 
 .pagination {
   display: flex;
@@ -237,35 +356,96 @@ pre { font-size: var(--fs-sm); }
   margin-top: var(--sp-6);
   padding-top: var(--sp-6);
   border-top: 1px solid var(--border);
+  font-size: var(--fs-sm);
 }
 .pagination-older { margin-inline-start: auto; }
 
+/* Reading progress: a hairline across the top that fills as the page scrolls. It is driven by the scroll
+   position alone, with no script; where animation-timeline is missing the bar simply stays at zero width. */
+.reading-progress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 20;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+@supports (animation-timeline: scroll()) {
+  .reading-progress { animation: reading-progress linear both; animation-timeline: scroll(root block); }
+}
+@keyframes reading-progress { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .reading-progress { display: none; } }
+
 /* Post page */
 .post-article { max-width: var(--measure); }
-.post-header h1 { margin: 0; }
-.post-meta { margin: var(--sp-2) 0 0; color: var(--text-muted); font-size: var(--fs-sm); }
-.tag-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-4) 0 0; padding: 0; list-style: none; }
-.tag {
-  display: inline-block;
-  padding: 0 var(--sp-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+.post-header h1 {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.post-subtitle { margin: var(--sp-3) 0 0; color: var(--text-muted); font-family: var(--font-read); font-size: var(--fs-h3); }
+/* Byline: who wrote it, when, and how long it takes to read - the line every reader looks for before starting. */
+.byline {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-8) 0 0;
+  padding-bottom: var(--sp-6);
+  border-bottom: 1px solid var(--border);
+}
+.byline-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--surface-soft);
+  border-radius: 50%;
+  font-weight: 600;
+}
+.byline-text { min-width: 0; }
+.byline-name { margin: 0; font-weight: 600; }
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  margin: 0;
   color: var(--text-muted);
   font-size: var(--fs-sm);
+}
+.tag-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.tag {
+  display: inline-block;
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--surface-soft);
+  border-radius: var(--r-full);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
   text-decoration: none;
 }
-a.tag:hover { color: var(--text); border-color: var(--text); }
-.post-cover { display: block; margin-top: var(--sp-8); border-radius: var(--r-md); }
-.post-article .prose { margin-top: var(--sp-8); }
+a.tag:hover { background: var(--border); color: var(--text); }
+.post-cover-figure { margin: var(--sp-8) 0 0; }
+.post-cover { display: block; width: 100%; border-radius: var(--r-sm); }
+.post-cover-caption { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-sm); text-align: center; }
+/* The article body is set larger than the rest of the site, the one place on the page meant for long reading */
+.post-article .prose { margin-top: var(--sp-8); font-size: var(--fs-read); line-height: var(--lh-read); }
 .prose > :first-child { margin-top: 0; }
-.post-back { max-width: var(--measure); margin: var(--sp-12) 0 0; padding-top: var(--sp-6); border-top: 1px solid var(--border); }
+.post-footer { margin-top: var(--sp-12); padding-top: var(--sp-6); border-top: 1px solid var(--border); }
+.post-back { max-width: var(--measure); margin: var(--sp-8) 0 0; font-size: var(--fs-sm); }
 
 @media (min-width: 40rem) {
-  .card-thumb { display: block; flex: none; width: 8rem; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-md); }
+  .card { gap: var(--sp-8); }
+  .card-thumb { width: 10rem; }
+  :root { --fs-title: 2.75rem; }
 }
 
-/* Projects (Task 12): the grid on the home page and /projects, and the project page */
-.projects > h1 { margin: 0 0 var(--sp-6); }
+/* Projects: the grid on the home page and /projects, and the project page */
+.projects > h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .featured .section-head { max-width: none; }
 .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: var(--sp-6); }
 /* a card can carry lang="th" on an /en page, so it declares font-size and line-height again for :lang(th) */
@@ -282,45 +462,250 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
   line-height: var(--lh-body);
 }
 .project-card > * { margin: 0; }
+/* a project card shows its whole title and, like a post card, is clickable anywhere through the a::after overlay */
+.project-card .card-title { display: block; font-size: var(--fs-h3); }
 .project-card:hover { border-color: var(--border-strong); }
 .project-card:hover .card-title a { text-decoration: underline; }
 .project-thumb { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-sm); }
 .project-summary { margin: var(--sp-3) 0 0; color: var(--text-muted); font-size: var(--fs-h3); }
 .project-links { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-4) 0 0; font-weight: 600; }
 
-/* About page (Task 16). .social-list is shared with the footer, which reads the same settings keys. */
-.about > * { max-width: var(--measure); }
-.about h1 { margin: 0 0 var(--sp-6); }
-.about .prose { margin-bottom: var(--sp-8); }
+/* About page (spec 2.1). The page has its own warm palette and serif display type, a deliberate break from
+   the rest of the site, and it carries a dark counterpart so the theme toggle still works. The tokens hang
+   off the <body> of this page only - :has() picks it out without the layout templates needing a body class -
+   and --bg is redefined from them, so the header and footer sit on the same colour as the card instead of
+   framing it in white.
+   Contrast on the light page: --about-ink is 5.8:1 on --about-bg, and --about-accent, used only for display
+   type at 1.5rem and up and for the rules, is 4:1 - over the 3:1 that large text needs. */
+body:has(main.about) {
+  --about-bg:     light-dark(#EFE7E4, #1C1714);
+  --about-ink:    light-dark(#7A3B1F, #E8CFC2);
+  --about-accent: light-dark(#B0562E, #D98C5F);
+  --about-rule:   light-dark(#C9866A, #6A4636);
+  --about-frame:  light-dark(#DCD1CC, #2B2320);
+  --bg: var(--about-bg);
+}
+.about-card { color: var(--about-ink); }
+.about-card a { color: inherit; text-decoration-color: var(--about-rule); }
+.about-card a:hover { color: var(--about-accent); }
+/* Display type. --font-serif puts Anuphan before the generic serif fallback, so Latin gets Source Serif 4 and
+   Thai - which has no glyph in it - lands on the one face this site ships with Thai glyphs, instead of a
+   broken mix. */
+.about-head h1, .about-greeting, .about-name, .about-quote, .about-quote-source, .about-pill,
+.about-contact h2, .about-facts {
+  font-family: var(--font-serif);
+}
+.about-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding-block: var(--sp-3);
+  border-block: 1px solid var(--about-rule);
+}
+.about-head h1 { margin: 0; font-size: var(--fs-h2); font-weight: 600; color: var(--about-accent); }
+.about-star { flex: none; width: 1.25rem; height: 1.25rem; fill: var(--about-accent); }
+
+/* The rows of the page. Every row after the first is separated by a rule, and from 48rem up the two columns
+   inside a row are separated by a vertical one, the way the reference layout is ruled. */
+.about-row { padding-block: var(--sp-8); }
+.about-row + .about-row { border-top: 1px solid var(--about-rule); }
+.about-figure { margin: 0 0 var(--sp-6); }
+/* The arch: a semicircular top over straight sides. The radius is larger than half the width, so the browser
+   clamps it to exactly half and the top becomes a half-circle at any size. */
+.about-portrait {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: var(--about-frame);
+  border-radius: 100vw 100vw var(--r-sm) var(--r-sm);
+}
+/* The slideshow: every slide sits in the same grid cell so the frame keeps one size, and only the current one
+   is painted. The server marks the first slide, so a page with no JavaScript shows that one and nothing moves. */
+.about-slides { display: grid; }
+.about-slide { grid-area: 1 / 1; opacity: 0; transition: opacity 600ms ease; }
+.about-slide.is-current { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .about-slide { transition: none; } }
+.about-slide-dots { display: flex; justify-content: center; gap: var(--sp-2); margin-top: var(--sp-4); }
+.about-slide-dots button {
+  width: 0.75rem;
+  height: 0.75rem;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--about-rule);
+  border-radius: 50%;
+}
+.about-slide-dots button:hover { border-color: var(--about-accent); }
+.about-slide-dots button[aria-current] { background: var(--about-accent); border-color: var(--about-accent); }
+
+.about-greeting { margin: 0; font-size: var(--fs-h3); color: var(--about-accent); }
+.about-name {
+  margin: var(--sp-2) 0 var(--sp-6);
+  font-size: clamp(2.5rem, 7vw, 4rem);
+  line-height: 1.05;
+  font-weight: 500;
+  color: var(--about-accent);
+  text-wrap: balance;
+}
+.about-intro .prose { max-width: none; margin-bottom: var(--sp-6); color: var(--about-ink); }
+.about-intro .prose > :first-child { margin-top: 0; }
+.about-intro .prose > :last-child { margin-bottom: 0; }
+
+/* The facts box: an outlined panel with the rings ornament in a cell of its own, as in the reference. */
+.about-facts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 1px solid var(--about-rule);
+  border-radius: var(--r-sm);
+}
+.about-facts ul { margin: 0; padding: var(--sp-4); list-style: none; }
+.about-facts li + li { margin-top: var(--sp-2); }
+.about-rings {
+  width: 5.5rem;
+  height: 5.5rem;
+  padding: var(--sp-3);
+  border-left: 1px solid var(--about-rule);
+  fill: none;
+  stroke: var(--about-rule);
+  stroke-width: 1;
+}
+
+/* The lower row: the swatches on one side, the video on the other. */
+.about-pill {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-6);
+  border: 1px solid var(--about-rule);
+  border-radius: var(--r-full);
+  color: var(--about-accent);
+  text-align: center;
+}
+.about-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(3.5rem, 1fr));
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.about-swatch { display: block; height: 3rem; border: 1px solid var(--about-frame); border-radius: var(--r-sm); }
+.about-video { margin-top: var(--sp-8); }
+/* the frame holds the shape so the row does not jump when the player finishes loading */
+.about-video-frame {
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--sp-4);
+  background: var(--about-frame);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.about-video-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+/* what stands in for the player until the reader accepts cookies: same box, no third-party request */
+.about-video-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6);
+  background: none;
+  border: 1px dashed var(--about-rule);
+  text-align: center;
+}
+.about-video-wait p { margin: 0; }
+
+/* The quote sits under the swatches, in small type so a long passage still fits the narrow column. The star
+   is centred on the rule that separates it from the swatches above. */
+.about-aside > * + * { margin-top: var(--sp-8); padding-top: var(--sp-8); border-top: 1px solid var(--about-rule); }
+.about-quote-wrap { position: relative; }
+.about-quote-wrap > .about-star {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding-inline: var(--sp-3);
+  background: var(--about-bg);
+  box-sizing: content-box;
+}
+/* The quotation marks are drawn by the block, one hung over each corner of the text, the way the reference
+   sets a quote. They are decoration, so the empty alt text after the slash keeps a screen reader from
+   reading stray punctuation around a <blockquote> that is already announced as a quote. */
+.about-quote-block {
+  position: relative;
+  margin: 0;
+  padding: var(--sp-6) var(--sp-4) var(--sp-4);
+}
+.about-quote-block::before, .about-quote-block::after {
+  position: absolute;
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--about-rule);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.about-quote-block::before { content: "\201C" / ""; top: 0; left: 0; }
+.about-quote-block::after { content: "\201D" / ""; right: 0; bottom: 0; transform: translateY(0.35em); }
+.about-quote { margin: 0; font-size: var(--fs-base); line-height: 1.65; color: var(--about-accent); }
+.about-quote-source { margin: var(--sp-3) 0 0; color: var(--about-ink); font-size: var(--fs-sm); }
+.about-quote-source cite { font-style: normal; }
+
+/* Contact sits under a rule at the foot of the page, like the reference. */
+.about-contact { padding-top: var(--sp-8); border-top: 1px solid var(--about-rule); }
+.about-contact h2 { margin: 0 0 var(--sp-4); font-size: var(--fs-h3); font-weight: 600; color: var(--about-accent); }
+.about-contact-cols { display: grid; gap: var(--sp-2) var(--sp-8); }
+.about-contact-lines { margin: 0; padding: 0; list-style: none; }
+.about-contact .social-list { margin: 0; }
+/* underlined, not colour alone: inside the card a link sits in the same ink as the text around it */
+.about-contact .social-list a { color: inherit; text-decoration: underline; text-decoration-color: var(--about-rule); }
+.about-contact .social-list a:hover { color: var(--about-accent); text-decoration-color: currentColor; }
+
+@media (min-width: 48rem) {
+  .about-head h1 { font-size: var(--fs-h1); }
+  .about-star { width: 1.75rem; height: 1.75rem; }
+  /* the portrait column is fixed so the text beside it keeps a comfortable measure at every width */
+  .about-row { display: grid; grid-template-columns: 20rem minmax(0, 1fr); gap: var(--sp-8); }
+  .about-row > :nth-child(2) { padding-left: var(--sp-8); border-left: 1px solid var(--about-rule); }
+  /* a row whose other half was never filled in gets the whole width instead of a narrow first column, but a
+     picture with no text beside it keeps a sane size rather than growing to the width of the page */
+  .about-row > :only-child { grid-column: 1 / -1; }
+  .about-figure:only-child .about-portrait { max-width: 20rem; }
+  .about-figure { margin: 0; }
+  .about-portrait { max-width: none; }
+  .about-video { margin-top: 0; }
+  .about-contact-cols { grid-template-columns: 1fr 1fr; }
+}
+
 .social-list { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-6); margin: var(--sp-6) 0 0; padding: 0; list-style: none; }
 .social-list a { color: var(--text-muted); text-decoration: none; }
 .social-list a:hover { color: var(--text); text-decoration: underline; }
 .site-footer .social-list { margin: 0 0 var(--sp-3); }
 
-/* Search page (Task 17). The queries live in src/routes/public.js as SEARCH_POST_SQL and SEARCH_PROJECT_SQL.
-   Matching projects reuse the uncapped .project-grid from the home page's featured section; matching posts
-   reuse .post-list, capped to --measure like every other post list. */
-.search h1 { max-width: var(--measure); margin: 0 0 var(--sp-6); }
-.search-form { max-width: var(--measure); display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-8); }
+/* Search, which sits under the intro on the home page. The queries live in src/routes/public.js as
+   SEARCH_POST_SQL and SEARCH_PROJECT_SQL. Matching projects reuse the uncapped .project-grid from the
+   featured section; matching posts reuse .post-list, capped to --measure like every other post list.
+   The result sections need no margin of their own: .home is a flex column with a --sp-12 gap. */
+.search-form { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-6); }
 .search-form label { font-weight: 600; }
 .search-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.search-row input { flex: 1 1 16rem; }
-.search-hint, .search-empty { max-width: var(--measure); color: var(--text-muted); }
-.search-section + .search-section { margin-top: var(--sp-12); }
-.search-section h2 { margin: 0 0 var(--sp-4); }
+.search-row input { flex: 1 1 16rem; min-width: 0; border-radius: var(--r-full); padding-inline: var(--sp-4); }
+.search-hint { margin: var(--sp-2) 0 0; color: var(--text-muted); }
+.search-empty { max-width: var(--measure); margin: 0; color: var(--text-muted); }
+.search-section h2 { margin: 0 0 var(--sp-4); font-size: var(--fs-h3); }
 .search-section .post-list { max-width: var(--measure); }
 
-/* Footer credit line (Task 19), now carrying the privacy link next to the copyright text. */
+/* Footer credit line, carrying the privacy link next to the copyright text. */
 .footer-meta { display: flex; flex-wrap: wrap; gap: 0 var(--sp-2); }
 
-/* Cookie consent bar (Task 19). partials/consent.ejs renders it, public/js/consent.js wires the buttons.
+/* Cookie consent bar. partials/consent.ejs renders it, public/js/consent.js wires the buttons.
    Fixed to the bottom edge, never a modal, so it never blocks the content behind it. */
 .consent-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 10;
+  z-index: 15;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -330,13 +715,17 @@ a.tag:hover { color: var(--text); border-color: var(--text); }
   background: var(--surface);
   border-top: 1px solid var(--border-strong);
 }
+/* public/js/consent.js hides the bar by setting the hidden attribute, and an author rule beats the browser's
+   own [hidden] { display: none } no matter how specific it is - so display: flex above would keep the bar on
+   screen after the reader answers without this line. */
+.consent-bar[hidden] { display: none; }
 .consent-bar p { margin: 0; max-width: 40rem; }
 .consent-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); flex-shrink: 0; }
 
-/* Privacy page (Task 19). The cookie table can be wider than --measure on a narrow screen, so it gets its own
+/* Privacy page. The cookie table can be wider than --measure on a narrow screen, so it gets its own
    horizontal-scroll container instead of the page itself scrolling. */
 .privacy > * { max-width: var(--measure); }
-.privacy h1 { margin: 0 0 var(--sp-6); }
+.privacy h1 { margin: 0 0 var(--sp-6); font-size: var(--fs-title); font-weight: 700; letter-spacing: -0.02em; }
 .privacy h2 { margin: var(--sp-8) 0 var(--sp-4); }
 .privacy .prose { margin-bottom: var(--sp-8); }
 .table-wrap { max-width: var(--measure); overflow-x: auto; }

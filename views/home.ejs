@@ -6,7 +6,42 @@
 <% if (settings.tagline) { -%>
     <p class="tagline"><%= settings.tagline %></p>
 <% } -%>
+    <form class="search-form" role="search" method="get" action="/<%= lang %>">
+      <label for="q"><%= t.searchLabel %></label>
+      <div class="search-row">
+        <input type="search" id="q" name="q" maxlength="100" value="<%= q %>">
+        <button type="submit"><%= t.searchButton %></button>
+      </div>
+    </form>
+<% if (tooShort) { -%>
+    <p class="search-hint"><%= t.searchHint %></p>
+<% } -%>
   </section>
+<% if (searching) { -%>
+<% if (!foundProjects.length && !foundPosts.length) { -%>
+  <p class="empty search-empty"><%= t.searchNoResults %> “<%= q %>”</p>
+<% } -%>
+<% if (foundProjects.length) { -%>
+  <section class="search-section">
+    <h2><%= t.searchProjectsHeading %></h2>
+    <div class="project-grid">
+<% for (const card of foundProjects) { -%>
+      <%- include('partials/project-card', { card, level: 3 }) %>
+<% } -%>
+    </div>
+  </section>
+<% } -%>
+<% if (foundPosts.length) { -%>
+  <section class="search-section">
+    <h2><%= t.searchPostsHeading %></h2>
+    <div class="post-list">
+<% for (const card of foundPosts) { -%>
+      <%- include('partials/post-card', { card, level: 3 }) %>
+<% } -%>
+    </div>
+  </section>
+<% } -%>
+<% } else { -%>
 <% if (featured.length) { -%>
   <section class="featured">
     <div class="section-head">
@@ -32,6 +67,7 @@
 <% } -%>
     </div>
   </section>
+<% } -%>
 <% } -%>
 </main>
 <%- include('partials/footer') %>
