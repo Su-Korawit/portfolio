@@ -3,6 +3,7 @@
   const form = document.querySelector('.comment-form');
   if (form) {
     const textarea = form.querySelector('textarea[name="body"]');
+    if (!textarea) return;
     const counter = form.querySelector('.comment-counter');
     const max = Number(textarea.getAttribute('maxlength')) || 2000;
 
