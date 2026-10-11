@@ -39,11 +39,23 @@ function exec(sql) {
   return conn().executeMultiple(sql);
 }
 
+const POST_COLUMNS = [
+  ['series_id', 'INTEGER REFERENCES series(id) ON DELETE SET NULL'],
+  ['series_part', 'INTEGER'],
+  ['sort_order', 'INTEGER NOT NULL DEFAULT 0']
+];
+
 const ready = (async () => {
   await exec('PRAGMA foreign_keys = ON');
   // journal_mode is a local SQLite file setting; Turso manages that itself on its own storage.
   if (!process.env.TURSO_DATABASE_URL) await exec('PRAGMA journal_mode = WAL');
   await exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
+  // CREATE TABLE IF NOT EXISTS leaves a table that already exists alone, so columns added to schema.sql
+  // later are added here to a database made before them.
+  const postColumns = (await all('PRAGMA table_info(posts)')).map(col => col.name);
+  for (const [name, type] of POST_COLUMNS) {
+    if (!postColumns.includes(name)) await exec(`ALTER TABLE posts ADD COLUMN ${name} ${type}`);
+  }
 })();
 
 // Only one transaction runs at a time. BEGIN IMMEDIATE from two connections at once on a local

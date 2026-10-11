@@ -13,6 +13,9 @@ const initial = [...authorName.trim()][0] || 'P';
 <main id="main" class="post">
   <article class="post-article">
     <header class="post-header">
+<% if (locals.series) { -%>
+      <p class="series-label"><%= t.seriesLabel %>: <%= series.name %> · <%= t.seriesPart.replace('{n}', series.part) %></p>
+<% } -%>
       <h1><%= tr.title %></h1>
 <% if (tr.excerpt) { -%>
       <p class="post-subtitle"><%= tr.excerpt %></p>
@@ -22,10 +25,6 @@ const initial = [...authorName.trim()][0] || 'P';
         <div class="byline-text">
           <p class="byline-name"><%= authorName %></p>
           <p class="post-meta">
-<% if (tr.published_at) { -%>
-            <time datetime="<%= tr.published_at %>"><%= formatDate(lang, tr.published_at) %></time>
-            <span class="meta-dot" aria-hidden="true">·</span>
-<% } -%>
             <span><%= readTime(t, tr.body_markdown) %></span>
           </p>
         </div>
@@ -42,6 +41,16 @@ const initial = [...authorName.trim()][0] || 'P';
     <div class="prose">
       <%- md.render(tr.body_markdown) %>
     </div>
+<% if (locals.series && series.parts.length > 1) { -%>
+    <nav class="series-nav" aria-label="<%= t.seriesLabel %>">
+      <p class="series-nav-title"><%= series.name %></p>
+      <ol>
+<% for (const part of series.parts) { -%>
+        <li<% if (part.lang !== lang) { %> lang="<%= part.lang %>"<% } %>><% if (part.series_part === series.part && part.slug === tr.slug) { %><strong><%= t.seriesPart.replace('{n}', part.series_part) %> · <%= part.title %></strong><% } else { %><a href="/<%= part.lang %>/blog/<%= part.slug %>"><%= t.seriesPart.replace('{n}', part.series_part) %> · <%= part.title %></a><% } %></li>
+<% } -%>
+      </ol>
+    </nav>
+<% } -%>
 <% if (tags.length) { -%>
     <footer class="post-footer">
       <ul class="tag-list" aria-label="<%= t.postTags %>">

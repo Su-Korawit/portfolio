@@ -88,7 +88,7 @@
    The editor is a writing surface first: the title and the body sit in the middle of the page with no boxes
    around them, at the size and in the serif they will have once published, and everything a post needs but
    nobody reads while writing - slug, excerpt, SEO - waits below them under a quiet label. */
-.editor { max-width: var(--measure); }
+.editor { max-width: 80rem; }
 .editor .page-head {
   position: sticky;
   top: 0;
@@ -165,4 +165,28 @@
   /* site.css pins the public header once it is one row tall; on an admin page the bar that follows the editor
      down the page is the one with the save button in it, so only one of the two is sticky. */
   .site-header { position: static; backdrop-filter: none; }
+}
+
+/* Wider editor, and no blue frame: the title and the body are written straight on the page, so focus is the caret
+   alone; the other fields get a darker border instead of the accent outline. */
+.editor .write-field :focus-visible { outline: none; }
+.editor :focus-visible { outline: none; }
+.editor input:focus, .editor select:focus, .editor textarea:focus { border-color: var(--text); }
+.editor .write-field input:focus, .editor .write-field textarea:focus { border-color: transparent; }
+.field-row { display: grid; gap: var(--sp-4); align-items: end; }
+.translation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4); }
+.translation-actions .inline-field { display: flex; align-items: center; gap: var(--sp-2); }
+.translation-actions select { width: auto; }
+.translation-actions input[type="file"] { width: auto; max-width: 16rem; padding: 0; border: 0; background: none; }
+.editor .write-field .editor-body { min-height: 32rem; }
+
+/* Post list: order buttons and the series a post belongs to */
+.admin-move { white-space: nowrap; width: 1%; }
+.admin-move form { display: inline; margin: 0; }
+.admin-move button { padding: 0 var(--sp-2); }
+.admin-move button:disabled { opacity: 0.3; cursor: default; }
+.series-tag { display: block; color: var(--text-muted); font-size: var(--fs-sm); }
+
+@media (min-width: 40rem) {
+  .field-row { grid-template-columns: 2fr 1fr 2fr; }
 }

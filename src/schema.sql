@@ -1,6 +1,16 @@
+CREATE TABLE IF NOT EXISTS series (
+  id    INTEGER PRIMARY KEY,
+  name  TEXT NOT NULL UNIQUE
+);
+
+-- series_id, series_part and sort_order came after the first release; src/db.js adds them to an older
+-- database that already has this table.
 CREATE TABLE IF NOT EXISTS posts (
   id           INTEGER PRIMARY KEY,
   cover_image  TEXT,
+  series_id    INTEGER REFERENCES series(id) ON DELETE SET NULL,
+  series_part  INTEGER,
+  sort_order   INTEGER NOT NULL DEFAULT 0,
   created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   updated_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );

@@ -67,7 +67,7 @@ test('04 published at', async () => {
     assert.equal((await row(id, 'en')).published_at, enDate);
     r = await h.req('/th/blog/docker-101');
     assert.equal(r.status, 200);
-    assert.ok(r.text.includes('<time datetime="2026-01-02T03:04:05.678Z">2 ม.ค. 2569</time>'), r.text);
+    assert.ok(!r.text.includes('<time'), r.text);
 
     // the list links to the editor and shows both translations as published
     r = await h.req('/admin/posts');

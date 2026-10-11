@@ -34,7 +34,7 @@ test('03 publish per language', async () => {
     assert.ok(card.startsWith('<article class="card" lang="th">'), card);
     assert.ok(card.includes('href="/th/blog/x"'), card);
     assert.ok(card.includes(strings.en.badgeOtherLang), card);
-    assert.ok(card.includes('<time datetime="2026-09-12T20:30:00.000Z">Sep 13, 2026</time>'), card);
+    assert.ok(!card.includes('<time'), card);
     assert.ok(card.includes('<img class="card-thumb" src="/uploads/cover.png" alt="" loading="lazy">'), card);
 
     // the other direction: an English-only post is an English card with a badge on /th/blog
@@ -53,7 +53,7 @@ test('03 publish per language', async () => {
     assert.equal(r.status, 200);
     assert.ok(r.text.includes('<h1>บทความไทย X</h1>'), r.text);
     assert.ok(r.text.includes('class="hljs-keyword"'), r.text);
-    assert.ok(r.text.includes('<time datetime="2026-09-12T20:30:00.000Z">13 ก.ย. 2569</time>'), r.text);
+    assert.ok(!r.text.includes('<time'), r.text);
     assert.ok(r.text.includes('<img class="post-cover" src="/uploads/cover.png" alt="ภาพปกภาษาไทย">'), r.text);
     assert.ok(r.text.includes('<a class="tag" href="/th/tags/containers">คอนเทนเนอร์</a>'), r.text);
     assert.ok(r.text.includes('<link rel="canonical" href="http://test.local/th/blog/x">'), r.text);

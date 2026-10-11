@@ -23,6 +23,9 @@ module.exports = {
     // {n} is the estimated number of minutes from src/reading-time.js
     readTime: 'อ่าน {n} นาที',
     backToBlog: 'กลับไปหน้ารวมบทความ',
+    seriesLabel: 'ซีรีส์',
+    // {n} is the part number of a post in its series
+    seriesPart: 'ตอนที่ {n}',
     pagination: 'การแบ่งหน้า',
     pageLabel: 'หน้า',
     pageNewer: 'บทความใหม่กว่า',
@@ -120,6 +123,8 @@ module.exports = {
     // {n} is the estimated number of minutes from src/reading-time.js
     readTime: '{n} min read',
     backToBlog: 'Back to the blog',
+    seriesLabel: 'Series',
+    seriesPart: 'Part {n}',
     pagination: 'Pagination',
     pageLabel: 'Page',
     pageNewer: 'Newer posts',

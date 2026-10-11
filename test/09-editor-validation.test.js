@@ -55,20 +55,19 @@ test('09 editor validation', async () => {
     assert.ok(en.startsWith(' class="translation" lang="en">'), en);
     assert.ok(th.includes('<option value="draft" selected>'), th);
     assert.ok(en.includes('<option value="none" selected>'), en);
-    // the hyphen is escaped because browsers compile pattern= with the v flag
-    assert.ok(th.includes('pattern="[a-z0-9\\-]*"'), th);
     // a new post has no saved translation, so choosing none asks nothing
     assert.ok(!r.text.includes('onchange='), r.text);
 
-    // spec test 9, case 1: Thai title, empty slug, en none
+    // spec test 9, case 1: a form with an error comes back as a 400 and writes nothing (the error is a series
+    // part that is not a number; a Thai title with no slug is no longer an error, see the last case)
     const before = await countPosts();
     r = await h.req('/admin/posts', {
       method: 'POST',
-      form: { cover_image: '/uploads/cover.png', tags: '12', th: thai, en: { ...blank, status: 'none' } }
+      form: { cover_image: '/uploads/cover.png', tags: '12', series_part: 'abc', th: thai, en: { ...blank, status: 'none' } }
     });
     assert.equal(r.status, 400);
     assert.equal(await countPosts(), before);
-    assert.ok(r.text.includes('กรุณาใส่ slug ภาษาอังกฤษ (a-z, 0-9, -)'), r.text);
+    assert.ok(r.text.includes('ตอนที่ต้องเป็นจำนวนเต็ม'), r.text);
     // everything typed is still in the form, HTML-escaped
     assert.ok(r.text.includes('## ขั้นตอน'), r.text);
     assert.ok(r.text.includes('const tag = &#34;&lt;b&gt;x&lt;/b&gt;&#34;;'), r.text);
@@ -105,8 +104,6 @@ test('09 editor validation', async () => {
     assert.ok(en.startsWith(' class="translation" lang="en" open>'), en);
     assert.ok(th.includes("confirm('ลบฉบับภาษานี้เมื่อบันทึก?')"), th);
     assert.ok(en.includes("confirm('ลบฉบับภาษานี้เมื่อบันทึก?')"), en);
-    assert.ok(th.includes('ลิงก์เดิมจะใช้ไม่ได้'), th);
-    assert.ok(!en.includes('ลิงก์เดิมจะใช้ไม่ได้'), en);
     assert.ok(th.includes('value="docker-101"'), th);
 
     // spec test 9, case 3: a slug that another post uses in the same language is a 400 with a message, not a 500

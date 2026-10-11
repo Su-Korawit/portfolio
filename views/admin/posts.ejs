@@ -13,12 +13,25 @@ const chipLabels = { published: 'เผยแพร่', draft: 'แบบร่
   <div class="table-scroll">
     <table class="admin-table">
       <thead>
-        <tr><th scope="col">หัวข้อ</th><th scope="col">ไทย</th><th scope="col">EN</th><th scope="col">แก้ไขล่าสุด</th></tr>
+        <tr><th scope="col">ลำดับ</th><th scope="col">หัวข้อ</th><th scope="col">ไทย</th><th scope="col">EN</th><th scope="col">แก้ไขล่าสุด</th></tr>
       </thead>
       <tbody>
-<% for (const post of posts) { -%>
-        <tr>
-          <td><a href="/admin/posts/<%= post.id %>"><%= post.title || '(ไม่มีหัวข้อ)' %></a></td>
+<% for (const [index, post] of posts.entries()) { -%>
+        <tr id="post-<%= post.id %>">
+          <td class="admin-move">
+<% for (const [direction, label, glyph, disabled] of [['up', 'เลื่อนขึ้น', '↑', index === 0], ['down', 'เลื่อนลง', '↓', index === posts.length - 1]]) { -%>
+            <form method="post" action="/admin/posts/<%= post.id %>/move">
+              <input type="hidden" name="direction" value="<%= direction %>">
+              <button type="submit" aria-label="<%= label %>"<% if (disabled) { %> disabled<% } %>><%= glyph %></button>
+            </form>
+<% } -%>
+          </td>
+          <td>
+            <a href="/admin/posts/<%= post.id %>"><%= post.title || '(ไม่มีหัวข้อ)' %></a>
+<% if (post.series) { -%>
+            <span class="series-tag"><%= post.series %> · ตอนที่ <%= post.series_part %></span>
+<% } -%>
+          </td>
 <% for (const status of [post.th, post.en]) { -%>
           <td><span class="chip chip-<%= status || 'none' %>"><%= chipLabels[status] || 'ไม่มีฉบับแปล' %></span></td>
 <% } -%>

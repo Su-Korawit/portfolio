@@ -37,7 +37,7 @@ test('18 reading experience', async () => {
     let r = await h.req('/th/blog');
     assert.equal(r.status, 200);
     const card = (r.text.match(/<article class="card"[^]*?<\/article>/g) || [])[0];
-    assert.ok(card.includes('<time datetime="2026-09-12T20:30:00.000Z">'), card);
+    assert.ok(!card.includes('<time'), card);
     assert.ok(card.includes(strings.th.readTime.replace('{n}', 2)), card);
 
     // the post page: subtitle, byline with the site name, the same reading time, tags below the body

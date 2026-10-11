@@ -10,7 +10,7 @@ const PAGE_SIZE = 10;
 
 // Fallback list query from spec 2.1. Each post appears once: in the page language when that
 // translation is published, otherwise as the published translation in the other language.
-// post_id breaks ties, so two posts with the same published_at never swap places between pages.
+// sort_order is the order set by hand in the admin (all 0 until it is used, then the date decides). post_id breaks ties, so two posts with the same published_at never swap places between pages.
 const LIST_SQL = `
   SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
   FROM post_translations t
@@ -19,7 +19,7 @@ const LIST_SQL = `
     AND (t.lang = ? OR NOT EXISTS (
           SELECT 1 FROM post_translations x
           WHERE x.post_id = t.post_id AND x.lang = ? AND x.status = 'published'))
-  ORDER BY t.published_at DESC, t.post_id DESC
+  ORDER BY p.sort_order, t.published_at DESC, t.post_id DESC
   LIMIT ? OFFSET ?`;
 
 // Projects use the same fallback as LIST_SQL and the order from spec 2.1: featured first, then sort_order, then id.
@@ -47,7 +47,7 @@ const TAG_LIST_SQL = `
     AND (t.lang = ? OR NOT EXISTS (
           SELECT 1 FROM post_translations x
           WHERE x.post_id = t.post_id AND x.lang = ? AND x.status = 'published'))
-  ORDER BY t.published_at DESC, t.post_id DESC
+  ORDER BY p.sort_order, t.published_at DESC, t.post_id DESC
   LIMIT ? OFFSET ?`;
 
 // Search (spec 4.1). LIKE instead of FTS5, because FTS5's default tokenizer cannot split Thai text that has
@@ -259,7 +259,22 @@ async function loadPost(lang, slug) {
     [lang, slug]
   );
   if (!tr) return null;
-  const post = await get('SELECT id, cover_image FROM posts WHERE id = ?', [tr.post_id]);
+  const post = await get('SELECT id, cover_image, series_id, series_part FROM posts WHERE id = ?', [tr.post_id]);
+  // The other parts of the series, in the reader's language where a part has one. A part with no published
+  // translation at all is left out.
+  let series = null;
+  if (post.series_id) {
+    const parts = await all(
+      `SELECT p.series_part, t.lang, t.slug, t.title
+       FROM posts p JOIN post_translations t ON t.post_id = p.id AND t.status = 'published'
+       WHERE p.series_id = ? AND (t.lang = ? OR NOT EXISTS (
+         SELECT 1 FROM post_translations x WHERE x.post_id = p.id AND x.lang = ? AND x.status = 'published'))
+       ORDER BY p.series_part, p.id`,
+      [post.series_id, lang, lang]
+    );
+    const { name } = await get('SELECT name FROM series WHERE id = ?', [post.series_id]);
+    series = { name, part: post.series_part, parts };
+  }
   const siblings = await all(
     "SELECT lang, slug FROM post_translations WHERE post_id = ? AND status = 'published' ORDER BY lang DESC",
     [tr.post_id]
@@ -275,7 +290,7 @@ async function loadPost(lang, slug) {
   const alternates = siblings.length === 2
     ? siblings.map(s => ({ lang: s.lang, href: '/' + s.lang + '/blog/' + s.slug }))
     : [];
-  return { post, tr, tags, alternates };
+  return { post, tr, tags, alternates, series };
 }
 
 function postMeta(lang, tr, post, alternates) {
