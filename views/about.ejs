@@ -129,11 +129,11 @@ const hasContact = Boolean(contact.items.length || hasSocial);
         <ul class="social-list">
 <% for (const [key, label] of social) { -%>
 <% if (settings[key]) { -%>
-          <li><a href="<%= settings[key] %>"><%= label %></a></li>
+          <li><a href="<%= settings[key] %>"><%- include('partials/social-icon', { key }) %><%= label %></a></li>
 <% } -%>
 <% } -%>
 <% if (settings.email) { -%>
-          <li><a href="mailto:<%= settings.email %>"><%= settings.email %></a></li>
+          <li><a href="mailto:<%= settings.email %>"><%- include('partials/social-icon', { key: 'email' }) %><%= settings.email %></a></li>
 <% } -%>
         </ul>
 <% } -%>

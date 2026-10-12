@@ -660,6 +660,13 @@ body:has(main.about) {
 /* underlined, not colour alone: inside the card a link sits in the same ink as the text around it */
 .about-contact .social-list a { color: inherit; text-decoration: underline; text-decoration-color: var(--about-rule); }
 .about-contact .social-list a:hover { color: var(--about-accent); text-decoration-color: currentColor; }
+.about-contact .social-list a { display: inline-flex; align-items: center; gap: var(--sp-2); }
+/* two colours from the About palette: an accent disc with the logo cut out in the page colour */
+.social-icon { flex: none; width: 1.6em; height: 1.6em; }
+.social-icon-disc { fill: var(--about-accent); }
+.social-icon-glyph { fill: var(--about-bg); }
+.social-icon-line { fill: none; stroke: var(--about-bg); stroke-width: 3.2; stroke-linejoin: round; }
+.about-contact .social-list a:hover .social-icon-disc { fill: var(--about-ink); }
 
 @media (min-width: 48rem) {
   .about-head h1 { font-size: var(--fs-h1); }
