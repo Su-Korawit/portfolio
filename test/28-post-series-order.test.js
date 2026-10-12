@@ -29,7 +29,7 @@ test('28 series, order and automatic slug', async () => {
 
     // the post page names its series and lists the parts in part order; no date is shown anywhere
     r = await h.req('/th/blog/post-' + second);
-    assert.ok(r.text.includes('ซีรีส์: Docker · ตอนที่ 2'), r.text);
+    assert.match(r.text, /ซีรีส์: <a href="\/th\/series\/\d+">Docker<\/a> · ตอนที่ 2/);
     assert.ok(r.text.indexOf('ตอนที่ 1 · ตอนแรก') < r.text.indexOf('ตอนที่ 7 · ตอนเจ็ด'), r.text);
     assert.ok(!r.text.includes('<time'), r.text);
 

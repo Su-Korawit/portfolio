@@ -1,0 +1,14 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+<main id="main" class="blog series-page">
+  <p class="series-label"><%= t.seriesLabel %></p>
+  <h1><%= series.name %></h1>
+  <p class="series-count"><%= t.seriesCount.replace('{n}', posts.length) %></p>
+  <div class="post-list">
+<% for (const card of posts) { -%>
+    <%- include('partials/post-card', { card, level: 2, hideSeries: true }) %>
+<% } -%>
+  </div>
+  <p class="post-back"><a href="/<%= lang %>/blog"><%= t.backToBlog %></a></p>
+</main>
+<%- include('partials/footer') %>

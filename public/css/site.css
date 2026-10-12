@@ -776,3 +776,14 @@ body:has(main.about) {
 .series-nav { margin-top: var(--sp-8); padding: var(--sp-4); background: var(--surface-soft); border-radius: var(--r-md); }
 .series-nav-title { margin: 0 0 var(--sp-2); font-weight: 600; }
 .series-nav ol { margin: 0; padding-inline-start: var(--sp-6); }
+.series-label a, .series-nav-title a { color: inherit; text-decoration-color: var(--border); }
+.series-label a:hover, .series-nav-title a:hover { color: var(--text); }
+/* the series chip above a card's title and the heading of /series/:id */
+.card-series { margin: 0 0 var(--sp-2); }
+.series-chip {
+  display: inline-block; padding: 0.125rem var(--sp-3); border-radius: 999px;
+  background: var(--surface-soft); color: var(--text-muted); font-size: var(--fs-sm); text-decoration: none;
+}
+a.series-chip:hover { background: var(--border); color: var(--text); }
+.series-page h1 { margin-bottom: var(--sp-2); }
+.series-page .series-count { margin: 0 0 var(--sp-6); color: var(--text-muted); }

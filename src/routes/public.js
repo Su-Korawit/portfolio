@@ -12,9 +12,11 @@ const PAGE_SIZE = 10;
 // translation is published, otherwise as the published translation in the other language.
 // sort_order is the order set by hand in the admin (all 0 until it is used, then the date decides). post_id breaks ties, so two posts with the same published_at never swap places between pages.
 const LIST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image,
+    p.series_id, s.name AS series_name
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
+  LEFT JOIN series s ON s.id = p.series_id
   WHERE t.status = 'published'
     AND (t.lang = ? OR NOT EXISTS (
           SELECT 1 FROM post_translations x
@@ -39,9 +41,11 @@ const PROJECT_LIST_SQL = `
 // The tag page lists posts only (spec 2.1). This is LIST_SQL with one more join that keeps the posts of one tag,
 // so the fallback and the order are the same as /blog. Parameters: [tagId, lang, lang, limit, offset].
 const TAG_LIST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image,
+    p.series_id, s.name AS series_name
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
+  LEFT JOIN series s ON s.id = p.series_id
   JOIN post_tags pt ON pt.post_id = t.post_id AND pt.tag_id = ?
   WHERE t.status = 'published'
     AND (t.lang = ? OR NOT EXISTS (
@@ -49,6 +53,18 @@ const TAG_LIST_SQL = `
           WHERE x.post_id = t.post_id AND x.lang = ? AND x.status = 'published'))
   ORDER BY p.sort_order, t.published_at DESC, t.post_id DESC
   LIMIT ? OFFSET ?`;
+
+// The series page lists the parts of one series in part order, each post once, in the page language where it has a
+// published translation and otherwise in the other one. Parameters: [seriesId, lang, lang].
+const SERIES_PARTS_SQL = `
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
+  FROM post_translations t
+  JOIN posts p ON p.id = t.post_id
+  WHERE p.series_id = ? AND t.status = 'published'
+    AND (t.lang = ? OR NOT EXISTS (
+          SELECT 1 FROM post_translations x
+          WHERE x.post_id = t.post_id AND x.lang = ? AND x.status = 'published'))
+  ORDER BY p.series_part, p.id`;
 
 // Search (spec 4.1). LIKE instead of FTS5, because FTS5's default tokenizer cannot split Thai text that has
 // no spaces between words, and ESCAPE '!' turns a literal '%' or '_' the reader typed into an ordinary
@@ -124,9 +140,11 @@ const linesOf = ({ value, lang }) => ({ lang, items: value.split('\n').map(line 
 // translation of the post, not just the one being displayed - so a term that exists only in the Thai body
 // still finds the post when searching from /en, shown as its own English card. Title matches sort first.
 const SEARCH_POST_SQL = `
-  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image
+  SELECT t.post_id, t.lang, t.slug, t.title, t.excerpt, t.body_markdown, t.published_at, p.cover_image,
+    p.series_id, s.name AS series_name
   FROM post_translations t
   JOIN posts p ON p.id = t.post_id
+  LEFT JOIN series s ON s.id = p.series_id
   WHERE t.status = 'published'
     AND (t.lang = $lang OR NOT EXISTS (
           SELECT 1 FROM post_translations x
@@ -253,6 +271,30 @@ router.get('/blog', async (req, res, next) => {
   });
 });
 
+// /series/:id. A series has no slug of its own, so it is found by id; one with no published part is a 404.
+router.get('/series/:id', async (req, res, next) => {
+  const { lang, t } = res.locals;
+  if (!/^[1-9][0-9]*$/.test(req.params.id) || !Number.isSafeInteger(Number(req.params.id))) return next();
+  const id = Number(req.params.id);
+  const series = await get('SELECT id, name FROM series WHERE id = ?', [id]);
+  if (!series) return next();
+  const posts = await all(SERIES_PARTS_SQL, [id, lang, lang]);
+  if (posts.length === 0) return next();
+  res.render('series', {
+    series,
+    posts,
+    meta: {
+      title: t.seriesLabel + ': ' + series.name,
+      canonical: '/' + lang + '/series/' + id,
+      alternates: [
+        { lang: 'th', href: '/th/series/' + id },
+        { lang: 'en', href: '/en/series/' + id }
+      ],
+      type: 'website'
+    }
+  });
+});
+
 async function loadPost(lang, slug) {
   const tr = await get(
     "SELECT * FROM post_translations WHERE lang = ? AND slug = ? AND status = 'published'",
@@ -273,7 +315,7 @@ async function loadPost(lang, slug) {
       [post.series_id, lang, lang]
     );
     const { name } = await get('SELECT name FROM series WHERE id = ?', [post.series_id]);
-    series = { name, part: post.series_part, parts };
+    series = { id: post.series_id, name, part: post.series_part, parts };
   }
   const siblings = await all(
     "SELECT lang, slug FROM post_translations WHERE post_id = ? AND status = 'published' ORDER BY lang DESC",

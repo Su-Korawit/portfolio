@@ -26,6 +26,8 @@ module.exports = {
     seriesLabel: 'ซีรีส์',
     // {n} is the part number of a post in its series
     seriesPart: 'ตอนที่ {n}',
+    // {n} is how many posts of the series are published
+    seriesCount: '{n} ตอน',
     pagination: 'การแบ่งหน้า',
     pageLabel: 'หน้า',
     pageNewer: 'บทความใหม่กว่า',
@@ -125,6 +127,7 @@ module.exports = {
     backToBlog: 'Back to the blog',
     seriesLabel: 'Series',
     seriesPart: 'Part {n}',
+    seriesCount: '{n} parts',
     pagination: 'Pagination',
     pageLabel: 'Page',
     pageNewer: 'Newer posts',

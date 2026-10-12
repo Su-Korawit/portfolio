@@ -4,6 +4,9 @@ const heading = 'h' + (locals.level || 2);
 -%>
 <article class="card"<% if (foreign) { %> lang="<%= card.lang %>"<% } %>>
   <div class="card-body">
+<% if (card.series_id && !locals.hideSeries) { -%>
+    <p class="card-series"><a class="series-chip" href="/<%= lang %>/series/<%= card.series_id %>"><%= t.seriesLabel %> · <%= card.series_name %></a></p>
+<% } -%>
     <<%= heading %> class="card-title"><a href="/<%= card.lang %>/blog/<%= card.slug %>"><%= card.title %></a></<%= heading %>>
 <% if (card.excerpt) { -%>
     <p class="excerpt"><%= card.excerpt %></p>
